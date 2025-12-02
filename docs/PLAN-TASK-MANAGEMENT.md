@@ -124,15 +124,17 @@ src/
 - [x] Trang danh sách Boards
 - [x] Lexical Editor component
 
-### Phase 2: Table View ⬜
+### Phase 2: Table View ✅
 
-- [ ] Table view component
-- [ ] Dynamic columns từ properties
-- [ ] Inline editing cho cells
-- [ ] Add/remove rows
-- [ ] Add/remove columns (properties)
-- [ ] Sort cơ bản
-- [ ] Filter cơ bản
+- [x] Table view component
+- [x] Dynamic columns từ properties
+- [x] Inline editing cho cells
+- [x] Add/remove rows
+- [x] Add/remove columns (properties)
+- [x] Sort cơ bản
+- [x] Filter cơ bản
+- [x] Responsive design (mobile card view)
+- [x] Board toolbar (search, filter, sort, add column)
 
 ### Phase 3: Kanban View ⬜
 

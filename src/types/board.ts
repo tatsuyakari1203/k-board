@@ -67,24 +67,30 @@ export const filterOperatorSchema = z.enum([
   "is_not_empty",
   "greater_than",
   "less_than",
+  "greater_or_equal",
+  "less_or_equal",
+  "before",
+  "after",
 ]);
 
 export type FilterOperator = z.infer<typeof filterOperatorSchema>;
 
 export const filterSchema = z.object({
-  propertyId: z.string().uuid(),
+  propertyId: z.string(),
   operator: filterOperatorSchema,
   value: z.unknown().optional(),
 });
 
 export type Filter = z.infer<typeof filterSchema>;
+export type FilterConfig = Filter; // Alias for component usage
 
 export const sortSchema = z.object({
-  propertyId: z.string().uuid(),
+  propertyId: z.string(),
   direction: z.enum(["asc", "desc"]),
 });
 
 export type Sort = z.infer<typeof sortSchema>;
+export type SortConfig = Sort; // Alias for component usage
 
 export const viewConfigSchema = z.object({
   groupBy: z.string().uuid().optional(), // For Kanban

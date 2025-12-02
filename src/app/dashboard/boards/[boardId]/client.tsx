@@ -1,10 +1,19 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { BoardHeader } from "@/components/boards/board-header";
+import { BoardToolbar } from "@/components/boards/board-toolbar";
 import { TableView } from "@/components/boards/views/table-view";
-import { type Board, type Task, type View, ViewType } from "@/types/board";
+import {
+  type Board,
+  type Task,
+  type View,
+  type Property,
+  type SortConfig,
+  type FilterConfig,
+  ViewType
+} from "@/types/board";
 
 interface BoardData extends Omit<Board, "createdAt" | "updatedAt"> {
   _id: string;
@@ -32,9 +41,14 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
     board.views.find((v) => v.isDefault)?.id || board.views[0]?.id
   );
 
+  // Toolbar state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filters, setFilters] = useState<FilterConfig[]>([]);
+  const [sorts, setSorts] = useState<SortConfig[]>([]);
+
   const activeView = board.views.find((v) => v.id === activeViewId);
 
-  // Update board name
+  // Update board
   const handleUpdateBoard = useCallback(
     async (updates: Partial<BoardData>) => {
       try {
@@ -53,6 +67,91 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
     },
     [board._id]
   );
+
+  // Add property
+  const handleAddProperty = useCallback(
+    async (property: Omit<Property, "id" | "order">) => {
+      const newProperty: Property = {
+        ...property,
+        id: crypto.randomUUID(),
+        order: board.properties.length,
+      };
+
+      try {
+        const res = await fetch(`/api/boards/${board._id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            properties: [...board.properties, newProperty],
+          }),
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          setBoard((prev) => ({ ...prev, ...updated }));
+        }
+      } catch (error) {
+        console.error("Failed to add property:", error);
+      }
+    },
+    [board._id, board.properties]
+  );
+
+  // Remove property
+  const handleRemoveProperty = useCallback(
+    async (propertyId: string) => {
+      try {
+        const res = await fetch(`/api/boards/${board._id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            properties: board.properties.filter((p) => p.id !== propertyId),
+          }),
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          setBoard((prev) => ({ ...prev, ...updated }));
+        }
+      } catch (error) {
+        console.error("Failed to remove property:", error);
+      }
+    },
+    [board._id, board.properties]
+  );
+
+  // Filter handlers
+  const handleAddFilter = useCallback((filter: FilterConfig) => {
+    setFilters((prev) => [...prev, filter]);
+  }, []);
+
+  const handleRemoveFilter = useCallback((index: number) => {
+    setFilters((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const handleClearFilters = useCallback(() => {
+    setFilters([]);
+  }, []);
+
+  // Sort handlers
+  const handleAddSort = useCallback((sort: SortConfig) => {
+    setSorts((prev) => {
+      // Replace if same property, otherwise add
+      const existing = prev.findIndex((s) => s.propertyId === sort.propertyId);
+      if (existing >= 0) {
+        const updated = [...prev];
+        updated[existing] = sort;
+        return updated;
+      }
+      return [...prev, sort];
+    });
+  }, []);
+
+  const handleRemoveSort = useCallback((index: number) => {
+    setSorts((prev) => prev.filter((_, i) => i !== index));
+  }, []);
+
+  const handleClearSorts = useCallback(() => {
+    setSorts([]);
+  }, []);
 
   // Create new task
   const handleCreateTask = useCallback(
@@ -79,23 +178,27 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
   // Update task
   const handleUpdateTask = useCallback(
     async (taskId: string, updates: Partial<TaskData>) => {
+      // Optimistic update
+      setTasks((prev) =>
+        prev.map((t) => (t._id === taskId ? { ...t, ...updates } : t))
+      );
+
       try {
         const res = await fetch(`/api/boards/${board._id}/tasks/${taskId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updates),
         });
-        if (res.ok) {
-          const updated = await res.json();
-          setTasks((prev) =>
-            prev.map((t) => (t._id === taskId ? { ...t, ...updated } : t))
-          );
+        if (!res.ok) {
+          // Revert on error
+          setTasks(initialBoard.tasks);
         }
       } catch (error) {
         console.error("Failed to update task:", error);
+        setTasks(initialBoard.tasks);
       }
     },
-    [board._id]
+    [board._id, initialBoard.tasks]
   );
 
   // Delete task
@@ -125,15 +228,35 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
         onUpdateBoard={handleUpdateBoard}
       />
 
+      <BoardToolbar
+        properties={board.properties}
+        filters={filters}
+        sorts={sorts}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        onAddProperty={handleAddProperty}
+        onRemoveProperty={handleRemoveProperty}
+        onAddFilter={handleAddFilter}
+        onRemoveFilter={handleRemoveFilter}
+        onClearFilters={handleClearFilters}
+        onAddSort={handleAddSort}
+        onRemoveSort={handleRemoveSort}
+        onClearSorts={handleClearSorts}
+      />
+
       <div className="flex-1 overflow-auto">
         {activeView?.type === ViewType.TABLE && (
           <TableView
             board={board}
             tasks={tasks}
             view={activeView}
+            searchQuery={searchQuery}
+            filters={filters}
+            sorts={sorts}
             onCreateTask={handleCreateTask}
             onUpdateTask={handleUpdateTask}
             onDeleteTask={handleDeleteTask}
+            onRemoveProperty={handleRemoveProperty}
           />
         )}
 

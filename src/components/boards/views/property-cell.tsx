@@ -19,18 +19,19 @@ interface PropertyCellProps {
   property: Property;
   value: unknown;
   onChange: (value: unknown) => void;
+  compact?: boolean;
 }
 
-export function PropertyCell({ property, value, onChange }: PropertyCellProps) {
+export function PropertyCell({ property, value, onChange, compact = false }: PropertyCellProps) {
   switch (property.type) {
     case PropertyType.TEXT:
-      return <TextCell value={value as string} onChange={onChange} />;
+      return <TextCell value={value as string} onChange={onChange} compact={compact} />;
 
     case PropertyType.NUMBER:
-      return <NumberCell value={value as number} onChange={onChange} />;
+      return <NumberCell value={value as number} onChange={onChange} compact={compact} />;
 
     case PropertyType.DATE:
-      return <DateCell value={value as string} onChange={onChange} />;
+      return <DateCell value={value as string} onChange={onChange} compact={compact} />;
 
     case PropertyType.SELECT:
     case PropertyType.STATUS:
@@ -39,6 +40,7 @@ export function PropertyCell({ property, value, onChange }: PropertyCellProps) {
           value={value as string}
           options={property.options || []}
           onChange={onChange}
+          compact={compact}
         />
       );
 
@@ -48,20 +50,21 @@ export function PropertyCell({ property, value, onChange }: PropertyCellProps) {
           value={(value as string[]) || []}
           options={property.options || []}
           onChange={onChange}
+          compact={compact}
         />
       );
 
     case PropertyType.CURRENCY:
-      return <CurrencyCell value={value as number} onChange={onChange} />;
+      return <CurrencyCell value={value as number} onChange={onChange} compact={compact} />;
 
     case PropertyType.CHECKBOX:
       return <CheckboxCell value={value as boolean} onChange={onChange} />;
 
     case PropertyType.PERSON:
-      return <PersonCell value={value as string} onChange={onChange} />;
+      return <PersonCell value={value as string} onChange={onChange} compact={compact} />;
 
     default:
-      return <TextCell value={value as string} onChange={onChange} />;
+      return <TextCell value={value as string} onChange={onChange} compact={compact} />;
   }
 }
 
@@ -72,16 +75,21 @@ export function PropertyCell({ property, value, onChange }: PropertyCellProps) {
 function TextCell({
   value,
   onChange,
+  compact = false,
 }: {
   value: string;
   onChange: (v: string) => void;
+  compact?: boolean;
 }) {
   return (
     <input
       type="text"
       value={value || ""}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full bg-transparent border-none outline-none py-1.5 px-0 text-sm focus:ring-0"
+      className={cn(
+        "w-full bg-transparent border-none outline-none text-sm focus:ring-0",
+        compact ? "py-1 px-0" : "py-1.5 px-0"
+      )}
       placeholder="—"
     />
   );
@@ -94,16 +102,21 @@ function TextCell({
 function NumberCell({
   value,
   onChange,
+  compact = false,
 }: {
   value: number;
   onChange: (v: number) => void;
+  compact?: boolean;
 }) {
   return (
     <input
       type="number"
       value={value ?? ""}
       onChange={(e) => onChange(e.target.value ? Number(e.target.value) : 0)}
-      className="w-full bg-transparent border-none outline-none py-1.5 px-0 text-sm focus:ring-0"
+      className={cn(
+        "w-full bg-transparent border-none outline-none text-sm focus:ring-0",
+        compact ? "py-1 px-0" : "py-1.5 px-0"
+      )}
       placeholder="—"
     />
   );
@@ -116,9 +129,11 @@ function NumberCell({
 function CurrencyCell({
   value,
   onChange,
+  compact = false,
 }: {
   value: number;
   onChange: (v: number) => void;
+  compact?: boolean;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -149,7 +164,10 @@ function CurrencyCell({
         onChange={(e) => setInputValue(e.target.value)}
         onBlur={handleBlur}
         autoFocus
-        className="w-full bg-transparent border-none outline-none py-1.5 px-0 text-sm focus:ring-0"
+        className={cn(
+          "w-full bg-transparent border-none outline-none text-sm focus:ring-0",
+          compact ? "py-1 px-0" : "py-1.5 px-0"
+        )}
       />
     );
   }
@@ -157,7 +175,7 @@ function CurrencyCell({
   return (
     <div
       onClick={handleFocus}
-      className="py-1.5 text-sm cursor-text min-h-[32px]"
+      className={cn("text-sm cursor-text", compact ? "py-1 min-h-[28px]" : "py-1.5 min-h-[32px]")}
     >
       {value ? `${formatCurrency(value)} ₫` : <span className="text-muted-foreground">—</span>}
     </div>
@@ -171,9 +189,11 @@ function CurrencyCell({
 function DateCell({
   value,
   onChange,
+  compact = false,
 }: {
   value: string;
   onChange: (v: string) => void;
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const date = value ? new Date(value) : undefined;
@@ -183,7 +203,8 @@ function DateCell({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "flex items-center gap-1.5 py-1.5 text-sm text-left w-full",
+            "flex items-center gap-1.5 text-sm text-left w-full",
+            compact ? "py-1" : "py-1.5",
             !date && "text-muted-foreground"
           )}
         >
@@ -223,10 +244,12 @@ function SelectCell({
   value,
   options,
   onChange,
+  compact = false,
 }: {
   value: string;
   options: SelectOption[];
   onChange: (v: string) => void;
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const selectedOption = options.find((o) => o.id === value);
@@ -234,11 +257,14 @@ function SelectCell({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="flex items-center gap-1 py-1 text-sm text-left w-full min-h-[32px]">
+        <button className={cn(
+          "flex items-center gap-1 text-sm text-left w-full",
+          compact ? "py-0.5 min-h-[28px]" : "py-1 min-h-[32px]"
+        )}>
           {selectedOption ? (
             <Badge
               variant="secondary"
-              className={cn("font-normal", selectedOption.color)}
+              className={cn("font-normal text-xs", selectedOption.color)}
             >
               {selectedOption.label}
             </Badge>
@@ -300,10 +326,12 @@ function MultiSelectCell({
   value,
   options,
   onChange,
+  compact = false,
 }: {
   value: string[];
   options: SelectOption[];
   onChange: (v: string[]) => void;
+  compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const selectedOptions = options.filter((o) => value.includes(o.id));
@@ -319,7 +347,10 @@ function MultiSelectCell({
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <button className="flex items-center gap-1 py-1 text-sm text-left w-full min-h-[32px] flex-wrap">
+        <button className={cn(
+          "flex items-center gap-1 text-sm text-left w-full flex-wrap",
+          compact ? "py-0.5 min-h-[28px]" : "py-1 min-h-[32px]"
+        )}>
           {selectedOptions.length > 0 ? (
             selectedOptions.map((option) => (
               <Badge
@@ -400,9 +431,11 @@ function CheckboxCell({
 function PersonCell({
   value,
   onChange,
+  compact = false,
 }: {
   value: string;
   onChange: (v: string) => void;
+  compact?: boolean;
 }) {
   // TODO: Implement person picker with user list
   return (
@@ -410,7 +443,10 @@ function PersonCell({
       type="text"
       value={value || ""}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full bg-transparent border-none outline-none py-1.5 px-0 text-sm focus:ring-0"
+      className={cn(
+        "w-full bg-transparent border-none outline-none text-sm focus:ring-0",
+        compact ? "py-1 px-0" : "py-1.5 px-0"
+      )}
       placeholder="—"
     />
   );
