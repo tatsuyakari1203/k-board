@@ -29,8 +29,9 @@ export function BoardHeader({
   const [title, setTitle] = useState(board.name);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Sync title when board.name changes
   useEffect(() => {
-    setTitle(board.name);
+    setTitle(board.name); // eslint-disable-line react-hooks/set-state-in-effect
   }, [board.name]);
 
   useEffect(() => {
@@ -60,22 +61,22 @@ export function BoardHeader({
   };
 
   return (
-    <header className="flex-shrink-0 border-b bg-background">
+    <header className="flex-shrink-0 bg-background">
       {/* Top bar */}
-      <div className="flex items-center h-11 px-3 gap-2 text-sm">
+      <div className="flex items-center h-10 px-4 gap-2 text-sm border-b border-border/40">
         <Link
           href="/dashboard/boards"
-          className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors text-xs"
         >
-          <ChevronLeft className="h-4 w-4" />
+          <ChevronLeft className="h-3.5 w-3.5" />
           <span>Boards</span>
         </Link>
       </div>
 
       {/* Title */}
-      <div className="px-6 py-4">
-        <div className="flex items-center gap-3">
-          <span className="text-3xl">{board.icon || "📋"}</span>
+      <div className="px-4 py-6">
+        <div className="flex items-center gap-2">
+          <span className="text-2xl">{board.icon || "📋"}</span>
           {isEditingTitle ? (
             <input
               ref={inputRef}
@@ -84,13 +85,13 @@ export function BoardHeader({
               onChange={(e) => setTitle(e.target.value)}
               onBlur={handleTitleSubmit}
               onKeyDown={handleKeyDown}
-              className="text-2xl font-semibold bg-transparent border-none outline-none focus:ring-0 w-full"
+              className="text-xl font-medium bg-transparent border-none outline-none focus:ring-0 w-full"
               placeholder="Untitled"
             />
           ) : (
             <h1
               onClick={() => setIsEditingTitle(true)}
-              className="text-2xl font-semibold cursor-text hover:bg-accent/50 px-1 -mx-1 rounded transition-colors"
+              className="text-xl font-medium cursor-text hover:bg-accent/40 px-1 -mx-1 rounded transition-colors"
             >
               {board.name}
             </h1>
@@ -98,22 +99,22 @@ export function BoardHeader({
         </div>
       </div>
 
-      {/* View tabs - Notion style */}
-      <div className="flex items-center gap-1 px-6 border-t">
+      {/* View tabs */}
+      <div className="flex items-center gap-0.5 px-4">
         {views.map((view) => (
           <button
             key={view.id}
             onClick={() => onViewChange(view.id)}
-            className={`flex items-center gap-1.5 px-3 py-2 text-sm transition-colors border-b-2 -mb-px ${
+            className={`flex items-center gap-1 px-2 py-1.5 text-xs transition-colors border-b-2 -mb-px ${
               activeView?.id === view.id
                 ? "border-foreground text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
             {view.type === ViewType.TABLE ? (
-              <Table2 className="h-4 w-4" />
+              <Table2 className="h-3.5 w-3.5" />
             ) : (
-              <Kanban className="h-4 w-4" />
+              <Kanban className="h-3.5 w-3.5" />
             )}
             <span>{view.name}</span>
           </button>

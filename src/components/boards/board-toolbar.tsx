@@ -55,7 +55,8 @@ export function BoardToolbar({
   searchQuery,
   onSearchChange,
   onAddPropertyClick,
-  onRemoveProperty: _onRemoveProperty,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  onRemoveProperty,
   onAddFilter,
   onRemoveFilter,
   onClearFilters,
@@ -72,9 +73,9 @@ export function BoardToolbar({
   );
 
   return (
-    <div className="flex flex-col gap-2 px-4 py-2 border-b md:px-6">
+    <div className="flex flex-col gap-1.5 px-4 py-1.5 border-b border-border/40">
       {/* Main toolbar row */}
-      <div className="flex items-center gap-1 flex-wrap">
+      <div className="flex items-center gap-0.5 flex-wrap">
         {/* Filter button */}
         <FilterPopover
           properties={properties}
@@ -87,13 +88,13 @@ export function BoardToolbar({
             asChild
             variant="ghost"
             size="sm"
-            className={`h-7 text-xs gap-1.5 ${filters.length > 0 ? "text-primary" : ""}`}
+            className={`h-6 text-xs gap-1 px-2 ${filters.length > 0 ? "text-foreground" : "text-muted-foreground"}`}
           >
             <div role="button" tabIndex={0}>
-              <Filter className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Lọc</span>
+              <Filter className="h-3 w-3" />
+              <span className="hidden sm:inline">Filter</span>
               {filters.length > 0 && (
-                <span className="bg-primary/20 text-primary px-1.5 rounded-full text-xs">
+                <span className="bg-muted text-foreground px-1 rounded text-[10px]">
                   {filters.length}
                 </span>
               )}
@@ -113,13 +114,13 @@ export function BoardToolbar({
             asChild
             variant="ghost"
             size="sm"
-            className={`h-7 text-xs gap-1.5 ${sorts.length > 0 ? "text-primary" : ""}`}
+            className={`h-6 text-xs gap-1 px-2 ${sorts.length > 0 ? "text-foreground" : "text-muted-foreground"}`}
           >
             <div role="button" tabIndex={0}>
-              <ArrowUpDown className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Sắp xếp</span>
+              <ArrowUpDown className="h-3 w-3" />
+              <span className="hidden sm:inline">Sort</span>
               {sorts.length > 0 && (
-                <span className="bg-primary/20 text-primary px-1.5 rounded-full text-xs">
+                <span className="bg-muted text-foreground px-1 rounded text-[10px]">
                   {sorts.length}
                 </span>
               )}
@@ -134,22 +135,22 @@ export function BoardToolbar({
               asChild
               variant="ghost"
               size="sm"
-              className={`h-7 text-xs gap-1.5 ${groupBy ? "text-primary" : ""}`}
+              className={`h-6 text-xs gap-1 px-2 ${groupBy ? "text-foreground" : "text-muted-foreground"}`}
             >
               <div role="button" tabIndex={0}>
-                <Layers className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Nhóm</span>
+                <Layers className="h-3 w-3" />
+                <span className="hidden sm:inline">Group</span>
                 {groupBy && (
-                  <span className="bg-primary/20 text-primary px-1.5 rounded-full text-xs">
+                  <span className="bg-muted text-foreground px-1 rounded text-[10px]">
                     1
                   </span>
                 )}
               </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
-            <DropdownMenuItem onClick={() => onGroupByChange(undefined)}>
-              Không nhóm
+          <DropdownMenuContent align="start" className="w-48">
+            <DropdownMenuItem onClick={() => onGroupByChange(undefined)} className="text-xs">
+              No grouping
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {groupableProperties.map((prop) => (
@@ -157,13 +158,14 @@ export function BoardToolbar({
                 key={prop.id}
                 checked={groupBy === prop.id}
                 onCheckedChange={(checked) => onGroupByChange(checked ? prop.id : undefined)}
+                className="text-xs"
               >
                 {prop.name}
               </DropdownMenuCheckboxItem>
             ))}
             {groupableProperties.length === 0 && (
-              <div className="p-2 text-xs text-muted-foreground text-center">
-                Không có thuộc tính để nhóm
+              <div className="p-2 text-[10px] text-muted-foreground text-center">
+                No groupable properties
               </div>
             )}
           </DropdownMenuContent>
@@ -176,28 +178,30 @@ export function BoardToolbar({
               asChild
               variant="ghost"
               size="sm"
-              className="h-7 text-xs gap-1.5"
+              className="h-6 text-xs gap-1 px-2 text-muted-foreground"
             >
               <div role="button" tabIndex={0}>
-                <Eye className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Hiển thị</span>
+                <Eye className="h-3 w-3" />
+                <span className="hidden sm:inline">Properties</span>
               </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56 max-h-[300px] overflow-y-auto">
-            <DropdownMenuLabel>Hiển thị cột</DropdownMenuLabel>
+          <DropdownMenuContent align="start" className="w-48 max-h-[280px] overflow-y-auto">
+            <DropdownMenuLabel className="text-xs">Show columns</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuCheckboxItem
                 checked={!visibleProperties || visibleProperties.includes("title")}
                 onCheckedChange={() => onToggleColumnVisibility("title")}
+                className="text-xs"
             >
-                Tiêu đề
+                Title
             </DropdownMenuCheckboxItem>
             {properties.map((prop) => (
               <DropdownMenuCheckboxItem
                 key={prop.id}
                 checked={!visibleProperties || visibleProperties.includes(prop.id)}
                 onCheckedChange={() => onToggleColumnVisibility(prop.id)}
+                className="text-xs"
               >
                 {prop.name}
               </DropdownMenuCheckboxItem>
@@ -209,28 +213,28 @@ export function BoardToolbar({
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 text-xs gap-1.5 md:hidden"
+          className="h-6 text-xs gap-1 px-2 text-muted-foreground md:hidden"
           onClick={() => setShowSearch(!showSearch)}
         >
-          <Search className="h-3.5 w-3.5" />
+          <Search className="h-3 w-3" />
         </Button>
 
         {/* Search input - desktop */}
         <div className="hidden md:flex items-center relative ml-auto">
-          <Search className="absolute left-2 h-3.5 w-3.5 text-muted-foreground" />
+          <Search className="absolute left-1.5 h-3 w-3 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Tìm kiếm..."
+            placeholder="Search..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="h-7 w-48 pl-7 text-xs"
+            className="h-6 w-40 pl-6 text-xs border-0 bg-muted/50 focus-visible:ring-0"
           />
           {searchQuery && (
             <button
               onClick={() => onSearchChange("")}
-              className="absolute right-2 text-muted-foreground hover:text-foreground"
+              className="absolute right-1.5 text-muted-foreground hover:text-foreground"
             >
-              <X className="h-3 w-3" />
+              <X className="h-2.5 w-2.5" />
             </button>
           )}
         </div>
@@ -241,28 +245,28 @@ export function BoardToolbar({
         <Button
           variant="ghost"
           size="sm"
-          className="h-7 text-xs gap-1.5"
+          className="h-6 text-xs gap-1 px-2 text-muted-foreground"
           onClick={onAddPropertyClick}
         >
-          <Plus className="h-3.5 w-3.5" />
-          <span className="hidden sm:inline">Thêm cột</span>
+          <Plus className="h-3 w-3" />
+          <span className="hidden sm:inline">New column</span>
         </Button>
 
         {/* More options */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button asChild variant="ghost" size="sm" className="h-7 w-7 p-0">
+            <Button asChild variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground">
               <div role="button" tabIndex={0}>
-                <MoreHorizontal className="h-3.5 w-3.5" />
+                <MoreHorizontal className="h-3 w-3" />
               </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onClearFilters} disabled={filters.length === 0}>
-              Xóa tất cả bộ lọc
+            <DropdownMenuItem onClick={onClearFilters} disabled={filters.length === 0} className="text-xs">
+              Clear all filters
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onClearSorts} disabled={sorts.length === 0}>
-              Xóa sắp xếp
+            <DropdownMenuItem onClick={onClearSorts} disabled={sorts.length === 0} className="text-xs">
+              Clear sorting
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -271,13 +275,13 @@ export function BoardToolbar({
       {/* Mobile search row */}
       {showSearch && (
         <div className="flex items-center relative md:hidden">
-          <Search className="absolute left-2 h-3.5 w-3.5 text-muted-foreground" />
+          <Search className="absolute left-2 h-3 w-3 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Tìm kiếm..."
+            placeholder="Search..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="h-8 pl-7 text-sm w-full"
+            className="h-7 pl-6 text-xs w-full"
             autoFocus
           />
           {searchQuery && (
@@ -285,7 +289,7 @@ export function BoardToolbar({
               onClick={() => onSearchChange("")}
               className="absolute right-2 text-muted-foreground hover:text-foreground"
             >
-              <X className="h-3.5 w-3.5" />
+              <X className="h-3 w-3" />
             </button>
           )}
         </div>
@@ -293,13 +297,13 @@ export function BoardToolbar({
 
       {/* Active filters display */}
       {(filters.length > 0 || sorts.length > 0) && (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1">
           {filters.map((filter, index) => {
             const prop = properties.find((p) => p.id === filter.propertyId);
             return (
               <span
                 key={`filter-${index}`}
-                className="inline-flex items-center gap-1 px-2 py-0.5 bg-accent text-xs rounded-full"
+                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-muted text-[10px] rounded"
               >
                 <span className="text-muted-foreground">{prop?.name}:</span>
                 <span>{String(filter.value)}</span>
@@ -307,7 +311,7 @@ export function BoardToolbar({
                   onClick={() => onRemoveFilter(index)}
                   className="text-muted-foreground hover:text-foreground ml-0.5"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-2.5 w-2.5" />
                 </button>
               </span>
             );
@@ -317,9 +321,9 @@ export function BoardToolbar({
             return (
               <span
                 key={`sort-${index}`}
-                className="inline-flex items-center gap-1 px-2 py-0.5 bg-accent text-xs rounded-full"
+                className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-muted text-[10px] rounded"
               >
-                <ArrowUpDown className="h-3 w-3" />
+                <ArrowUpDown className="h-2.5 w-2.5" />
                 <span>{prop?.name}</span>
                 <span className="text-muted-foreground">
                   {sort.direction === "asc" ? "↑" : "↓"}
@@ -328,7 +332,7 @@ export function BoardToolbar({
                   onClick={() => onRemoveSort(index)}
                   className="text-muted-foreground hover:text-foreground ml-0.5"
                 >
-                  <X className="h-3 w-3" />
+                  <X className="h-2.5 w-2.5" />
                 </button>
               </span>
             );

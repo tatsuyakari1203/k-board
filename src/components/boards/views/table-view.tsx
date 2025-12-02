@@ -29,7 +29,6 @@ import {
   DragEndEvent,
 } from "@dnd-kit/core";
 import {
-  arrayMove,
   SortableContext,
   sortableKeyboardCoordinates,
   horizontalListSortingStrategy,
@@ -84,7 +83,7 @@ function getDateValue(value: unknown): string | null {
   if (!value) return null;
   if (typeof value === 'string') return value;
   if (typeof value === 'object' && value !== null && 'from' in value) {
-    return (value as any).from;
+    return (value as Record<string, unknown>).from as string;
   }
   return String(value);
 }
@@ -249,11 +248,11 @@ function SortableHeader({
     <th
       ref={setNodeRef}
       style={style}
-      className="text-left font-medium text-muted-foreground py-2 px-3 bg-background relative group/header"
+      className="text-left font-normal text-muted-foreground h-8 px-2 border-b border-r border-border/50 relative group/header select-none bg-transparent"
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between h-full">
         <div
-          className="flex-1 flex items-center min-w-0 cursor-grab active:cursor-grabbing mr-1"
+          className="flex-1 flex items-center min-w-0 cursor-grab active:cursor-grabbing mr-1 h-full"
           {...attributes}
           {...listeners}
         >
@@ -264,21 +263,21 @@ function SortableHeader({
               onChange={(e) => setEditValue(e.target.value)}
               onBlur={handleRenameSubmit}
               onKeyDown={handleKeyDown}
-              className="w-full bg-background border rounded px-1 py-0.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+              className="w-full bg-transparent border-none px-0 py-0.5 text-xs focus:outline-none focus:ring-0"
               autoFocus
               onClick={(e) => e.stopPropagation()}
               onMouseDown={(e) => e.stopPropagation()}
               onPointerDown={(e) => e.stopPropagation()}
             />
           ) : (
-            <span className="truncate select-none">{property.name}</span>
+            <span className="truncate text-xs font-medium text-muted-foreground">{property.name}</span>
           )}
         </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="opacity-0 group-hover/header:opacity-100 p-0.5 hover:bg-accent rounded transition-opacity shrink-0">
-              <MoreHorizontal className="h-3.5 w-3.5" />
+            <button className="opacity-0 group-hover/header:opacity-100 p-0.5 hover:bg-accent/50 rounded transition-opacity shrink-0">
+              <MoreHorizontal className="h-3 w-3" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
@@ -312,14 +311,47 @@ function SortableHeader({
       {/* Resize handle */}
       <div
         onMouseDown={(e) => {
-          e.stopPropagation(); // Prevent drag start
+          e.stopPropagation();
           onResize(e, property.id);
         }}
-        className="absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/50 transition-colors"
+        className="absolute right-0 top-0 bottom-0 w-0.5 cursor-col-resize hover:bg-primary/30 transition-colors"
       />
     </th>
   );
 }
+// Title Cell Component
+function TitleCell({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
+    }
+  }, [value]);
+
+  return (
+    <textarea
+      ref={textareaRef}
+      value={value}
+      onChange={(e) => {
+        onChange(e.target.value);
+        e.target.style.height = "auto";
+        e.target.style.height = e.target.scrollHeight + "px";
+      }}
+      rows={1}
+      className="w-full bg-transparent border-none outline-none focus:ring-0 font-normal text-sm resize-none overflow-hidden"
+      placeholder="Untitled"
+    />
+  );
+}
+
 // Sortable Row Component
 function SortableRow({
   task,
@@ -344,7 +376,7 @@ function SortableRow({
   onUpdateTask: (id: string, updates: Partial<TaskData>) => void;
   onDeleteTask: (id: string) => void;
   users?: UserOption[];
-  onAddPropertyOption?: (id: string, option: any) => void;
+  onAddPropertyOption?: (id: string, option: { id: string; label: string; color?: string }) => void;
   isDragEnabled: boolean;
   isSelected: boolean;
   onToggleSelect: (id: string) => void;
@@ -375,10 +407,10 @@ function SortableRow({
     <tr
       ref={setNodeRef}
       style={style}
-      className={`border-b hover:bg-accent/30 transition-colors group ${isSelected ? "bg-accent/40" : ""}`}
+      className={`group ${isSelected ? "bg-blue-50/50 dark:bg-blue-900/10" : "hover:bg-accent/40"}`}
       onMouseEnter={() => onFillMove(visualIndex)}
     >
-      <td className="w-8 text-center border-r p-0 bg-background sticky left-0 z-20">
+      <td className="w-8 text-center border-b border-border/40 p-0 bg-background sticky left-0 z-20 group-hover:bg-accent/40 transition-colors">
         <div className="flex items-center justify-center h-full w-full">
             <input
                 type="checkbox"
@@ -387,29 +419,26 @@ function SortableRow({
                     e.stopPropagation();
                     onToggleSelect(task._id);
                 }}
-                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                className="h-3.5 w-3.5 rounded-sm border-muted-foreground/30 text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer"
             />
         </div>
       </td>
-      <td className="w-8 text-center sticky left-8 z-20 bg-background border-r">
+      <td className="w-6 text-center sticky left-8 z-20 bg-background border-b border-border/40 group-hover:bg-accent/40 transition-colors">
         {isDragEnabled && (
           <button
             {...attributes}
             {...listeners}
-            className="opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing p-1 text-muted-foreground hover:text-foreground transition-opacity"
+            className="opacity-0 group-hover:opacity-100 cursor-grab active:cursor-grabbing p-0.5 text-muted-foreground/50 hover:text-muted-foreground transition-opacity w-full h-full flex items-center justify-center"
           >
-            <GripVertical className="h-4 w-4" />
+            <GripVertical className="h-3 w-3" />
           </button>
         )}
       </td>
       {isTitleVisible && (
-        <td className="py-1 px-3 sticky left-16 bg-background border-r z-20 group-hover:bg-accent/30">
-          <input
-            type="text"
+        <td className="px-2 sticky left-[56px] bg-background border-b border-border/40 z-20 group-hover:bg-accent/40 transition-colors min-h-8 h-auto align-top py-1.5">
+          <TitleCell
             value={task.title}
-            onChange={(e) => onUpdateTask(task._id, { title: e.target.value })}
-            className="w-full bg-transparent border-none outline-none py-1.5 px-0 focus:ring-0"
-            placeholder="Untitled"
+            onChange={(val) => onUpdateTask(task._id, { title: val })}
           />
         </td>
       )}
@@ -424,8 +453,8 @@ function SortableRow({
           <td
             key={property.id}
             className={cn(
-              "py-1 px-3 relative group/cell border-r border-transparent hover:border-border",
-              isInFillRange && "bg-primary/10 ring-1 ring-primary inset-0"
+              "relative group/cell border-b border-border/40 min-h-8 h-auto p-0 align-top",
+              isInFillRange && "bg-blue-50/50 dark:bg-blue-900/20"
             )}
             style={{ width: columnWidths[property.id] || 150, minWidth: 80 }}
           >
@@ -439,24 +468,25 @@ function SortableRow({
               }
               onAddOption={onAddPropertyOption}
               users={users}
+              className="min-h-8 w-full px-2 flex items-center py-1"
             />
             {/* Fill Handle */}
             <div
-              className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-primary rounded-tl-sm cursor-crosshair opacity-0 group-hover/cell:opacity-100 transition-opacity z-20"
+              className="absolute bottom-0 right-0 w-2 h-2 bg-primary/60 cursor-crosshair opacity-0 group-hover/cell:opacity-100 transition-opacity z-20"
               onMouseDown={(e) => {
-                e.stopPropagation(); // Prevent row drag
+                e.stopPropagation();
                 onFillStart(e, task._id, property.id, taskProps[property.id], visualIndex);
               }}
             />
           </td>
         );
       })}
-      <td className="w-10 text-center">
+      <td className="w-8 text-center border-b border-border/40">
         <button
           onClick={() => onDeleteTask(task._id)}
-          className="opacity-0 group-hover:opacity-100 p-1 text-muted-foreground hover:text-destructive transition-opacity"
+          className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground/50 hover:text-destructive transition-opacity"
         >
-          <Trash2 className="h-4 w-4" />
+          <Trash2 className="h-3.5 w-3.5" />
         </button>
       </td>
     </tr>
@@ -481,15 +511,15 @@ function GroupHeader({
 }) {
   return (
     <tr>
-      <td colSpan={colSpan} className="bg-muted/30 border-b py-1.5 px-2">
+      <td colSpan={colSpan} className="border-b border-border/40 px-2 h-8 sticky left-0 z-10 bg-background">
         <button
           onClick={onToggle}
-          className="flex items-center gap-2 hover:bg-muted/50 rounded px-1 py-0.5 transition-colors text-left"
+          className="flex items-center gap-1.5 hover:bg-accent/50 rounded px-1 py-0.5 transition-colors text-left"
         >
-          {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
           {color && <div className={`w-2 h-2 rounded-full ${color.split(" ")[0].replace("text-", "bg-")}`} />}
-          <span className="font-medium text-sm">{title}</span>
-          <span className="text-xs text-muted-foreground ml-1">{count}</span>
+          <span className="font-medium text-xs">{title}</span>
+          <span className="text-xs text-muted-foreground">{count}</span>
         </button>
       </td>
     </tr>
@@ -524,20 +554,6 @@ export function TableView({
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
   const [fillRange, setFillRange] = useState<{ start: number; end: number; propertyId: string; value: unknown } | null>(null);
 
-  const AGGREGATION_LABELS: Record<string, string> = {
-    [AggregationType.COUNT]: "Đếm tất cả",
-    [AggregationType.COUNT_EMPTY]: "Đếm trống",
-    [AggregationType.COUNT_NOT_EMPTY]: "Đếm có dữ liệu",
-    [AggregationType.PERCENT_EMPTY]: "% Trống",
-    [AggregationType.PERCENT_NOT_EMPTY]: "% Có dữ liệu",
-    [AggregationType.SUM]: "Tổng",
-    [AggregationType.AVERAGE]: "Trung bình",
-    [AggregationType.MEDIAN]: "Trung vị",
-    [AggregationType.MIN]: "Nhỏ nhất",
-    [AggregationType.MAX]: "Lớn nhất",
-    [AggregationType.RANGE]: "Khoảng",
-  };
-
   // Dnd Sensors
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -556,7 +572,7 @@ export function TableView({
     board.properties.forEach((p) => {
       widths[p.id] = p.width || 150;
     });
-    setColumnWidths(widths);
+    setColumnWidths(widths); // eslint-disable-line react-hooks/set-state-in-effect
   }, [board.properties]);
 
   // Column resize handlers
@@ -749,32 +765,20 @@ export function TableView({
   }, [groupedTasks, processedTasks, expandedGroups]);
 
   // Fill Handle Logic
-  const handleFillStart = (e: React.MouseEvent, taskId: string, propertyId: string, value: unknown, index: number) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const handleFillStart = (_e: React.MouseEvent, _taskId: string, propertyId: string, value: unknown, index: number) => {
     setFillRange({ start: index, end: index, propertyId, value });
 
     const handleMouseUp = () => {
       setFillRange(prev => {
         if (prev && prev.start !== prev.end) {
-          // Apply changes
-          const start = Math.min(prev.start, prev.end);
-          const end = Math.max(prev.start, prev.end);
-
-          // We need to find the tasks in this range
-          // Since visualTasks is derived from state, we can use it
-          // BUT we need to be careful about stale closures if we use visualTasks directly here?
-          // Actually, setFillRange callback gives us the range.
-          // We need the tasks.
-          // Let's trigger an effect or just use the ref to tasks?
-          // Or just dispatch the updates here if we have access to tasks.
-          // We don't have access to the latest visualTasks inside this closure unless we use a ref or similar.
-          // However, since we are adding the listener on mousedown, the closure captures the current render scope.
-          // If visualTasks changes during drag (unlikely unless real-time update), it might be an issue.
-          // For now, let's assume visualTasks is stable enough during a drag.
+          // Apply changes - unused for now
+          // const _start = Math.min(prev.start, prev.end);
+          // const _end = Math.max(prev.start, prev.end);
         }
         return null;
       });
       document.removeEventListener("mouseup", handleMouseUp);
-      // document.removeEventListener("mousemove", handleMouseMove); // We use onMouseEnter on rows instead
     };
 
     document.addEventListener("mouseup", handleMouseUp);
@@ -873,11 +877,11 @@ export function TableView({
   // Initialize expanded state for new groups
   useEffect(() => {
     if (groupedTasks) {
-      setExpandedGroups(prev => {
+      setExpandedGroups(prev => { // eslint-disable-line react-hooks/set-state-in-effect
         const next = { ...prev };
         groupedTasks.forEach(g => {
           if (next[g.id] === undefined) {
-            next[g.id] = true; // Default expanded
+            next[g.id] = true;
           }
         });
         return next;
@@ -919,7 +923,8 @@ export function TableView({
     if (active.id === over.id) return;
 
     const activeData = active.data.current;
-    const overData = over.data.current;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const _overData = over.data.current;
 
     if (activeData?.type === "COLUMN" && onReorderProperties) {
       const oldIndex = sortedProperties.findIndex((p) => p.id === active.id);
@@ -949,22 +954,22 @@ export function TableView({
         {/* Desktop Table View */}
         <div className="hidden md:block overflow-x-auto flex-1">
           <table className="w-full border-collapse text-sm min-w-max">
-            <thead className="sticky top-0 bg-background z-10">
-              <tr className="border-b">
-                <th className="w-8 bg-background border-r p-0 sticky left-0 z-30">
+            <thead className="sticky top-0 bg-background z-30">
+              <tr>
+                <th className="w-8 border-b border-border/50 p-0 sticky left-0 z-40 bg-background">
                     <div className="flex items-center justify-center h-full w-full">
                         <input
                             type="checkbox"
                             checked={processedTasks.length > 0 && selectedTaskIds.size === processedTasks.length}
                             onChange={handleSelectAll}
-                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                            className="h-3.5 w-3.5 rounded-sm border-muted-foreground/30 text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer"
                         />
                     </div>
                 </th>
-                <th className="w-8 bg-background sticky left-8 z-30 border-r" />
+                <th className="w-6 sticky left-8 z-40 border-b border-border/50 bg-background" />
                 {isTitleVisible && (
-                  <th className="text-left font-medium text-muted-foreground py-2 px-3 min-w-[200px] bg-background sticky left-16 z-30 border-r">
-                    Tiêu đề
+                  <th className="text-left font-normal text-muted-foreground px-2 min-w-[200px] sticky left-[56px] z-40 border-b border-r border-border/50 h-8 bg-background">
+                    <span className="text-xs font-medium">Title</span>
                   </th>
                 )}
                 <SortableContext
@@ -984,7 +989,7 @@ export function TableView({
                     />
                   ))}
                 </SortableContext>
-                <th className="w-10 bg-background" />
+                <th className="w-8 border-b border-border/50 bg-background" />
               </tr>
             </thead>
 
@@ -1078,44 +1083,44 @@ export function TableView({
                 </SortableContext>
               )}
 
-              <tr className="border-b">
-                <td className="w-8 border-r bg-background sticky left-0 z-20" />
-                <td className="w-8 border-r bg-background sticky left-8 z-20" />
-                {isTitleVisible ? (
-                  <>
-                    <td className="py-1 px-3 sticky left-16 z-20 bg-background border-r">
-                      <button
-                        onClick={startAddingTask}
-                        className="flex items-center gap-1.5 py-1.5 text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        <Plus className="h-4 w-4" />
-                        <span>Thêm mới</span>
-                      </button>
-                    </td>
-                    <td colSpan={visibleProperties.length} className="bg-background" />
-                  </>
-                ) : (
-                  <td colSpan={visibleProperties.length} className="py-1 px-3">
+              <tr>
+                <td className="w-8 border-b border-border/40 bg-background sticky left-0 z-20 h-8" />
+                <td className="w-6 border-b border-border/40 bg-background sticky left-8 z-20 h-8" />
+                {isTitleVisible && (
+                  <td className="px-2 sticky left-[56px] z-20 bg-background border-b border-border/40 h-8 hover:bg-accent/40 transition-colors cursor-pointer" onClick={startAddingTask}>
                     <button
-                      onClick={startAddingTask}
-                      className="flex items-center gap-1.5 py-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                      className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors w-full h-full text-xs"
                     >
-                      <Plus className="h-4 w-4" />
-                      <span>Thêm mới</span>
+                      <Plus className="h-3.5 w-3.5" />
+                      <span>New</span>
                     </button>
                   </td>
                 )}
+                {visibleProperties.map((p, index) => (
+                  <td key={p.id} className="border-b border-border/40 h-8">
+                    {!isTitleVisible && index === 0 && (
+                       <button
+                        onClick={startAddingTask}
+                        className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors w-full h-full text-xs px-2"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        <span>New</span>
+                      </button>
+                    )}
+                  </td>
+                ))}
+                <td className="w-8 border-b border-border/40" />
               </tr>
             </tbody>
-            <tfoot className="sticky bottom-0 bg-background z-10 border-t shadow-sm">
+            <tfoot className="sticky bottom-0 bg-background z-30">
               <tr>
-                <td className="w-8 border-r sticky left-0 bg-background z-20" />
-                <td className="w-8 border-r sticky left-8 bg-background z-20" />
+                <td className="w-8 border-t border-border/50 sticky left-0 bg-background z-40 h-7" />
+                <td className="w-6 border-t border-border/50 sticky left-8 bg-background z-40 h-7" />
                 {isTitleVisible && (
-                  <td className="py-2 px-3 border-r font-medium text-muted-foreground text-right sticky left-16 bg-background z-20">
-                    <div className="flex items-center justify-end gap-2">
-                      <span className="text-xs uppercase">Đếm:</span>
-                      <span>{processedTasks.length}</span>
+                  <td className="px-2 border-t border-border/50 text-muted-foreground text-right sticky left-[56px] bg-background z-40 h-7">
+                    <div className="flex items-center justify-end gap-1.5 h-full">
+                      <span className="text-[10px] text-muted-foreground">Count</span>
+                      <span className="text-xs">{processedTasks.length}</span>
                     </div>
                   </td>
                 )}
@@ -1124,62 +1129,62 @@ export function TableView({
                   const value = aggregation ? calculateAggregation(processedTasks, property, aggregation.type) : null;
 
                   return (
-                    <td key={property.id} className="py-2 px-3 border-r">
+                    <td key={property.id} className="px-2 border-t border-border/50 h-7">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="w-full text-right text-xs text-muted-foreground hover:text-foreground truncate h-full min-h-[20px] flex items-center justify-end">
+                          <button className="w-full text-right text-[10px] text-muted-foreground hover:text-foreground truncate h-full flex items-center justify-end group/calc">
                             {aggregation ? (
-                              <span className="font-medium">
+                              <span className="text-xs">
                                 {value}
                               </span>
                             ) : (
-                              <span className="opacity-0 hover:opacity-50">Tính toán</span>
+                              <span className="opacity-0 group-hover/calc:opacity-40 transition-opacity">Calculate</span>
                             )}
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Tính toán</DropdownMenuLabel>
+                          <DropdownMenuLabel className="text-xs">Calculate</DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, null)}>
-                            Không
+                            None
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.COUNT)}>
-                            Đếm tất cả
+                            Count all
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.COUNT_EMPTY)}>
-                            Đếm trống
+                            Count empty
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.COUNT_NOT_EMPTY)}>
-                            Đếm có dữ liệu
+                            Count not empty
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.PERCENT_EMPTY)}>
-                            % Trống
+                            Percent empty
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.PERCENT_NOT_EMPTY)}>
-                            % Có dữ liệu
+                            Percent not empty
                           </DropdownMenuItem>
 
                           {(property.type === PropertyType.NUMBER || property.type === PropertyType.CURRENCY) && (
                             <>
                               <DropdownMenuSeparator />
                               <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.SUM)}>
-                                Tổng
+                                Sum
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.AVERAGE)}>
-                                Trung bình
+                                Average
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.MIN)}>
-                                Nhỏ nhất
+                                Min
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.MAX)}>
-                                Lớn nhất
+                                Max
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.MEDIAN)}>
-                                Trung vị
+                                Median
                               </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.RANGE)}>
-                                Khoảng
+                                Range
                               </DropdownMenuItem>
                             </>
                           )}
@@ -1188,55 +1193,55 @@ export function TableView({
                     </td>
                   );
                 })}
-                <td className="w-10" />
+                <td className="w-8 border-t border-border/50" />
               </tr>
             </tfoot>
           </table>
         </div>
 
-        {/* Mobile Card View - No Drag Drop for now */}
+        {/* Mobile Card View */}
         <div className="md:hidden flex-1 overflow-y-auto">
-          <div className="divide-y">
+          <div className="divide-y divide-border/40">
             {processedTasks.map((task) => (
-              <div key={task._id} className="p-4 space-y-3">
+              <div key={task._id} className="p-3 space-y-2">
                 <div className="flex items-start gap-2">
                   <input
                     type="checkbox"
                     checked={selectedTaskIds.has(task._id)}
                     onChange={() => handleToggleSelect(task._id)}
-                    className="mt-1.5 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                    className="mt-1 h-3.5 w-3.5 rounded-sm border-muted-foreground/30 text-primary focus:ring-0"
                   />
-                  <button className="cursor-grab p-1 text-muted-foreground hover:text-foreground mt-0.5">
-                    <GripVertical className="h-4 w-4" />
+                  <button className="cursor-grab p-0.5 text-muted-foreground/50 hover:text-muted-foreground mt-0.5">
+                    <GripVertical className="h-3.5 w-3.5" />
                   </button>
                   <input
                     type="text"
                     value={task.title}
                     onChange={(e) => onUpdateTask(task._id, { title: e.target.value })}
-                    className="flex-1 font-medium bg-transparent border-none outline-none focus:ring-0"
+                    className="flex-1 text-sm bg-transparent border-none outline-none focus:ring-0"
                     placeholder="Untitled"
                   />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="p-1 text-muted-foreground hover:text-foreground">
-                        <MoreHorizontal className="h-4 w-4" />
+                      <button className="p-0.5 text-muted-foreground/50 hover:text-muted-foreground">
+                        <MoreHorizontal className="h-3.5 w-3.5" />
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onDeleteTask(task._id)} className="text-destructive">
-                        <Trash2 className="h-4 w-4 mr-2" />
-                        Xóa
+                      <DropdownMenuItem onClick={() => onDeleteTask(task._id)} className="text-destructive text-xs">
+                        <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                        Delete
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 pl-7">
+                <div className="grid grid-cols-2 gap-1.5 pl-6">
                   {visibleProperties.slice(0, 6).map((property) => {
                     const taskProps = task.properties || {};
                     return (
-                      <div key={property.id} className="space-y-0.5">
-                        <label className="text-xs text-muted-foreground truncate block">
+                      <div key={property.id}>
+                        <label className="text-[10px] text-muted-foreground truncate block mb-0.5">
                           {property.name}
                         </label>
                         <PropertyCell
@@ -1257,21 +1262,21 @@ export function TableView({
                 </div>
 
                 {visibleProperties.length > 6 && (
-                  <button className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground pl-7">
-                    <span>+{visibleProperties.length - 6} thuộc tính khác</span>
-                    <ChevronRight className="h-3 w-3" />
+                  <button className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground pl-6">
+                    <span>+{visibleProperties.length - 6} more</span>
+                    <ChevronRight className="h-2.5 w-2.5" />
                   </button>
                 )}
               </div>
             ))}
 
-            <div className="p-4">
+            <div className="p-3">
               <button
                 onClick={startAddingTask}
-                className="flex items-center gap-2 py-2 text-muted-foreground hover:text-foreground transition-colors w-full"
+                className="flex items-center gap-1.5 py-1.5 text-muted-foreground hover:text-foreground transition-colors w-full text-xs"
               >
-                <Plus className="h-4 w-4" />
-                <span>Thêm mới</span>
+                <Plus className="h-3.5 w-3.5" />
+                <span>New</span>
               </button>
             </div>
           </div>
@@ -1279,22 +1284,22 @@ export function TableView({
 
         {/* Empty state */}
         {processedTasks.length === 0 && (
-          <div className="flex flex-col items-center justify-center py-16 text-center">
-            <p className="text-muted-foreground mb-2">
-              {filters.length > 0 || searchQuery ? "Không tìm thấy kết quả" : "Chưa có hồ sơ nào"}
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <p className="text-sm text-muted-foreground mb-1.5">
+              {filters.length > 0 || searchQuery ? "No results found" : "No records yet"}
             </p>
             {!filters.length && !searchQuery && (
-              <button onClick={startAddingTask} className="text-primary hover:underline">
-                Thêm hồ sơ đầu tiên
+              <button onClick={startAddingTask} className="text-xs text-muted-foreground hover:text-foreground">
+                Add first record
               </button>
             )}
           </div>
         )}
 
         {selectedTaskIds.size > 0 && (
-          <div className="fixed bottom-12 left-1/2 -translate-x-1/2 bg-foreground text-background px-4 py-2 rounded-full shadow-lg flex items-center gap-4 z-50">
-            <span className="text-sm font-medium">{selectedTaskIds.size} đã chọn</span>
-            <div className="h-4 w-[1px] bg-background/20" />
+          <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-foreground text-background px-3 py-1.5 rounded-md shadow-lg flex items-center gap-3 z-50">
+            <span className="text-xs">{selectedTaskIds.size} selected</span>
+            <div className="h-3 w-px bg-background/20" />
             <button
               onClick={() => {
                 if (onBulkDeleteTasks) {
@@ -1302,16 +1307,16 @@ export function TableView({
                   setSelectedTaskIds(new Set());
                 }
               }}
-              className="text-sm font-medium hover:text-red-400 flex items-center gap-2"
+              className="text-xs hover:text-red-400 flex items-center gap-1"
             >
-              <Trash2 className="h-4 w-4" />
-              Xóa
+              <Trash2 className="h-3 w-3" />
+              Delete
             </button>
             <button
                 onClick={() => setSelectedTaskIds(new Set())}
-                className="ml-2 p-1 hover:bg-background/20 rounded-full"
+                className="p-0.5 hover:bg-background/20 rounded"
             >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3" />
             </button>
           </div>
         )}

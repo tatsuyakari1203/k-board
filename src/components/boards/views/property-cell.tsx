@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { format, isValid, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { vi } from "date-fns/locale";
-import { Check, Plus, X, Paperclip, Upload, FileText, Image as ImageIcon, User as UserIcon, Clock, Calendar as CalendarIcon, ArrowRight } from "lucide-react";
+import { Check, Plus, X, Paperclip, Upload, FileText, Image as ImageIcon, Clock, Calendar as CalendarIcon, ArrowRight } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -59,18 +59,19 @@ interface PropertyCellProps {
   onAddOption?: (propertyId: string, option: SelectOption) => void;
   users?: UserOption[];
   compact?: boolean;
+  className?: string;
 }
 
-export function PropertyCell({ property, value, onChange, onAddOption, users = [], compact = false }: PropertyCellProps) {
+export function PropertyCell({ property, value, onChange, onAddOption, users = [], compact = false, className }: PropertyCellProps) {
   switch (property.type) {
     case PropertyType.TEXT:
-      return <TextCell value={value as string} onChange={onChange} compact={compact} />;
+      return <TextCell value={value as string} onChange={onChange} compact={compact} className={className} />;
 
     case PropertyType.NUMBER:
-      return <NumberCell value={value as number} onChange={onChange} compact={compact} />;
+      return <NumberCell value={value as number} onChange={onChange} compact={compact} className={className} />;
 
     case PropertyType.DATE:
-      return <DateCell value={value as string} onChange={onChange} compact={compact} />;
+      return <DateCell value={value as string} onChange={onChange} compact={compact} className={className} />;
 
     case PropertyType.SELECT:
     case PropertyType.STATUS:
@@ -81,6 +82,7 @@ export function PropertyCell({ property, value, onChange, onAddOption, users = [
           onChange={onChange}
           onAddOption={onAddOption ? (opt) => onAddOption(property.id, opt) : undefined}
           compact={compact}
+          className={className}
         />
       );
 
@@ -92,24 +94,25 @@ export function PropertyCell({ property, value, onChange, onAddOption, users = [
           onChange={onChange}
           onAddOption={onAddOption ? (opt) => onAddOption(property.id, opt) : undefined}
           compact={compact}
+          className={className}
         />
       );
 
     case PropertyType.CURRENCY:
-      return <CurrencyCell value={value as number} onChange={onChange} compact={compact} />;
+      return <CurrencyCell value={value as number} onChange={onChange} compact={compact} className={className} />;
 
     case PropertyType.CHECKBOX:
-      return <CheckboxCell value={value as boolean} onChange={onChange} />;
+      return <CheckboxCell value={value as boolean} onChange={onChange} className={className} />;
 
     case PropertyType.PERSON:
     case PropertyType.USER:
-      return <UserCell value={value as string} users={users} onChange={onChange} compact={compact} />;
+      return <UserCell value={value as string} users={users} onChange={onChange} compact={compact} className={className} />;
 
     case PropertyType.ATTACHMENT:
-      return <AttachmentCell value={(value as AttachmentFile[]) || []} onChange={onChange} compact={compact} />;
+      return <AttachmentCell value={(value as AttachmentFile[]) || []} onChange={onChange} compact={compact} className={className} />;
 
     default:
-      return <TextCell value={value as string} onChange={onChange} compact={compact} />;
+      return <TextCell value={value as string} onChange={onChange} compact={compact} className={className} />;
   }
 }
 
@@ -121,21 +124,39 @@ function TextCell({
   value,
   onChange,
   compact = false,
+  className,
 }: {
   value: string;
   onChange: (v: string) => void;
   compact?: boolean;
+  className?: string;
 }) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = textareaRef.current.scrollHeight + "px";
+    }
+  }, [value]);
+
   return (
-    <input
-      type="text"
+    <textarea
+      ref={textareaRef}
       value={value || ""}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={(e) => {
+        onChange(e.target.value);
+        e.target.style.height = "auto";
+        e.target.style.height = e.target.scrollHeight + "px";
+      }}
+      rows={1}
       className={cn(
-        "w-full bg-transparent border-none outline-none text-sm focus:ring-0",
-        compact ? "py-1 px-0" : "py-1.5 px-0"
+        "w-full bg-transparent border-none outline-none text-sm focus:ring-0 resize-none overflow-hidden placeholder:text-muted-foreground/40",
+        compact ? "py-0.5 px-0" : "py-0 px-0",
+        className
       )}
-      placeholder="—"
+      placeholder=""
+      style={{ height: "auto" }}
     />
   );
 }
@@ -148,10 +169,12 @@ function NumberCell({
   value,
   onChange,
   compact = false,
+  className,
 }: {
   value: number;
   onChange: (v: number) => void;
   compact?: boolean;
+  className?: string;
 }) {
   return (
     <input
@@ -159,10 +182,11 @@ function NumberCell({
       value={value ?? ""}
       onChange={(e) => onChange(e.target.value ? Number(e.target.value) : 0)}
       className={cn(
-        "w-full bg-transparent border-none outline-none text-sm focus:ring-0",
-        compact ? "py-1 px-0" : "py-1.5 px-0"
+        "w-full bg-transparent border-none outline-none text-sm focus:ring-0 placeholder:text-muted-foreground/40",
+        compact ? "py-0.5 px-0" : "py-1 px-0",
+        className
       )}
-      placeholder="—"
+      placeholder=""
     />
   );
 }
@@ -175,10 +199,12 @@ function CurrencyCell({
   value,
   onChange,
   compact = false,
+  className,
 }: {
   value: number;
   onChange: (v: number) => void;
   compact?: boolean;
+  className?: string;
 }) {
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState("");
@@ -211,7 +237,8 @@ function CurrencyCell({
         autoFocus
         className={cn(
           "w-full bg-transparent border-none outline-none text-sm focus:ring-0",
-          compact ? "py-1 px-0" : "py-1.5 px-0"
+          compact ? "py-0.5 px-0" : "py-1 px-0",
+          className
         )}
       />
     );
@@ -220,9 +247,13 @@ function CurrencyCell({
   return (
     <div
       onClick={handleFocus}
-      className={cn("text-sm cursor-text", compact ? "py-1 min-h-[28px]" : "py-1.5 min-h-[32px]")}
+      className={cn(
+        "text-sm cursor-text flex items-center",
+        compact ? "py-0.5 min-h-[24px]" : "py-1 min-h-[28px]",
+        className
+      )}
     >
-      {value ? `${formatCurrency(value)} ₫` : <span className="text-muted-foreground">—</span>}
+      {value ? `${formatCurrency(value)} ₫` : <span className="text-muted-foreground/40"></span>}
     </div>
   );
 }
@@ -250,10 +281,10 @@ function parseDateValue(value: unknown): DateValue {
   }
 
   // Assume it's the new object structure
-  const val = value as any;
+  const val = value as Record<string, unknown>;
   return {
-    from: val.from || null,
-    to: val.to || null,
+    from: (val.from as string) || null,
+    to: (val.to as string) || null,
     hasTime: !!val.hasTime
   };
 }
@@ -266,14 +297,14 @@ function Switch({ checked, onCheckedChange }: { checked: boolean; onCheckedChang
       aria-checked={checked}
       onClick={() => onCheckedChange(!checked)}
       className={cn(
-        "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50",
-        checked ? "bg-primary" : "bg-input"
+        "relative inline-flex h-4 w-7 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50",
+        checked ? "bg-primary" : "bg-muted-foreground/20"
       )}
     >
       <span
         className={cn(
-          "pointer-events-none block h-4 w-4 rounded-full bg-background shadow-lg ring-0 transition-transform",
-          checked ? "translate-x-4" : "translate-x-0"
+          "pointer-events-none block h-3 w-3 rounded-full bg-background shadow-sm ring-0 transition-transform",
+          checked ? "translate-x-3" : "translate-x-0"
         )}
       />
     </button>
@@ -284,10 +315,12 @@ function DateCell({
   value,
   onChange,
   compact = false,
+  className,
 }: {
   value: unknown;
   onChange: (v: unknown) => void;
   compact?: boolean;
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const dateValue = parseDateValue(value);
@@ -305,9 +338,10 @@ function DateCell({
   const [startTime, setStartTime] = useState(dateValue.from ? format(new Date(dateValue.from), "HH:mm") : "09:00");
   const [endTime, setEndTime] = useState(dateValue.to ? format(new Date(dateValue.to), "HH:mm") : "17:00");
 
+  // Sync state when value or open changes
   useEffect(() => {
     const parsed = parseDateValue(value);
-    setSelectedRange({
+    setSelectedRange({ // eslint-disable-line react-hooks/set-state-in-effect
       from: parsed.from ? new Date(parsed.from) : undefined,
       to: parsed.to ? new Date(parsed.to) : undefined,
     });
@@ -323,8 +357,8 @@ function DateCell({
       return;
     }
 
-    let fromDate = new Date(range.from);
-    let toDate = range.to ? new Date(range.to) : null;
+    const fromDate = new Date(range.from);
+    const toDate = range.to ? new Date(range.to) : null;
 
     if (withTime) {
       const [startH, startM] = startT.split(":").map(Number);
@@ -350,20 +384,16 @@ function DateCell({
 
   const handleSelect = (range: DateRange | undefined) => {
     setSelectedRange(range);
-    // Auto save if not range mode or if range is complete (or just start selected in range mode)
-    // Actually for better UX, let's save immediately but keep popover open?
-    // Or maybe just update local state and have a "Done" or auto-save on close?
-    // Notion saves immediately.
-
-    // If we are in single mode, range.to is undefined.
-    // If we are in range mode, we wait for both? No, Notion updates as you click.
-
     handleSave(range, includeTime, startTime, endTime);
   };
 
   const toggleRange = (checked: boolean) => {
     setIsRange(checked);
-    const newRange = { ...selectedRange, to: checked ? selectedRange?.to : undefined };
+    if (!selectedRange?.from) return;
+    const newRange: DateRange = {
+      from: selectedRange.from,
+      to: checked ? selectedRange.to : undefined
+    };
     setSelectedRange(newRange);
     handleSave(newRange, includeTime, startTime, endTime);
   };
@@ -412,13 +442,14 @@ function DateCell({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "flex items-center gap-1.5 text-sm text-left w-full truncate",
-            compact ? "py-1" : "py-1.5",
-            !dateValue.from && "text-muted-foreground"
+            "flex items-center gap-1 text-sm text-left w-full flex-wrap",
+            compact ? "py-0.5" : "py-1",
+            !dateValue.from && "text-muted-foreground/40",
+            className
           )}
         >
-          <CalendarIcon className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-          <span className="truncate">{formatDateDisplay()}</span>
+          <CalendarIcon className="h-3 w-3 text-muted-foreground/60 flex-shrink-0" />
+          <span className="text-xs">{formatDateDisplay()}</span>
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-auto p-0" align="start">
@@ -445,19 +476,23 @@ function DateCell({
                     )}
                 </div>
             </div>
+            {isRange ? (
             <Calendar
-            mode={isRange ? "range" : "single"}
-            selected={isRange ? selectedRange : selectedRange?.from}
-            onSelect={(val) => {
-                if (isRange) {
-                    handleSelect(val as DateRange);
-                } else {
-                    handleSelect({ from: val as Date, to: undefined });
-                }
-            }}
-            locale={vi}
-            initialFocus
+              mode="range"
+              selected={selectedRange}
+              onSelect={(val) => handleSelect(val as DateRange)}
+              locale={vi}
+              initialFocus
             />
+            ) : (
+            <Calendar
+              mode="single"
+              selected={selectedRange?.from}
+              onSelect={(val) => handleSelect({ from: val as Date, to: undefined })}
+              locale={vi}
+              initialFocus
+            />
+            )}
         </div>
 
         <div className="p-3 space-y-3 bg-muted/10">
@@ -533,12 +568,14 @@ function SelectCell({
   onChange,
   onAddOption,
   compact = false,
+  className,
 }: {
   value: string;
   options: SelectOption[];
   onChange: (v: string) => void;
   onAddOption?: (option: SelectOption) => void;
   compact?: boolean;
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [newOptionLabel, setNewOptionLabel] = useState("");
@@ -560,18 +597,19 @@ function SelectCell({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button className={cn(
-          "flex items-center gap-1 text-sm text-left w-full",
-          compact ? "py-0.5 min-h-[28px]" : "py-1 min-h-[32px]"
+          "flex items-center gap-1 text-sm text-left w-full flex-wrap",
+          compact ? "py-0.5 min-h-[24px]" : "py-0.5 min-h-[28px]",
+          className
         )}>
           {selectedOption ? (
             <Badge
               variant="secondary"
-              className={cn("font-normal text-xs", selectedOption.color)}
+              className={cn("font-normal text-xs px-1.5 py-0", selectedOption.color)}
             >
               {selectedOption.label}
             </Badge>
           ) : (
-            <span className="text-muted-foreground">—</span>
+            <span className="text-muted-foreground/40"></span>
           )}
         </button>
       </PopoverTrigger>
@@ -661,12 +699,14 @@ function MultiSelectCell({
   onChange,
   onAddOption,
   compact = false,
+  className,
 }: {
   value: string[];
   options: SelectOption[];
   onChange: (v: string[]) => void;
   onAddOption?: (option: SelectOption) => void;
   compact?: boolean;
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [newOptionLabel, setNewOptionLabel] = useState("");
@@ -696,21 +736,22 @@ function MultiSelectCell({
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button className={cn(
-          "flex items-center gap-1 text-sm text-left w-full flex-wrap",
-          compact ? "py-0.5 min-h-[28px]" : "py-1 min-h-[32px]"
+          "flex items-center gap-0.5 text-sm text-left w-full flex-wrap",
+          compact ? "py-0.5 min-h-[24px]" : "py-0.5 min-h-[28px]",
+          className
         )}>
           {selectedOptions.length > 0 ? (
             selectedOptions.map((option) => (
               <Badge
                 key={option.id}
                 variant="secondary"
-                className={cn("font-normal", option.color)}
+                className={cn("font-normal text-xs px-1.5 py-0", option.color)}
               >
                 {option.label}
               </Badge>
             ))
           ) : (
-            <span className="text-muted-foreground">—</span>
+            <span className="text-muted-foreground/40"></span>
           )}
         </button>
       </PopoverTrigger>
@@ -785,20 +826,24 @@ function MultiSelectCell({
 function CheckboxCell({
   value,
   onChange,
+  className,
 }: {
   value: boolean;
   onChange: (v: boolean) => void;
+  className?: string;
 }) {
   return (
-    <button
-      onClick={() => onChange(!value)}
-      className={cn(
-        "h-4 w-4 border rounded flex items-center justify-center transition-colors",
-        value ? "bg-primary border-primary" : "border-input hover:border-primary"
-      )}
-    >
-      {value && <Check className="h-3 w-3 text-primary-foreground" />}
-    </button>
+    <div className={cn("flex items-center h-full", className)}>
+      <button
+        onClick={() => onChange(!value)}
+        className={cn(
+          "h-3.5 w-3.5 border rounded-sm flex items-center justify-center transition-colors",
+          value ? "bg-primary border-primary" : "border-muted-foreground/30 hover:border-muted-foreground/50"
+        )}
+      >
+        {value && <Check className="h-2.5 w-2.5 text-primary-foreground" />}
+      </button>
+    </div>
   );
 }
 
@@ -811,11 +856,13 @@ function UserCell({
   users,
   onChange,
   compact = false,
+  className,
 }: {
   value: string;
   users: UserOption[];
   onChange: (v: string) => void;
   compact?: boolean;
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -832,23 +879,24 @@ function UserCell({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "flex items-center gap-2 text-sm text-left w-full",
-            compact ? "py-0.5 min-h-[28px]" : "py-1 min-h-[32px]"
+            "flex items-center gap-1.5 text-sm text-left w-full flex-wrap",
+            compact ? "py-0.5 min-h-[24px]" : "py-0.5 min-h-[28px]",
+            className
           )}
         >
           {selectedUser ? (
             <>
-              <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
+              <div className="h-4 w-4 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium text-muted-foreground">
                 {selectedUser.image ? (
-                  <img src={selectedUser.image} alt="" className="h-5 w-5 rounded-full object-cover" />
+                  <img src={selectedUser.image} alt="" className="h-4 w-4 rounded-full object-cover" />
                 ) : (
                   selectedUser.name.charAt(0).toUpperCase()
                 )}
               </div>
-              <span className="truncate">{selectedUser.name}</span>
+              <span className="text-xs">{selectedUser.name}</span>
             </>
           ) : (
-            <span className="text-muted-foreground">—</span>
+            <span className="text-muted-foreground/40"></span>
           )}
         </button>
       </PopoverTrigger>
@@ -924,10 +972,12 @@ function AttachmentCell({
   value,
   onChange,
   compact = false,
+  className,
 }: {
   value: AttachmentFile[];
   onChange: (v: AttachmentFile[]) => void;
   compact?: boolean;
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -984,17 +1034,18 @@ function AttachmentCell({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "flex items-center gap-1.5 text-sm text-left w-full",
-            compact ? "py-0.5 min-h-[28px]" : "py-1 min-h-[32px]"
+            "flex items-center gap-1 text-sm text-left w-full",
+            compact ? "py-0.5 min-h-[24px]" : "py-0.5 min-h-[28px]",
+            className
           )}
         >
           {value.length > 0 ? (
             <div className="flex items-center gap-1">
-              <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
-              <span>{value.length} tệp</span>
+              <Paperclip className="h-3 w-3 text-muted-foreground/60" />
+              <span className="text-xs">{value.length}</span>
             </div>
           ) : (
-            <span className="text-muted-foreground">—</span>
+            <span className="text-muted-foreground/40"></span>
           )}
         </button>
       </PopoverTrigger>
