@@ -179,7 +179,7 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
       setTasks((prev) =>
         prev.map((t) => {
           if (t._id !== taskId) return t;
-          
+
           // If updating properties, merge with existing
           if (updates.properties) {
             return {
