@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
-import { Check, Plus } from "lucide-react";
+import { Check, Plus, X, Paperclip, Upload, FileText, Image as ImageIcon, User as UserIcon } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -36,15 +36,31 @@ interface SelectOption {
   color?: string;
 }
 
+interface UserOption {
+  id: string;
+  name: string;
+  email: string;
+  image?: string;
+}
+
+interface AttachmentFile {
+  id: string;
+  name: string;
+  url: string;
+  type: string;
+  size: number;
+}
+
 interface PropertyCellProps {
   property: Property;
   value: unknown;
   onChange: (value: unknown) => void;
   onAddOption?: (propertyId: string, option: SelectOption) => void;
+  users?: UserOption[];
   compact?: boolean;
 }
 
-export function PropertyCell({ property, value, onChange, onAddOption, compact = false }: PropertyCellProps) {
+export function PropertyCell({ property, value, onChange, onAddOption, users = [], compact = false }: PropertyCellProps) {
   switch (property.type) {
     case PropertyType.TEXT:
       return <TextCell value={value as string} onChange={onChange} compact={compact} />;
@@ -85,7 +101,11 @@ export function PropertyCell({ property, value, onChange, onAddOption, compact =
       return <CheckboxCell value={value as boolean} onChange={onChange} />;
 
     case PropertyType.PERSON:
-      return <PersonCell value={value as string} onChange={onChange} compact={compact} />;
+    case PropertyType.USER:
+      return <UserCell value={value as string} users={users} onChange={onChange} compact={compact} />;
+
+    case PropertyType.ATTACHMENT:
+      return <AttachmentCell value={(value as AttachmentFile[]) || []} onChange={onChange} compact={compact} />;
 
     default:
       return <TextCell value={value as string} onChange={onChange} compact={compact} />;
@@ -534,29 +554,267 @@ function CheckboxCell({
 }
 
 // ============================================
-// PERSON CELL (placeholder)
+// USER CELL - Select user from list
 // ============================================
 
-function PersonCell({
+function UserCell({
   value,
+  users,
   onChange,
   compact = false,
 }: {
   value: string;
+  users: UserOption[];
   onChange: (v: string) => void;
   compact?: boolean;
 }) {
-  // TODO: Implement person picker with user list
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const selectedUser = users.find((u) => u.id === value);
+
+  const filteredUsers = users.filter(
+    (u) =>
+      u.name.toLowerCase().includes(search.toLowerCase()) ||
+      u.email.toLowerCase().includes(search.toLowerCase())
+  );
+
   return (
-    <input
-      type="text"
-      value={value || ""}
-      onChange={(e) => onChange(e.target.value)}
-      className={cn(
-        "w-full bg-transparent border-none outline-none text-sm focus:ring-0",
-        compact ? "py-1 px-0" : "py-1.5 px-0"
-      )}
-      placeholder="—"
-    />
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            "flex items-center gap-2 text-sm text-left w-full",
+            compact ? "py-0.5 min-h-[28px]" : "py-1 min-h-[32px]"
+          )}
+        >
+          {selectedUser ? (
+            <>
+              <div className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
+                {selectedUser.image ? (
+                  <img src={selectedUser.image} alt="" className="h-5 w-5 rounded-full object-cover" />
+                ) : (
+                  selectedUser.name.charAt(0).toUpperCase()
+                )}
+              </div>
+              <span className="truncate">{selectedUser.name}</span>
+            </>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-1" align="start">
+        <div className="space-y-1">
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm kiếm..."
+            className="w-full text-sm px-2 py-1.5 bg-transparent border-b outline-none focus:ring-0"
+          />
+          <div className="max-h-48 overflow-y-auto space-y-0.5">
+            {filteredUsers.length > 0 ? (
+              filteredUsers.map((user) => (
+                <button
+                  key={user.id}
+                  onClick={() => {
+                    onChange(user.id);
+                    setOpen(false);
+                    setSearch("");
+                  }}
+                  className={cn(
+                    "flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded hover:bg-accent transition-colors",
+                    value === user.id && "bg-accent"
+                  )}
+                >
+                  <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary flex-shrink-0">
+                    {user.image ? (
+                      <img src={user.image} alt="" className="h-6 w-6 rounded-full object-cover" />
+                    ) : (
+                      user.name.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0 text-left">
+                    <div className="truncate font-medium">{user.name}</div>
+                    <div className="truncate text-xs text-muted-foreground">{user.email}</div>
+                  </div>
+                  {value === user.id && <Check className="h-4 w-4 text-primary flex-shrink-0" />}
+                </button>
+              ))
+            ) : (
+              <div className="px-2 py-4 text-center text-sm text-muted-foreground">
+                {users.length === 0 ? "Chưa có user nào" : "Không tìm thấy"}
+              </div>
+            )}
+          </div>
+          {value && (
+            <>
+              <div className="border-t my-1" />
+              <button
+                onClick={() => {
+                  onChange("");
+                  setOpen(false);
+                }}
+                className="w-full px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground text-left rounded hover:bg-accent transition-colors"
+              >
+                Xóa
+              </button>
+            </>
+          )}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// ============================================
+// ATTACHMENT CELL - Upload files
+// ============================================
+
+function AttachmentCell({
+  value,
+  onChange,
+  compact = false,
+}: {
+  value: AttachmentFile[];
+  onChange: (v: AttachmentFile[]) => void;
+  compact?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    try {
+      const uploadedFiles: AttachmentFile[] = [];
+
+      for (const file of Array.from(files)) {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (res.ok) {
+          const fileInfo = await res.json();
+          uploadedFiles.push(fileInfo);
+        }
+      }
+
+      onChange([...value, ...uploadedFiles]);
+    } catch (error) {
+      console.error("Upload failed:", error);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
+
+  const removeFile = (fileId: string) => {
+    onChange(value.filter((f) => f.id !== fileId));
+  };
+
+  const isImage = (type: string) => type.startsWith("image/");
+
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            "flex items-center gap-1.5 text-sm text-left w-full",
+            compact ? "py-0.5 min-h-[28px]" : "py-1 min-h-[32px]"
+          )}
+        >
+          {value.length > 0 ? (
+            <div className="flex items-center gap-1">
+              <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
+              <span>{value.length} tệp</span>
+            </div>
+          ) : (
+            <span className="text-muted-foreground">—</span>
+          )}
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-2" align="start">
+        <div className="space-y-2">
+          {/* File list */}
+          {value.length > 0 && (
+            <div className="space-y-1 max-h-40 overflow-y-auto">
+              {value.map((file) => (
+                <div
+                  key={file.id}
+                  className="flex items-center gap-2 p-1.5 rounded bg-accent/50 group"
+                >
+                  {isImage(file.type) ? (
+                    <ImageIcon className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                  ) : (
+                    <FileText className="h-4 w-4 text-orange-500 flex-shrink-0" />
+                  )}
+                  <a
+                    href={file.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 min-w-0 text-xs hover:underline"
+                  >
+                    <div className="truncate">{file.name}</div>
+                    <div className="text-muted-foreground">{formatSize(file.size)}</div>
+                  </a>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeFile(file.id);
+                    }}
+                    className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-destructive transition-opacity"
+                  >
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Upload button */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            onChange={handleUpload}
+            className="hidden"
+            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="flex items-center justify-center gap-2 w-full py-2 border border-dashed rounded text-sm text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+          >
+            {uploading ? (
+              <>
+                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                <span>Đang tải...</span>
+              </>
+            ) : (
+              <>
+                <Upload className="h-4 w-4" />
+                <span>Tải lên tệp</span>
+              </>
+            )}
+          </button>
+        </div>
+      </PopoverContent>
+    </Popover>
   );
 }

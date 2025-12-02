@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useMemo } from "react";
+import { useState, useRef, useMemo, useCallback, useEffect } from "react";
 import { Plus, GripVertical, Trash2, MoreHorizontal, ChevronRight } from "lucide-react";
 import { PropertyCell } from "./property-cell";
 import {
@@ -24,6 +24,13 @@ interface TaskData {
   order: number;
 }
 
+interface UserOption {
+  id: string;
+  name: string;
+  email: string;
+  image?: string;
+}
+
 interface TableViewProps {
   board: {
     _id: string;
@@ -34,11 +41,13 @@ interface TableViewProps {
   searchQuery?: string;
   filters?: FilterConfig[];
   sorts?: SortConfig[];
+  users?: UserOption[];
   onCreateTask: (title: string) => Promise<TaskData | null>;
   onUpdateTask: (taskId: string, updates: Partial<TaskData>) => void;
   onDeleteTask: (taskId: string) => void;
   onRemoveProperty?: (propertyId: string) => void;
   onAddPropertyOption?: (propertyId: string, option: { id: string; label: string; color?: string }) => void;
+  onUpdatePropertyWidth?: (propertyId: string, width: number) => void;
 }
 
 // Helper to compare values for sorting
@@ -99,15 +108,59 @@ export function TableView({
   searchQuery = "",
   filters = [],
   sorts = [],
+  users = [],
   onCreateTask,
   onUpdateTask,
   onDeleteTask,
   onRemoveProperty,
   onAddPropertyOption,
+  onUpdatePropertyWidth,
 }: TableViewProps) {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [isAddingTask, setIsAddingTask] = useState(false);
+  const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+  const [resizing, setResizing] = useState<{ id: string; startX: number; startWidth: number } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Initialize column widths from properties
+  useEffect(() => {
+    const widths: Record<string, number> = {};
+    board.properties.forEach((p) => {
+      widths[p.id] = p.width || 150;
+    });
+    setColumnWidths(widths);
+  }, [board.properties]);
+
+  // Column resize handlers
+  const handleMouseDown = useCallback((e: React.MouseEvent, propertyId: string) => {
+    e.preventDefault();
+    const startWidth = columnWidths[propertyId] || 150;
+    setResizing({ id: propertyId, startX: e.clientX, startWidth });
+  }, [columnWidths]);
+
+  useEffect(() => {
+    if (!resizing) return;
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const diff = e.clientX - resizing.startX;
+      const newWidth = Math.max(80, Math.min(500, resizing.startWidth + diff));
+      setColumnWidths((prev) => ({ ...prev, [resizing.id]: newWidth }));
+    };
+
+    const handleMouseUp = () => {
+      if (resizing && onUpdatePropertyWidth) {
+        onUpdatePropertyWidth(resizing.id, columnWidths[resizing.id] || 150);
+      }
+      setResizing(null);
+    };
+
+    document.addEventListener("mousemove", handleMouseMove);
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [resizing, columnWidths, onUpdatePropertyWidth]);
 
   // Sort properties by order
   const sortedProperties = [...board.properties].sort((a, b) => a.order - b.order);
@@ -203,15 +256,15 @@ export function TableView({
               {visibleProperties.map((property) => (
                 <th
                   key={property.id}
-                  className="text-left font-medium text-muted-foreground py-2 px-3 min-w-[120px] bg-background"
-                  style={{ width: property.width || 150 }}
+                  className="text-left font-medium text-muted-foreground py-2 px-3 bg-background relative group/header"
+                  style={{ width: columnWidths[property.id] || 150, minWidth: 80 }}
                 >
-                  <div className="flex items-center justify-between group">
+                  <div className="flex items-center justify-between">
                     <span className="truncate">{property.name}</span>
                     {onRemoveProperty && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-accent rounded transition-opacity">
+                          <button className="opacity-0 group-hover/header:opacity-100 p-0.5 hover:bg-accent rounded transition-opacity">
                             <MoreHorizontal className="h-3.5 w-3.5" />
                           </button>
                         </DropdownMenuTrigger>
@@ -226,6 +279,11 @@ export function TableView({
                       </DropdownMenu>
                     )}
                   </div>
+                  {/* Resize handle */}
+                  <div
+                    onMouseDown={(e) => handleMouseDown(e, property.id)}
+                    className={`absolute right-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-primary/50 transition-colors ${resizing?.id === property.id ? 'bg-primary' : ''}`}
+                  />
                 </th>
               ))}
               <th className="w-10 bg-background" />
@@ -252,7 +310,11 @@ export function TableView({
                 {visibleProperties.map((property) => {
                   const taskProps = task.properties || {};
                   return (
-                    <td key={property.id} className="py-1 px-3">
+                    <td
+                      key={property.id}
+                      className="py-1 px-3"
+                      style={{ width: columnWidths[property.id] || 150, minWidth: 80 }}
+                    >
                       <PropertyCell
                         property={property}
                         value={taskProps[property.id]}
@@ -262,6 +324,7 @@ export function TableView({
                           })
                         }
                         onAddOption={onAddPropertyOption}
+                        users={users}
                       />
                     </td>
                   );
@@ -353,6 +416,7 @@ export function TableView({
                           })
                         }
                         onAddOption={onAddPropertyOption}
+                        users={users}
                         compact
                       />
                     </div>

@@ -30,6 +30,8 @@ import {
   FileText,
   Plus,
   X,
+  Paperclip,
+  UserCircle,
 } from "lucide-react";
 
 interface AddPropertyDialogProps {
@@ -45,10 +47,12 @@ const PROPERTY_TYPES = [
   { value: PropertyType.SELECT, label: "Chọn một", icon: List },
   { value: PropertyType.MULTI_SELECT, label: "Chọn nhiều", icon: List },
   { value: PropertyType.STATUS, label: "Trạng thái", icon: CheckCircle },
-  { value: PropertyType.PERSON, label: "Người", icon: User },
+  { value: PropertyType.USER, label: "Người dùng", icon: UserCircle },
+  { value: PropertyType.PERSON, label: "Người (text)", icon: User },
   { value: PropertyType.CURRENCY, label: "Tiền tệ", icon: DollarSign },
   { value: PropertyType.CHECKBOX, label: "Checkbox", icon: CheckSquare },
   { value: PropertyType.RICH_TEXT, label: "Văn bản dài", icon: FileText },
+  { value: PropertyType.ATTACHMENT, label: "Đính kèm", icon: Paperclip },
 ];
 
 const STATUS_COLORS = [

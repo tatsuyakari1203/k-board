@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { BoardHeader } from "@/components/boards/board-header";
 import { BoardToolbar } from "@/components/boards/board-toolbar";
 import { TableView } from "@/components/boards/views/table-view";
@@ -27,6 +27,13 @@ interface TaskData extends Omit<Task, "createdAt" | "updatedAt"> {
   updatedAt: string;
 }
 
+interface UserOption {
+  id: string;
+  name: string;
+  email: string;
+  image?: string;
+}
+
 interface BoardDetailClientProps {
   initialBoard: BoardData;
 }
@@ -34,6 +41,7 @@ interface BoardDetailClientProps {
 export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
   const [board, setBoard] = useState(initialBoard);
   const [tasks, setTasks] = useState(initialBoard.tasks);
+  const [users, setUsers] = useState<UserOption[]>([]);
   const [activeViewId, setActiveViewId] = useState(
     board.views.find((v) => v.isDefault)?.id || board.views[0]?.id
   );
@@ -44,6 +52,14 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
   const [sorts, setSorts] = useState<SortConfig[]>([]);
 
   const activeView = board.views.find((v) => v.id === activeViewId);
+
+  // Fetch users for assignment
+  useEffect(() => {
+    fetch("/api/users")
+      .then((res) => res.json())
+      .then((data) => setUsers(data))
+      .catch((err) => console.error("Failed to fetch users:", err));
+  }, []);
 
   // Update board
   const handleUpdateBoard = useCallback(
@@ -147,6 +163,30 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
         console.error("Failed to add property option:", error);
         // Revert on error
         setBoard((prev) => ({ ...prev, properties: board.properties }));
+      }
+    },
+    [board._id, board.properties]
+  );
+
+  // Update property width (column resize)
+  const handleUpdatePropertyWidth = useCallback(
+    async (propertyId: string, width: number) => {
+      const updatedProperties = board.properties.map((p) =>
+        p.id === propertyId ? { ...p, width } : p
+      );
+
+      try {
+        const res = await fetch(`/api/boards/${board._id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ properties: updatedProperties }),
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          setBoard((prev) => ({ ...prev, ...updated }));
+        }
+      } catch (error) {
+        console.error("Failed to update property width:", error);
       }
     },
     [board._id, board.properties]
@@ -308,11 +348,13 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
             searchQuery={searchQuery}
             filters={filters}
             sorts={sorts}
+            users={users}
             onCreateTask={handleCreateTask}
             onUpdateTask={handleUpdateTask}
             onDeleteTask={handleDeleteTask}
             onRemoveProperty={handleRemoveProperty}
             onAddPropertyOption={handleAddPropertyOption}
+            onUpdatePropertyWidth={handleUpdatePropertyWidth}
           />
         )}
 

@@ -15,6 +15,8 @@ export const PropertyType = {
   CURRENCY: "currency",
   CHECKBOX: "checkbox",
   RICH_TEXT: "rich-text", // Lexical editor
+  ATTACHMENT: "attachment", // Files/images
+  USER: "user", // Assign to user
 } as const;
 
 export type PropertyType = (typeof PropertyType)[keyof typeof PropertyType];
