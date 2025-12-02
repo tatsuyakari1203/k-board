@@ -1,42 +1,39 @@
 import Link from "next/link";
-import { ShieldX } from "lucide-react";
+import { Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 export default function UnauthorizedPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900">
-            <ShieldX className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
+    <div className="min-h-screen bg-background">
+      <header className="fixed top-0 left-0 right-0 z-50">
+        <div className="mx-auto flex h-14 max-w-screen-xl items-center px-6">
+          <Link href="/" className="text-base font-semibold tracking-tight">
+            K-ERP
+          </Link>
+        </div>
+      </header>
+
+      <main className="flex min-h-screen flex-col items-center justify-center px-6">
+        <div className="max-w-sm text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <Lock className="h-5 w-5 text-muted-foreground" />
           </div>
-          <CardTitle className="text-2xl font-bold">
+          <h1 className="text-xl font-semibold tracking-tight">
             Không có quyền truy cập
-          </CardTitle>
-          <CardDescription>
-            Bạn không có quyền truy cập trang này
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-center text-sm text-muted-foreground">
-          Vui lòng liên hệ quản trị viên nếu bạn cho rằng đây là lỗi.
-        </CardContent>
-        <CardFooter className="flex justify-center gap-4">
-          <Button variant="outline" asChild>
-            <Link href="/">Về trang chủ</Link>
-          </Button>
-          <Button asChild>
-            <Link href="/dashboard">Dashboard</Link>
-          </Button>
-        </CardFooter>
-      </Card>
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Bạn không có quyền truy cập trang này. Vui lòng liên hệ quản trị viên.
+          </p>
+          <div className="mt-6 flex items-center justify-center gap-3">
+            <Button variant="ghost" asChild className="font-normal text-muted-foreground">
+              <Link href="/">Về trang chủ</Link>
+            </Button>
+            <Button asChild className="font-normal">
+              <Link href="/dashboard">Dashboard</Link>
+            </Button>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }

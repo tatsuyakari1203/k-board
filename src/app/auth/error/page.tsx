@@ -1,39 +1,34 @@
 import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 export default function AuthErrorPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-red-100 dark:bg-red-900">
-            <AlertTriangle className="h-6 w-6 text-red-600 dark:text-red-400" />
+    <div className="min-h-screen bg-background">
+      <header className="fixed top-0 left-0 right-0 z-50">
+        <div className="mx-auto flex h-14 max-w-screen-xl items-center px-6">
+          <Link href="/" className="text-base font-semibold tracking-tight">
+            K-ERP
+          </Link>
+        </div>
+      </header>
+
+      <main className="flex min-h-screen flex-col items-center justify-center px-6">
+        <div className="max-w-sm text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
+            <AlertCircle className="h-6 w-6 text-destructive" />
           </div>
-          <CardTitle className="text-2xl font-bold">
+          <h1 className="text-xl font-semibold tracking-tight">
             Lỗi xác thực
-          </CardTitle>
-          <CardDescription>
-            Đã có lỗi xảy ra trong quá trình đăng nhập
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-center text-sm text-muted-foreground">
-          Vui lòng thử lại hoặc liên hệ quản trị viên nếu vấn đề vẫn tiếp tục.
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <Button asChild>
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Đã có lỗi xảy ra trong quá trình đăng nhập. Vui lòng thử lại.
+          </p>
+          <Button asChild className="mt-6 h-10 font-normal">
             <Link href="/auth/login">Quay lại đăng nhập</Link>
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </main>
     </div>
   );
 }

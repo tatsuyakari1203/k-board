@@ -1,9 +1,22 @@
+import Link from "next/link";
 import { RegisterForm } from "@/components/auth";
 
 export default function RegisterPage() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950 p-4">
-      <RegisterForm />
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <header className="fixed top-0 left-0 right-0 z-50">
+        <div className="mx-auto flex h-14 max-w-screen-xl items-center px-6">
+          <Link href="/" className="text-base font-semibold tracking-tight">
+            K-ERP
+          </Link>
+        </div>
+      </header>
+
+      {/* Form */}
+      <main className="flex min-h-screen items-center justify-center px-6">
+        <RegisterForm />
+      </main>
     </div>
   );
 }

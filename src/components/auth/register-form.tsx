@@ -18,14 +18,6 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 
 import { registerSchema, type RegisterInput } from "@/lib/validations/auth";
 
@@ -67,108 +59,122 @@ export function RegisterForm() {
     }
   }
 
+  const inputClassName = "h-11 border-0 bg-secondary px-3 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-1";
+
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl font-bold text-center">
-          Đăng ký
-        </CardTitle>
-        <CardDescription className="text-center">
-          Tạo tài khoản mới để sử dụng hệ thống
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Họ và tên</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Nguyễn Văn A"
-                      disabled={isLoading}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="email"
-                      placeholder="email@example.com"
-                      disabled={isLoading}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Mật khẩu</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      disabled={isLoading}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="confirmPassword"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Xác nhận mật khẩu</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="••••••••"
-                      disabled={isLoading}
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Đăng ký
-            </Button>
-          </form>
-        </Form>
-      </CardContent>
-      <CardFooter className="flex justify-center">
-        <p className="text-sm text-muted-foreground">
-          Đã có tài khoản?{" "}
-          <Link
-            href="/auth/login"
-            className="font-medium text-primary hover:underline"
-          >
-            Đăng nhập
-          </Link>
+    <div className="w-full max-w-sm">
+      <div className="mb-8">
+        <h1 className="text-2xl font-semibold tracking-tight">Tạo tài khoản</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Bắt đầu sử dụng K-ERP miễn phí.
         </p>
-      </CardFooter>
-    </Card>
+      </div>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="name"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-normal text-muted-foreground">
+                  Họ và tên
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Nguyễn Văn A"
+                    disabled={isLoading}
+                    className={inputClassName}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-normal text-muted-foreground">
+                  Email
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    type="email"
+                    placeholder="email@example.com"
+                    disabled={isLoading}
+                    className={inputClassName}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-normal text-muted-foreground">
+                  Mật khẩu
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    disabled={isLoading}
+                    className={inputClassName}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="confirmPassword"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="text-sm font-normal text-muted-foreground">
+                  Xác nhận mật khẩu
+                </FormLabel>
+                <FormControl>
+                  <Input
+                    type="password"
+                    placeholder="••••••••"
+                    disabled={isLoading}
+                    className={inputClassName}
+                    {...field}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button
+            type="submit"
+            className="mt-6 h-11 w-full font-normal"
+            disabled={isLoading}
+          >
+            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Tạo tài khoản
+          </Button>
+        </form>
+      </Form>
+
+      <p className="mt-8 text-center text-sm text-muted-foreground">
+        Đã có tài khoản?{" "}
+        <Link
+          href="/auth/login"
+          className="text-foreground underline-offset-4 hover:underline"
+        >
+          Đăng nhập
+        </Link>
+      </p>
+    </div>
   );
 }
