@@ -1,0 +1,39 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: k-erp-mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-password123}
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - k-erp-network
+
+  # Uncomment when ready to deploy
+  # app:
+  #   build: .
+  #   container_name: k-erp-app
+  #   restart: always
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - MONGODB_URI=mongodb://${MONGO_USERNAME:-admin}:${MONGO_PASSWORD:-password123}@mongodb:27017/k-erp?authSource=admin
+  #     - AUTH_SECRET=${AUTH_SECRET}
+  #     - AUTH_URL=${AUTH_URL:-http://localhost:3000}
+  #   depends_on:
+  #     - mongodb
+  #   networks:
+  #     - k-erp-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  k-erp-network:
+    driver: bridge
