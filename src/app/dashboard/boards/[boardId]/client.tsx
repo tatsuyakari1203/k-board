@@ -4,6 +4,8 @@ import { useState, useCallback, useEffect } from "react";
 import { BoardHeader } from "@/components/boards/board-header";
 import { BoardToolbar } from "@/components/boards/board-toolbar";
 import { TableView } from "@/components/boards/views/table-view";
+import { AddPropertyDialog } from "@/components/boards/add-property-dialog";
+import { arrayMove } from "@dnd-kit/sortable";
 import {
   type Board,
   type Task,
@@ -40,7 +42,10 @@ interface BoardDetailClientProps {
 
 export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
   const [board, setBoard] = useState(initialBoard);
-  const [tasks, setTasks] = useState(initialBoard.tasks);
+  // Ensure tasks are sorted by order initially
+  const [tasks, setTasks] = useState(() =>
+    [...initialBoard.tasks].sort((a, b) => a.order - b.order)
+  );
   const [users, setUsers] = useState<UserOption[]>([]);
   const [activeViewId, setActiveViewId] = useState(
     board.views.find((v) => v.isDefault)?.id || board.views[0]?.id
@@ -50,6 +55,10 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<FilterConfig[]>([]);
   const [sorts, setSorts] = useState<SortConfig[]>([]);
+
+  // Add Property Dialog State
+  const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
+  const [addPropertyIndex, setAddPropertyIndex] = useState<number | null>(null);
 
   const activeView = board.views.find((v) => v.id === activeViewId);
 
@@ -84,18 +93,39 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
   // Add property
   const handleAddProperty = useCallback(
     async (property: Omit<Property, "id" | "order">) => {
+      // Calculate order based on insertion index or append to end
+      let newOrder = board.properties.length;
+      let updatedProperties = [...board.properties];
+
+      if (addPropertyIndex !== null) {
+        newOrder = addPropertyIndex;
+        // Shift existing properties
+        updatedProperties = updatedProperties.map(p => ({
+          ...p,
+          order: p.order >= newOrder ? p.order + 1 : p.order
+        }));
+      }
+
       const newProperty: Property = {
         ...property,
         id: crypto.randomUUID(),
-        order: board.properties.length,
+        order: newOrder,
       };
+
+      updatedProperties.push(newProperty);
+
+      // Ensure properties are sorted by order
+      updatedProperties.sort((a, b) => a.order - b.order);
+
+      // Optimistic update
+      setBoard((prev) => ({ ...prev, properties: updatedProperties }));
 
       try {
         const res = await fetch(`/api/boards/${board._id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            properties: [...board.properties, newProperty],
+            properties: updatedProperties,
           }),
         });
         if (res.ok) {
@@ -104,6 +134,44 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
         }
       } catch (error) {
         console.error("Failed to add property:", error);
+        // Revert on error (simplified)
+        setBoard((prev) => ({ ...prev, properties: board.properties }));
+      } finally {
+        setAddPropertyIndex(null);
+      }
+    },
+    [board._id, board.properties, addPropertyIndex]
+  );
+
+  // Open Add Property Dialog
+  const handleOpenAddProperty = useCallback((index?: number) => {
+    setAddPropertyIndex(typeof index === "number" ? index : null);
+    setIsAddPropertyOpen(true);
+  }, []);
+
+  // Rename property
+  const handleRenameProperty = useCallback(
+    async (propertyId: string, newName: string) => {
+      const updatedProperties = board.properties.map((p) =>
+        p.id === propertyId ? { ...p, name: newName } : p
+      );
+
+      // Optimistic update
+      setBoard((prev) => ({ ...prev, properties: updatedProperties }));
+
+      try {
+        const res = await fetch(`/api/boards/${board._id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ properties: updatedProperties }),
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          setBoard((prev) => ({ ...prev, ...updated }));
+        }
+      } catch (error) {
+        console.error("Failed to rename property:", error);
+        setBoard((prev) => ({ ...prev, properties: board.properties }));
       }
     },
     [board._id, board.properties]
@@ -187,6 +255,35 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
         }
       } catch (error) {
         console.error("Failed to update property width:", error);
+      }
+    },
+    [board._id, board.properties]
+  );
+
+  // Reorder properties
+  const handleReorderProperties = useCallback(
+    async (oldIndex: number, newIndex: number) => {
+      if (oldIndex === newIndex) return;
+
+      // Sort properties by order first to ensure we are moving the right indices
+      const sortedProperties = [...board.properties].sort((a, b) => a.order - b.order);
+
+      const newProperties = arrayMove(sortedProperties, oldIndex, newIndex).map((p, index) => ({
+        ...p,
+        order: index,
+      }));
+
+      // Optimistic update
+      setBoard((prev) => ({ ...prev, properties: newProperties }));
+
+      try {
+        await fetch(`/api/boards/${board._id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ properties: newProperties }),
+        });
+      } catch (error) {
+        console.error("Failed to reorder properties:", error);
       }
     },
     [board._id, board.properties]
@@ -296,6 +393,34 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
     [board._id, initialBoard.tasks]
   );
 
+  // Reorder tasks
+  const handleReorderTasks = useCallback(
+    async (oldIndex: number, newIndex: number) => {
+      if (oldIndex === newIndex) return;
+
+      // Ensure we are working with sorted tasks
+      const sortedTasks = [...tasks].sort((a, b) => a.order - b.order);
+
+      const newTasks = arrayMove(sortedTasks, oldIndex, newIndex).map((t, index) => ({
+        ...t,
+        order: index,
+      }));
+
+      setTasks(newTasks);
+
+      try {
+        await fetch(`/api/boards/${board._id}/tasks/reorder`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ taskIds: newTasks.map((t) => t._id) }),
+        });
+      } catch (error) {
+        console.error("Failed to reorder tasks:", error);
+      }
+    },
+    [board._id, tasks]
+  );
+
   // Delete task
   const handleDeleteTask = useCallback(
     async (taskId: string) => {
@@ -329,7 +454,7 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
         sorts={sorts}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        onAddProperty={handleAddProperty}
+        onAddPropertyClick={() => handleOpenAddProperty()}
         onRemoveProperty={handleRemoveProperty}
         onAddFilter={handleAddFilter}
         onRemoveFilter={handleRemoveFilter}
@@ -355,6 +480,10 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
             onRemoveProperty={handleRemoveProperty}
             onAddPropertyOption={handleAddPropertyOption}
             onUpdatePropertyWidth={handleUpdatePropertyWidth}
+            onReorderTasks={handleReorderTasks}
+            onReorderProperties={handleReorderProperties}
+            onRenameProperty={handleRenameProperty}
+            onAddPropertyAt={handleOpenAddProperty}
           />
         )}
 
@@ -364,6 +493,12 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
           </div>
         )}
       </div>
+
+      <AddPropertyDialog
+        open={isAddPropertyOpen}
+        onOpenChange={setIsAddPropertyOpen}
+        onSubmit={handleAddProperty}
+      />
     </div>
   );
 }

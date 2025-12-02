@@ -18,7 +18,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { type Property, type SortConfig, type FilterConfig } from "@/types/board";
-import { AddPropertyDialog } from "./add-property-dialog";
 import { FilterPopover } from "./filter-popover";
 import { SortPopover } from "./sort-popover";
 
@@ -28,7 +27,7 @@ interface BoardToolbarProps {
   sorts: SortConfig[];
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  onAddProperty: (property: Omit<Property, "id" | "order">) => void;
+  onAddPropertyClick: () => void;
   onRemoveProperty: (propertyId: string) => void;
   onAddFilter: (filter: FilterConfig) => void;
   onRemoveFilter: (index: number) => void;
@@ -44,7 +43,7 @@ export function BoardToolbar({
   sorts,
   searchQuery,
   onSearchChange,
-  onAddProperty,
+  onAddPropertyClick,
   onRemoveProperty: _onRemoveProperty,
   onAddFilter,
   onRemoveFilter,
@@ -54,7 +53,6 @@ export function BoardToolbar({
   onClearSorts,
 }: BoardToolbarProps) {
   const [showSearch, setShowSearch] = useState(false);
-  const [showAddProperty, setShowAddProperty] = useState(false);
 
   return (
     <div className="flex flex-col gap-2 px-4 py-2 border-b md:px-6">
@@ -143,7 +141,7 @@ export function BoardToolbar({
           variant="ghost"
           size="sm"
           className="h-7 text-xs gap-1.5"
-          onClick={() => setShowAddProperty(true)}
+          onClick={onAddPropertyClick}
         >
           <Plus className="h-3.5 w-3.5" />
           <span className="hidden sm:inline">Thêm cột</span>
@@ -234,12 +232,6 @@ export function BoardToolbar({
           })}
         </div>
       )}
-
-      <AddPropertyDialog
-        open={showAddProperty}
-        onOpenChange={setShowAddProperty}
-        onSubmit={onAddProperty}
-      />
     </div>
   );
 }
