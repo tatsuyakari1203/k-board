@@ -36,6 +36,7 @@ async function getBoard(boardId: string, userId: string) {
       createdBy: t.createdBy.toString(),
       createdAt: t.createdAt.toISOString(),
       updatedAt: t.updatedAt.toISOString(),
+      properties: t.properties || {},
     })),
   };
 }

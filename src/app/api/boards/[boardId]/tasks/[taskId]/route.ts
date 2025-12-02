@@ -54,6 +54,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       _id: task._id.toString(),
       boardId: task.boardId.toString(),
       createdBy: task.createdBy.toString(),
+      properties: task.properties || {},
     });
   } catch (error) {
     console.error("GET /api/boards/[boardId]/tasks/[taskId] error:", error);
@@ -102,9 +103,27 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
+    // Get existing task to merge properties
+    const existingTask = await Task.findOne({ _id: taskId, boardId }).lean();
+    if (!existingTask) {
+      return NextResponse.json(
+        { error: "Task not found" },
+        { status: 404 }
+      );
+    }
+
+    // Prepare update - merge properties if provided
+    const updateData = { ...validation.data };
+    if (validation.data.properties) {
+      updateData.properties = {
+        ...(existingTask.properties || {}),
+        ...validation.data.properties,
+      };
+    }
+
     const task = await Task.findOneAndUpdate(
       { _id: taskId, boardId },
-      { $set: validation.data },
+      { $set: updateData },
       { new: true }
     ).lean();
 
@@ -120,6 +139,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       _id: task._id.toString(),
       boardId: task.boardId.toString(),
       createdBy: task.createdBy.toString(),
+      properties: task.properties || {},
     });
   } catch (error) {
     console.error("PATCH /api/boards/[boardId]/tasks/[taskId] error:", error);

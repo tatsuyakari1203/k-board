@@ -8,7 +8,6 @@ import {
   MoreHorizontal,
   Search,
   X,
-  Columns,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,7 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { type Property, PropertyType, type SortConfig, type FilterConfig } from "@/types/board";
+import { type Property, type SortConfig, type FilterConfig } from "@/types/board";
 import { AddPropertyDialog } from "./add-property-dialog";
 import { FilterPopover } from "./filter-popover";
 import { SortPopover } from "./sort-popover";
@@ -46,7 +45,7 @@ export function BoardToolbar({
   searchQuery,
   onSearchChange,
   onAddProperty,
-  onRemoveProperty,
+  onRemoveProperty: _onRemoveProperty,
   onAddFilter,
   onRemoveFilter,
   onClearFilters,

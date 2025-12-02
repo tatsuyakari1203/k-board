@@ -1,14 +1,12 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useCallback } from "react";
 import { BoardHeader } from "@/components/boards/board-header";
 import { BoardToolbar } from "@/components/boards/board-toolbar";
 import { TableView } from "@/components/boards/views/table-view";
 import {
   type Board,
   type Task,
-  type View,
   type Property,
   type SortConfig,
   type FilterConfig,
@@ -34,7 +32,6 @@ interface BoardDetailClientProps {
 }
 
 export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
-  const router = useRouter();
   const [board, setBoard] = useState(initialBoard);
   const [tasks, setTasks] = useState(initialBoard.tasks);
   const [activeViewId, setActiveViewId] = useState(
@@ -178,9 +175,24 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
   // Update task
   const handleUpdateTask = useCallback(
     async (taskId: string, updates: Partial<TaskData>) => {
-      // Optimistic update
+      // Optimistic update - merge properties correctly
       setTasks((prev) =>
-        prev.map((t) => (t._id === taskId ? { ...t, ...updates } : t))
+        prev.map((t) => {
+          if (t._id !== taskId) return t;
+          
+          // If updating properties, merge with existing
+          if (updates.properties) {
+            return {
+              ...t,
+              ...updates,
+              properties: {
+                ...(t.properties || {}),
+                ...updates.properties,
+              },
+            };
+          }
+          return { ...t, ...updates };
+        })
       );
 
       try {
@@ -189,7 +201,13 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(updates),
         });
-        if (!res.ok) {
+        if (res.ok) {
+          // Update with server response to ensure consistency
+          const updatedTask = await res.json();
+          setTasks((prev) =>
+            prev.map((t) => (t._id === taskId ? { ...t, ...updatedTask } : t))
+          );
+        } else {
           // Revert on error
           setTasks(initialBoard.tasks);
         }

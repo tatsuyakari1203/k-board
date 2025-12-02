@@ -1,10 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
-import { Calendar as CalendarIcon, Check, ChevronDown } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Check } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,

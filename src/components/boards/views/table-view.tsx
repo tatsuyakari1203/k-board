@@ -60,7 +60,8 @@ function compareValues(a: unknown, b: unknown, type: PropertyType): number {
 
 // Helper to check if task matches filter
 function matchesFilter(task: TaskData, filter: FilterConfig, properties: Property[]): boolean {
-  const value = task.properties[filter.propertyId];
+  const taskProps = task.properties || {};
+  const value = taskProps[filter.propertyId];
 
   switch (filter.operator) {
     case "is_empty":
@@ -123,9 +124,10 @@ export function TableView({
       const query = searchQuery.toLowerCase();
       result = result.filter(task => {
         if (task.title.toLowerCase().includes(query)) return true;
+        const taskProps = task.properties || {};
         for (const prop of board.properties) {
           if (prop.type === PropertyType.TEXT || prop.type === PropertyType.RICH_TEXT) {
-            const value = task.properties[prop.id];
+            const value = taskProps[prop.id];
             if (value && String(value).toLowerCase().includes(query)) return true;
           }
         }
@@ -147,8 +149,8 @@ export function TableView({
           const prop = board.properties.find(p => p.id === sort.propertyId);
           if (!prop) continue;
 
-          const aVal = a.properties[sort.propertyId];
-          const bVal = b.properties[sort.propertyId];
+          const aVal = (a.properties || {})[sort.propertyId];
+          const bVal = (b.properties || {})[sort.propertyId];
           const comparison = compareValues(aVal, bVal, prop.type);
 
           if (comparison !== 0) {
@@ -245,19 +247,22 @@ export function TableView({
                     placeholder="Untitled"
                   />
                 </td>
-                {visibleProperties.map((property) => (
-                  <td key={property.id} className="py-1 px-3">
-                    <PropertyCell
-                      property={property}
-                      value={task.properties[property.id]}
-                      onChange={(value) =>
-                        onUpdateTask(task._id, {
-                          properties: { ...task.properties, [property.id]: value },
-                        })
-                      }
-                    />
-                  </td>
-                ))}
+                {visibleProperties.map((property) => {
+                  const taskProps = task.properties || {};
+                  return (
+                    <td key={property.id} className="py-1 px-3">
+                      <PropertyCell
+                        property={property}
+                        value={taskProps[property.id]}
+                        onChange={(value) =>
+                          onUpdateTask(task._id, {
+                            properties: { ...taskProps, [property.id]: value },
+                          })
+                        }
+                      />
+                    </td>
+                  );
+                })}
                 <td className="w-10 text-center">
                   <button
                     onClick={() => onDeleteTask(task._id)}
@@ -329,23 +334,26 @@ export function TableView({
               </div>
 
               <div className="grid grid-cols-2 gap-2 pl-7">
-                {visibleProperties.slice(0, 6).map((property) => (
-                  <div key={property.id} className="space-y-0.5">
-                    <label className="text-xs text-muted-foreground truncate block">
-                      {property.name}
-                    </label>
-                    <PropertyCell
-                      property={property}
-                      value={task.properties[property.id]}
-                      onChange={(value) =>
-                        onUpdateTask(task._id, {
-                          properties: { ...task.properties, [property.id]: value },
-                        })
-                      }
-                      compact
-                    />
-                  </div>
-                ))}
+                {visibleProperties.slice(0, 6).map((property) => {
+                  const taskProps = task.properties || {};
+                  return (
+                    <div key={property.id} className="space-y-0.5">
+                      <label className="text-xs text-muted-foreground truncate block">
+                        {property.name}
+                      </label>
+                      <PropertyCell
+                        property={property}
+                        value={taskProps[property.id]}
+                        onChange={(value) =>
+                          onUpdateTask(task._id, {
+                            properties: { ...taskProps, [property.id]: value },
+                          })
+                        }
+                        compact
+                      />
+                    </div>
+                  );
+                })}
               </div>
 
               {visibleProperties.length > 6 && (

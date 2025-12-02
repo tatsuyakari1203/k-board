@@ -47,6 +47,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         _id: t._id.toString(),
         boardId: t.boardId.toString(),
         createdBy: t.createdBy.toString(),
+        properties: t.properties || {},
       }))
     );
   } catch (error) {
@@ -123,6 +124,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
         _id: task._id.toString(),
         boardId: task.boardId.toString(),
         createdBy: task.createdBy.toString(),
+        properties: task.properties || {},
       },
       { status: 201 }
     );
