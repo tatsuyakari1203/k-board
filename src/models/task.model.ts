@@ -29,7 +29,7 @@ const TaskSchema = new Schema<ITask>(
     },
     title: {
       type: String,
-      required: [true, "Tiêu đề là bắt buộc"],
+      default: "",
       maxlength: [500, "Tiêu đề không được quá 500 ký tự"],
       trim: true,
     },
@@ -76,6 +76,11 @@ TaskSchema.virtual("board", {
 // ============================================
 // EXPORT
 // ============================================
+
+// Delete the model if it exists to prevent using stale model in dev
+if (process.env.NODE_ENV === "development" && mongoose.models.Task) {
+  delete mongoose.models.Task;
+}
 
 const Task: Model<ITask> =
   mongoose.models.Task || mongoose.model<ITask>("Task", TaskSchema);

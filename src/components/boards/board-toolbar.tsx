@@ -84,17 +84,20 @@ export function BoardToolbar({
           onClearFilters={onClearFilters}
         >
           <Button
+            asChild
             variant="ghost"
             size="sm"
             className={`h-7 text-xs gap-1.5 ${filters.length > 0 ? "text-primary" : ""}`}
           >
-            <Filter className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Lọc</span>
-            {filters.length > 0 && (
-              <span className="bg-primary/20 text-primary px-1.5 rounded-full text-xs">
-                {filters.length}
-              </span>
-            )}
+            <div role="button" tabIndex={0}>
+              <Filter className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Lọc</span>
+              {filters.length > 0 && (
+                <span className="bg-primary/20 text-primary px-1.5 rounded-full text-xs">
+                  {filters.length}
+                </span>
+              )}
+            </div>
           </Button>
         </FilterPopover>
 
@@ -107,17 +110,20 @@ export function BoardToolbar({
           onClearSorts={onClearSorts}
         >
           <Button
+            asChild
             variant="ghost"
             size="sm"
             className={`h-7 text-xs gap-1.5 ${sorts.length > 0 ? "text-primary" : ""}`}
           >
-            <ArrowUpDown className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Sắp xếp</span>
-            {sorts.length > 0 && (
-              <span className="bg-primary/20 text-primary px-1.5 rounded-full text-xs">
-                {sorts.length}
-              </span>
-            )}
+            <div role="button" tabIndex={0}>
+              <ArrowUpDown className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Sắp xếp</span>
+              {sorts.length > 0 && (
+                <span className="bg-primary/20 text-primary px-1.5 rounded-full text-xs">
+                  {sorts.length}
+                </span>
+              )}
+            </div>
           </Button>
         </SortPopover>
 
@@ -125,17 +131,20 @@ export function BoardToolbar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
+              asChild
               variant="ghost"
               size="sm"
               className={`h-7 text-xs gap-1.5 ${groupBy ? "text-primary" : ""}`}
             >
-              <Layers className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Nhóm</span>
-              {groupBy && (
-                <span className="bg-primary/20 text-primary px-1.5 rounded-full text-xs">
-                  1
-                </span>
-              )}
+              <div role="button" tabIndex={0}>
+                <Layers className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Nhóm</span>
+                {groupBy && (
+                  <span className="bg-primary/20 text-primary px-1.5 rounded-full text-xs">
+                    1
+                  </span>
+                )}
+              </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56">
@@ -164,17 +173,26 @@ export function BoardToolbar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
+              asChild
               variant="ghost"
               size="sm"
               className="h-7 text-xs gap-1.5"
             >
-              <Eye className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Hiển thị</span>
+              <div role="button" tabIndex={0}>
+                <Eye className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Hiển thị</span>
+              </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-56 max-h-[300px] overflow-y-auto">
             <DropdownMenuLabel>Hiển thị cột</DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuCheckboxItem
+                checked={!visibleProperties || visibleProperties.includes("title")}
+                onCheckedChange={() => onToggleColumnVisibility("title")}
+            >
+                Tiêu đề
+            </DropdownMenuCheckboxItem>
             {properties.map((prop) => (
               <DropdownMenuCheckboxItem
                 key={prop.id}
@@ -233,8 +251,10 @@ export function BoardToolbar({
         {/* More options */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0">
-              <MoreHorizontal className="h-3.5 w-3.5" />
+            <Button asChild variant="ghost" size="sm" className="h-7 w-7 p-0">
+              <div role="button" tabIndex={0}>
+                <MoreHorizontal className="h-3.5 w-3.5" />
+              </div>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

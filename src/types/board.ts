@@ -122,7 +122,7 @@ export const viewConfigSchema = z.object({
   groupBy: z.string().uuid().optional(), // For Kanban or Table grouping
   sortBy: z.array(sortSchema).optional(),
   filters: z.array(filterSchema).optional(),
-  visibleProperties: z.array(z.string().uuid()).optional(),
+  visibleProperties: z.array(z.string()).optional(),
   aggregations: z.array(aggregationSchema).optional(),
 });
 
@@ -177,7 +177,7 @@ export type UpdateBoardInput = z.infer<typeof updateBoardSchema>;
 export const taskSchema = z.object({
   _id: z.string().optional(),
   boardId: z.string(),
-  title: z.string().min(1).max(500),
+  title: z.string().max(500).default(""),
   properties: z.record(z.string(), z.unknown()), // { propertyId: value }
   order: z.number().int().min(0),
   createdBy: z.string(),

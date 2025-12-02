@@ -37,6 +37,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { cn } from "@/lib/utils";
 
 interface TaskData {
   _id: string;
@@ -76,6 +77,16 @@ interface TableViewProps {
   onUpdateAggregation?: (propertyId: string, type: AggregationType | null) => void;
   groupBy?: string;
   onBulkDeleteTasks?: (taskIds: string[]) => void;
+}
+
+// Helper to extract date value
+function getDateValue(value: unknown): string | null {
+  if (!value) return null;
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object' && value !== null && 'from' in value) {
+    return (value as any).from;
+  }
+  return String(value);
 }
 
 // Helper to calculate aggregation
@@ -127,7 +138,11 @@ function compareValues(a: unknown, b: unknown, type: PropertyType): number {
     case PropertyType.CURRENCY:
       return Number(a) - Number(b);
     case PropertyType.DATE:
-      return new Date(String(a)).getTime() - new Date(String(b)).getTime();
+      const dateA = getDateValue(a);
+      const dateB = getDateValue(b);
+      if (!dateA) return 1;
+      if (!dateB) return -1;
+      return new Date(dateA).getTime() - new Date(dateB).getTime();
     case PropertyType.CHECKBOX:
       return (a ? 1 : 0) - (b ? 1 : 0);
     default:
@@ -138,7 +153,13 @@ function compareValues(a: unknown, b: unknown, type: PropertyType): number {
 // Helper to check if task matches filter
 function matchesFilter(task: TaskData, filter: FilterConfig, properties: Property[]): boolean {
   const taskProps = task.properties || {};
-  const value = taskProps[filter.propertyId];
+  let value = taskProps[filter.propertyId];
+
+  // Handle date objects for filtering
+  const property = properties.find(p => p.id === filter.propertyId);
+  if (property?.type === PropertyType.DATE) {
+    value = getDateValue(value);
+  }
 
   switch (filter.operator) {
     case "is_empty":
@@ -230,26 +251,33 @@ function SortableHeader({
       style={style}
       className="text-left font-medium text-muted-foreground py-2 px-3 bg-background relative group/header"
     >
-      <div className="flex items-center justify-between" {...attributes} {...listeners}>
-        {isEditing ? (
-          <input
-            type="text"
-            value={editValue}
-            onChange={(e) => setEditValue(e.target.value)}
-            onBlur={handleRenameSubmit}
-            onKeyDown={handleKeyDown}
-            className="w-full bg-background border rounded px-1 py-0.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
-            autoFocus
-            onClick={(e) => e.stopPropagation()}
-            onMouseDown={(e) => e.stopPropagation()}
-          />
-        ) : (
-          <span className="truncate cursor-grab active:cursor-grabbing select-none">{property.name}</span>
-        )}
+      <div className="flex items-center justify-between">
+        <div
+          className="flex-1 flex items-center min-w-0 cursor-grab active:cursor-grabbing mr-1"
+          {...attributes}
+          {...listeners}
+        >
+          {isEditing ? (
+            <input
+              type="text"
+              value={editValue}
+              onChange={(e) => setEditValue(e.target.value)}
+              onBlur={handleRenameSubmit}
+              onKeyDown={handleKeyDown}
+              className="w-full bg-background border rounded px-1 py-0.5 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
+              autoFocus
+              onClick={(e) => e.stopPropagation()}
+              onMouseDown={(e) => e.stopPropagation()}
+              onPointerDown={(e) => e.stopPropagation()}
+            />
+          ) : (
+            <span className="truncate select-none">{property.name}</span>
+          )}
+        </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="opacity-0 group-hover/header:opacity-100 p-0.5 hover:bg-accent rounded transition-opacity">
+            <button className="opacity-0 group-hover/header:opacity-100 p-0.5 hover:bg-accent rounded transition-opacity shrink-0">
               <MoreHorizontal className="h-3.5 w-3.5" />
             </button>
           </DropdownMenuTrigger>
@@ -304,6 +332,11 @@ function SortableRow({
   isDragEnabled,
   isSelected,
   onToggleSelect,
+  visualIndex,
+  onFillStart,
+  onFillMove,
+  fillRange,
+  isTitleVisible,
 }: {
   task: TaskData;
   visibleProperties: Property[];
@@ -315,6 +348,11 @@ function SortableRow({
   isDragEnabled: boolean;
   isSelected: boolean;
   onToggleSelect: (id: string) => void;
+  visualIndex: number;
+  onFillStart: (e: React.MouseEvent, taskId: string, propertyId: string, value: unknown, index: number) => void;
+  onFillMove: (index: number) => void;
+  fillRange: { start: number; end: number; propertyId: string } | null;
+  isTitleVisible: boolean;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task._id,
@@ -338,6 +376,7 @@ function SortableRow({
       ref={setNodeRef}
       style={style}
       className={`border-b hover:bg-accent/30 transition-colors group ${isSelected ? "bg-accent/40" : ""}`}
+      onMouseEnter={() => onFillMove(visualIndex)}
     >
       <td className="w-8 text-center border-r p-0 bg-background sticky left-0 z-20">
         <div className="flex items-center justify-center h-full w-full">
@@ -363,21 +402,31 @@ function SortableRow({
           </button>
         )}
       </td>
-      <td className="py-1 px-3 sticky left-16 bg-background border-r z-20 group-hover:bg-accent/30">
-        <input
-          type="text"
-          value={task.title}
-          onChange={(e) => onUpdateTask(task._id, { title: e.target.value })}
-          className="w-full bg-transparent border-none outline-none py-1.5 px-0 focus:ring-0"
-          placeholder="Untitled"
-        />
-      </td>
+      {isTitleVisible && (
+        <td className="py-1 px-3 sticky left-16 bg-background border-r z-20 group-hover:bg-accent/30">
+          <input
+            type="text"
+            value={task.title}
+            onChange={(e) => onUpdateTask(task._id, { title: e.target.value })}
+            className="w-full bg-transparent border-none outline-none py-1.5 px-0 focus:ring-0"
+            placeholder="Untitled"
+          />
+        </td>
+      )}
       {visibleProperties.map((property) => {
         const taskProps = task.properties || {};
+        const isInFillRange = fillRange &&
+          fillRange.propertyId === property.id &&
+          visualIndex >= Math.min(fillRange.start, fillRange.end) &&
+          visualIndex <= Math.max(fillRange.start, fillRange.end);
+
         return (
           <td
             key={property.id}
-            className="py-1 px-3"
+            className={cn(
+              "py-1 px-3 relative group/cell border-r border-transparent hover:border-border",
+              isInFillRange && "bg-primary/10 ring-1 ring-primary inset-0"
+            )}
             style={{ width: columnWidths[property.id] || 150, minWidth: 80 }}
           >
             <PropertyCell
@@ -390,6 +439,14 @@ function SortableRow({
               }
               onAddOption={onAddPropertyOption}
               users={users}
+            />
+            {/* Fill Handle */}
+            <div
+              className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-primary rounded-tl-sm cursor-crosshair opacity-0 group-hover/cell:opacity-100 transition-opacity z-20"
+              onMouseDown={(e) => {
+                e.stopPropagation(); // Prevent row drag
+                onFillStart(e, task._id, property.id, taskProps[property.id], visualIndex);
+              }}
             />
           </td>
         );
@@ -461,13 +518,11 @@ export function TableView({
   groupBy,
   onBulkDeleteTasks,
 }: TableViewProps) {
-  const [newTaskTitle, setNewTaskTitle] = useState("");
-  const [isAddingTask, setIsAddingTask] = useState(false);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const [resizing, setResizing] = useState<{ id: string; startX: number; startWidth: number } | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [fillRange, setFillRange] = useState<{ start: number; end: number; propertyId: string; value: unknown } | null>(null);
 
   const AGGREGATION_LABELS: Record<string, string> = {
     [AggregationType.COUNT]: "Đếm tất cả",
@@ -546,6 +601,8 @@ export function TableView({
       ? sortedProperties.filter((p) => view.config.visibleProperties!.includes(p.id))
       : sortedProperties;
   }, [sortedProperties, view.config.visibleProperties]);
+
+  const isTitleVisible = !view.config.visibleProperties || view.config.visibleProperties.includes("title");
 
   // Apply search, filters and sorts to tasks
   const processedTasks = useMemo(() => {
@@ -677,6 +734,142 @@ export function TableView({
     return groups;
   }, [processedTasks, groupBy, board.properties, users]);
 
+  // Flatten tasks for visual index calculation
+  const visualTasks = useMemo(() => {
+    if (groupedTasks) {
+      const tasks: TaskData[] = [];
+      groupedTasks.forEach(g => {
+        if (expandedGroups[g.id] !== false) { // Default true
+           tasks.push(...g.tasks);
+        }
+      });
+      return tasks;
+    }
+    return processedTasks;
+  }, [groupedTasks, processedTasks, expandedGroups]);
+
+  // Fill Handle Logic
+  const handleFillStart = (e: React.MouseEvent, taskId: string, propertyId: string, value: unknown, index: number) => {
+    setFillRange({ start: index, end: index, propertyId, value });
+
+    const handleMouseUp = () => {
+      setFillRange(prev => {
+        if (prev && prev.start !== prev.end) {
+          // Apply changes
+          const start = Math.min(prev.start, prev.end);
+          const end = Math.max(prev.start, prev.end);
+
+          // We need to find the tasks in this range
+          // Since visualTasks is derived from state, we can use it
+          // BUT we need to be careful about stale closures if we use visualTasks directly here?
+          // Actually, setFillRange callback gives us the range.
+          // We need the tasks.
+          // Let's trigger an effect or just use the ref to tasks?
+          // Or just dispatch the updates here if we have access to tasks.
+          // We don't have access to the latest visualTasks inside this closure unless we use a ref or similar.
+          // However, since we are adding the listener on mousedown, the closure captures the current render scope.
+          // If visualTasks changes during drag (unlikely unless real-time update), it might be an issue.
+          // For now, let's assume visualTasks is stable enough during a drag.
+        }
+        return null;
+      });
+      document.removeEventListener("mouseup", handleMouseUp);
+      // document.removeEventListener("mousemove", handleMouseMove); // We use onMouseEnter on rows instead
+    };
+
+    document.addEventListener("mouseup", handleMouseUp);
+  };
+
+  // We need to apply the changes when fillRange becomes null (on mouse up)
+  // But we can't do it inside the setState callback easily because we need side effects (API calls).
+  // So let's use an effect that watches for the transition from non-null to null?
+  // Or just handle it in the mouseup handler with a ref to visualTasks.
+  const visualTasksRef = useRef(visualTasks);
+  useEffect(() => {
+    visualTasksRef.current = visualTasks;
+  }, [visualTasks]);
+
+  useEffect(() => {
+    if (!fillRange) return;
+
+    const handleMouseUp = () => {
+      if (fillRange.start !== fillRange.end) {
+        const start = Math.min(fillRange.start, fillRange.end);
+        const end = Math.max(fillRange.start, fillRange.end);
+        const tasksToUpdate = visualTasksRef.current.slice(start, end + 1);
+
+        tasksToUpdate.forEach(task => {
+            // Skip the source task if it's included (it is)
+            // Actually we want to copy TO the range.
+            // If dragging down: start is source.
+            // If dragging up: end is source?
+            // Excel logic: The source is the cell you started dragging FROM.
+            // So we apply `fillRange.value` to all tasks in range.
+            if (task.properties[fillRange.propertyId] !== fillRange.value) {
+                onUpdateTask(task._id, {
+                    properties: { ...task.properties, [fillRange.propertyId]: fillRange.value }
+                });
+            }
+        });
+      }
+      setFillRange(null);
+    };
+
+    const onMouseUp = () => {
+        handleMouseUp();
+        document.removeEventListener("mouseup", onMouseUp);
+    }
+    document.addEventListener("mouseup", onMouseUp);
+    return () => document.removeEventListener("mouseup", onMouseUp);
+  }, [fillRange, onUpdateTask]); // Re-binds if fillRange changes, which happens on move. This is inefficient.
+
+  // Better approach:
+  // Keep fillRange in state.
+  // On mouse up (global), read the current fillRange state and apply.
+  // But global listener needs access to current state.
+
+  // Let's refactor handleFillStart to NOT add the listener, but set a flag `isFilling`.
+  // And have a global `useEffect` that handles the mouseup if `isFilling` is true.
+
+  const [isFilling, setIsFilling] = useState(false);
+
+  const onFillStartAction = (e: React.MouseEvent, taskId: string, propertyId: string, value: unknown, index: number) => {
+      setIsFilling(true);
+      setFillRange({ start: index, end: index, propertyId, value });
+  };
+
+  const onFillMoveAction = (index: number) => {
+      if (isFilling && fillRange) {
+          setFillRange({ ...fillRange, end: index });
+      }
+  };
+
+  useEffect(() => {
+      if (!isFilling) return;
+
+      const handleMouseUp = () => {
+          setIsFilling(false);
+          if (fillRange && fillRange.start !== fillRange.end) {
+              const start = Math.min(fillRange.start, fillRange.end);
+              const end = Math.max(fillRange.start, fillRange.end);
+              const tasksToUpdate = visualTasksRef.current.slice(start, end + 1);
+
+              tasksToUpdate.forEach(task => {
+                  // Don't update if value is same (optimization)
+                  // Also skip the source task ideally, but updating it with same value is harmless
+                  onUpdateTask(task._id, {
+                      properties: { ...task.properties, [fillRange.propertyId]: fillRange.value }
+                  });
+              });
+          }
+          setFillRange(null);
+      };
+
+      document.addEventListener("mouseup", handleMouseUp);
+      return () => document.removeEventListener("mouseup", handleMouseUp);
+  }, [isFilling, fillRange, onUpdateTask]);
+
+
   // Initialize expanded state for new groups
   useEffect(() => {
     if (groupedTasks) {
@@ -714,27 +907,8 @@ export function TableView({
     setSelectedTaskIds(newSelected);
   };
 
-  const handleAddTask = async () => {
-    if (!newTaskTitle.trim()) return;
-    const result = await onCreateTask(newTaskTitle.trim());
-    if (result) {
-      setNewTaskTitle("");
-      setIsAddingTask(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      handleAddTask();
-    } else if (e.key === "Escape") {
-      setNewTaskTitle("");
-      setIsAddingTask(false);
-    }
-  };
-
   const startAddingTask = () => {
-    setIsAddingTask(true);
-    setTimeout(() => inputRef.current?.focus(), 0);
+    onCreateTask("");
   };
 
   // Drag End Handler
@@ -788,9 +962,11 @@ export function TableView({
                     </div>
                 </th>
                 <th className="w-8 bg-background sticky left-8 z-30 border-r" />
-                <th className="text-left font-medium text-muted-foreground py-2 px-3 min-w-[200px] bg-background sticky left-16 z-30 border-r">
-                  Tiêu đề
-                </th>
+                {isTitleVisible && (
+                  <th className="text-left font-medium text-muted-foreground py-2 px-3 min-w-[200px] bg-background sticky left-16 z-30 border-r">
+                    Tiêu đề
+                  </th>
+                )}
                 <SortableContext
                   items={visibleProperties.map(p => p.id)}
                   strategy={horizontalListSortingStrategy}
@@ -815,7 +991,17 @@ export function TableView({
             <tbody>
               {groupedTasks ? (
                 // Grouped View
-                groupedTasks.map(group => (
+                groupedTasks.map(group => {
+                  // Calculate starting index for this group
+                  // We need to know how many tasks were in previous groups
+                  // This is expensive to calculate in render loop if we don't have it pre-calculated.
+                  // But we can use the task ID to find index in visualTasks?
+                  // Or just map visualTasks and render?
+                  // But we need the headers.
+
+                  // Let's use a running index counter? No, React render must be pure.
+                  // We can pre-calculate group start indices.
+                  return (
                   <>
                     <GroupHeader
                       key={group.id}
@@ -824,7 +1010,7 @@ export function TableView({
                       color={group.color}
                       isExpanded={!!expandedGroups[group.id]}
                       onToggle={() => toggleGroup(group.id)}
-                      colSpan={visibleProperties.length + 4}
+                      colSpan={visibleProperties.length + (isTitleVisible ? 4 : 3)}
                     />
                     {expandedGroups[group.id] && (
                       <SortableContext
@@ -832,7 +1018,13 @@ export function TableView({
                         strategy={verticalListSortingStrategy}
                         disabled={true} // Disable drag in grouped view for now
                       >
-                        {group.tasks.map((task) => (
+                        {group.tasks.map((task) => {
+                           // Find index in visualTasks
+                           // This is O(N*M) where N is total tasks and M is group tasks.
+                           // Optimization: Create a map of taskId -> index
+                           const vIndex = visualTasks.findIndex(t => t._id === task._id);
+
+                           return (
                           <SortableRow
                             key={task._id}
                             task={task}
@@ -845,12 +1037,17 @@ export function TableView({
                             isDragEnabled={false}
                             isSelected={selectedTaskIds.has(task._id)}
                             onToggleSelect={handleToggleSelect}
+                            visualIndex={vIndex}
+                            onFillStart={onFillStartAction}
+                            onFillMove={onFillMoveAction}
+                            fillRange={fillRange}
+                            isTitleVisible={isTitleVisible}
                           />
-                        ))}
+                        )})}
                       </SortableContext>
                     )}
                   </>
-                ))
+                )})
               ) : (
                 // Flat View
                 <SortableContext
@@ -858,7 +1055,7 @@ export function TableView({
                   strategy={verticalListSortingStrategy}
                   disabled={!isRowDragEnabled}
                 >
-                  {processedTasks.map((task) => (
+                  {processedTasks.map((task, index) => (
                     <SortableRow
                       key={task._id}
                       task={task}
@@ -871,6 +1068,11 @@ export function TableView({
                       isDragEnabled={isRowDragEnabled}
                       isSelected={selectedTaskIds.has(task._id)}
                       onToggleSelect={handleToggleSelect}
+                      visualIndex={index}
+                      onFillStart={onFillStartAction}
+                      onFillMove={onFillMoveAction}
+                      fillRange={fillRange}
+                      isTitleVisible={isTitleVisible}
                     />
                   ))}
                 </SortableContext>
@@ -879,19 +1081,21 @@ export function TableView({
               <tr className="border-b">
                 <td className="w-8 border-r bg-background sticky left-0 z-20" />
                 <td className="w-8 border-r bg-background sticky left-8 z-20" />
-                <td colSpan={visibleProperties.length + 2} className="py-1 px-3">
-                  {isAddingTask ? (
-                    <input
-                      ref={inputRef}
-                      type="text"
-                      value={newTaskTitle}
-                      onChange={(e) => setNewTaskTitle(e.target.value)}
-                      onBlur={() => { if (!newTaskTitle.trim()) setIsAddingTask(false); }}
-                      onKeyDown={handleKeyDown}
-                      className="w-full bg-transparent border-none outline-none py-1.5 px-0 focus:ring-0"
-                      placeholder="Nhập tiêu đề..."
-                    />
-                  ) : (
+                {isTitleVisible ? (
+                  <>
+                    <td className="py-1 px-3 sticky left-16 z-20 bg-background border-r">
+                      <button
+                        onClick={startAddingTask}
+                        className="flex items-center gap-1.5 py-1.5 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <Plus className="h-4 w-4" />
+                        <span>Thêm mới</span>
+                      </button>
+                    </td>
+                    <td colSpan={visibleProperties.length} className="bg-background" />
+                  </>
+                ) : (
+                  <td colSpan={visibleProperties.length} className="py-1 px-3">
                     <button
                       onClick={startAddingTask}
                       className="flex items-center gap-1.5 py-1.5 text-muted-foreground hover:text-foreground transition-colors"
@@ -899,20 +1103,22 @@ export function TableView({
                       <Plus className="h-4 w-4" />
                       <span>Thêm mới</span>
                     </button>
-                  )}
-                </td>
+                  </td>
+                )}
               </tr>
             </tbody>
             <tfoot className="sticky bottom-0 bg-background z-10 border-t shadow-sm">
               <tr>
                 <td className="w-8 border-r sticky left-0 bg-background z-20" />
                 <td className="w-8 border-r sticky left-8 bg-background z-20" />
-                <td className="py-2 px-3 border-r font-medium text-muted-foreground text-right sticky left-16 bg-background z-20">
-                  <div className="flex items-center justify-end gap-2">
-                    <span className="text-xs uppercase">Đếm:</span>
-                    <span>{processedTasks.length}</span>
-                  </div>
-                </td>
+                {isTitleVisible && (
+                  <td className="py-2 px-3 border-r font-medium text-muted-foreground text-right sticky left-16 bg-background z-20">
+                    <div className="flex items-center justify-end gap-2">
+                      <span className="text-xs uppercase">Đếm:</span>
+                      <span>{processedTasks.length}</span>
+                    </div>
+                  </td>
+                )}
                 {visibleProperties.map((property) => {
                   const aggregation = view.config.aggregations?.find(a => a.propertyId === property.id);
                   const value = aggregation ? calculateAggregation(processedTasks, property, aggregation.type) : null;
@@ -1060,33 +1266,19 @@ export function TableView({
             ))}
 
             <div className="p-4">
-              {isAddingTask ? (
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={newTaskTitle}
-                  onChange={(e) => setNewTaskTitle(e.target.value)}
-                  onBlur={() => { if (!newTaskTitle.trim()) setIsAddingTask(false); }}
-                  onKeyDown={handleKeyDown}
-                  className="flex-1 w-full bg-transparent border-none outline-none py-2 focus:ring-0"
-                  placeholder="Nhập tiêu đề..."
-                  autoFocus
-                />
-              ) : (
-                <button
-                  onClick={startAddingTask}
-                  className="flex items-center gap-2 py-2 text-muted-foreground hover:text-foreground transition-colors w-full"
-                >
-                  <Plus className="h-4 w-4" />
-                  <span>Thêm mới</span>
-                </button>
-              )}
+              <button
+                onClick={startAddingTask}
+                className="flex items-center gap-2 py-2 text-muted-foreground hover:text-foreground transition-colors w-full"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Thêm mới</span>
+              </button>
             </div>
           </div>
         </div>
 
         {/* Empty state */}
-        {processedTasks.length === 0 && !isAddingTask && (
+        {processedTasks.length === 0 && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
             <p className="text-muted-foreground mb-2">
               {filters.length > 0 || searchQuery ? "Không tìm thấy kết quả" : "Chưa có hồ sơ nào"}
