@@ -30,6 +30,10 @@ export function BoardHeader({
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    setTitle(board.name);
+  }, [board.name]);
+
+  useEffect(() => {
     if (isEditingTitle && inputRef.current) {
       inputRef.current.focus();
       inputRef.current.select();

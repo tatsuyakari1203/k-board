@@ -8,6 +8,8 @@ import {
   MoreHorizontal,
   Search,
   X,
+  Layers,
+  Eye,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,8 +18,11 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuCheckboxItem,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import { type Property, type SortConfig, type FilterConfig } from "@/types/board";
+import { type Property, type SortConfig, type FilterConfig, PropertyType } from "@/types/board";
 import { FilterPopover } from "./filter-popover";
 import { SortPopover } from "./sort-popover";
 
@@ -25,6 +30,8 @@ interface BoardToolbarProps {
   properties: Property[];
   filters: FilterConfig[];
   sorts: SortConfig[];
+  groupBy?: string;
+  visibleProperties?: string[];
   searchQuery: string;
   onSearchChange: (query: string) => void;
   onAddPropertyClick: () => void;
@@ -35,12 +42,16 @@ interface BoardToolbarProps {
   onAddSort: (sort: SortConfig) => void;
   onRemoveSort: (index: number) => void;
   onClearSorts: () => void;
+  onGroupByChange: (propertyId: string | undefined) => void;
+  onToggleColumnVisibility: (propertyId: string) => void;
 }
 
 export function BoardToolbar({
   properties,
   filters,
   sorts,
+  groupBy,
+  visibleProperties,
   searchQuery,
   onSearchChange,
   onAddPropertyClick,
@@ -51,8 +62,14 @@ export function BoardToolbar({
   onAddSort,
   onRemoveSort,
   onClearSorts,
+  onGroupByChange,
+  onToggleColumnVisibility,
 }: BoardToolbarProps) {
   const [showSearch, setShowSearch] = useState(false);
+
+  const groupableProperties = properties.filter(p =>
+    ([PropertyType.SELECT, PropertyType.STATUS, PropertyType.PERSON, PropertyType.USER] as string[]).includes(p.type)
+  );
 
   return (
     <div className="flex flex-col gap-2 px-4 py-2 border-b md:px-6">
@@ -103,6 +120,72 @@ export function BoardToolbar({
             )}
           </Button>
         </SortPopover>
+
+        {/* Group button */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className={`h-7 text-xs gap-1.5 ${groupBy ? "text-primary" : ""}`}
+            >
+              <Layers className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Nhóm</span>
+              {groupBy && (
+                <span className="bg-primary/20 text-primary px-1.5 rounded-full text-xs">
+                  1
+                </span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56">
+            <DropdownMenuItem onClick={() => onGroupByChange(undefined)}>
+              Không nhóm
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            {groupableProperties.map((prop) => (
+              <DropdownMenuCheckboxItem
+                key={prop.id}
+                checked={groupBy === prop.id}
+                onCheckedChange={(checked) => onGroupByChange(checked ? prop.id : undefined)}
+              >
+                {prop.name}
+              </DropdownMenuCheckboxItem>
+            ))}
+            {groupableProperties.length === 0 && (
+              <div className="p-2 text-xs text-muted-foreground text-center">
+                Không có thuộc tính để nhóm
+              </div>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
+        {/* Columns Visibility */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 text-xs gap-1.5"
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Hiển thị</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-56 max-h-[300px] overflow-y-auto">
+            <DropdownMenuLabel>Hiển thị cột</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {properties.map((prop) => (
+              <DropdownMenuCheckboxItem
+                key={prop.id}
+                checked={!visibleProperties || visibleProperties.includes(prop.id)}
+                onCheckedChange={() => onToggleColumnVisibility(prop.id)}
+              >
+                {prop.name}
+              </DropdownMenuCheckboxItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         {/* Search toggle - mobile */}
         <Button

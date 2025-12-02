@@ -1,14 +1,15 @@
 "use client";
 
 import { useState, useRef, useMemo, useCallback, useEffect } from "react";
-import { Plus, GripVertical, Trash2, MoreHorizontal, ChevronRight } from "lucide-react";
+import { Plus, GripVertical, Trash2, MoreHorizontal, ChevronRight, ChevronDown, X } from "lucide-react";
 import { PropertyCell } from "./property-cell";
 import {
   type Property,
   type View,
   type SortConfig,
   type FilterConfig,
-  PropertyType
+  PropertyType,
+  AggregationType,
 } from "@/types/board";
 import {
   DropdownMenu,
@@ -16,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import {
   DndContext,
@@ -71,6 +73,48 @@ interface TableViewProps {
   onReorderProperties?: (oldIndex: number, newIndex: number) => void;
   onRenameProperty?: (propertyId: string, newName: string) => void;
   onAddPropertyAt?: (index: number) => void;
+  onUpdateAggregation?: (propertyId: string, type: AggregationType | null) => void;
+  groupBy?: string;
+  onBulkDeleteTasks?: (taskIds: string[]) => void;
+}
+
+// Helper to calculate aggregation
+function calculateAggregation(tasks: TaskData[], property: Property, type: AggregationType): string | number {
+  const values = tasks.map(t => (t.properties || {})[property.id]).filter(v => v !== undefined && v !== null && v !== "");
+  const allCount = tasks.length;
+  const notEmptyCount = values.length;
+  const emptyCount = allCount - notEmptyCount;
+
+  switch (type) {
+    case AggregationType.COUNT: return allCount;
+    case AggregationType.COUNT_EMPTY: return emptyCount;
+    case AggregationType.COUNT_NOT_EMPTY: return notEmptyCount;
+    case AggregationType.PERCENT_EMPTY: return allCount ? Math.round((emptyCount / allCount) * 100) + "%" : "0%";
+    case AggregationType.PERCENT_NOT_EMPTY: return allCount ? Math.round((notEmptyCount / allCount) * 100) + "%" : "0%";
+  }
+
+  // Numeric calculations
+  if (property.type === PropertyType.NUMBER || property.type === PropertyType.CURRENCY) {
+    const numbers = values.map(v => Number(v)).filter(n => !isNaN(n));
+    if (numbers.length === 0) return 0;
+
+    const sum = numbers.reduce((a, b) => a + b, 0);
+
+    switch (type) {
+      case AggregationType.SUM: return sum;
+      case AggregationType.AVERAGE: return Math.round((sum / numbers.length) * 100) / 100;
+      case AggregationType.MIN: return Math.min(...numbers);
+      case AggregationType.MAX: return Math.max(...numbers);
+      case AggregationType.RANGE: return Math.max(...numbers) - Math.min(...numbers);
+      case AggregationType.MEDIAN: {
+        numbers.sort((a, b) => a - b);
+        const mid = Math.floor(numbers.length / 2);
+        return numbers.length % 2 !== 0 ? numbers[mid] : (numbers[mid - 1] + numbers[mid]) / 2;
+      }
+    }
+  }
+
+  return "";
 }
 
 // Helper to compare values for sorting
@@ -257,7 +301,9 @@ function SortableRow({
   onDeleteTask,
   users,
   onAddPropertyOption,
-  isDragEnabled
+  isDragEnabled,
+  isSelected,
+  onToggleSelect,
 }: {
   task: TaskData;
   visibleProperties: Property[];
@@ -267,6 +313,8 @@ function SortableRow({
   users?: UserOption[];
   onAddPropertyOption?: (id: string, option: any) => void;
   isDragEnabled: boolean;
+  isSelected: boolean;
+  onToggleSelect: (id: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: task._id,
@@ -289,9 +337,22 @@ function SortableRow({
     <tr
       ref={setNodeRef}
       style={style}
-      className="border-b hover:bg-accent/30 transition-colors group"
+      className={`border-b hover:bg-accent/30 transition-colors group ${isSelected ? "bg-accent/40" : ""}`}
     >
-      <td className="w-8 text-center">
+      <td className="w-8 text-center border-r p-0 bg-background sticky left-0 z-20">
+        <div className="flex items-center justify-center h-full w-full">
+            <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={(e) => {
+                    e.stopPropagation();
+                    onToggleSelect(task._id);
+                }}
+                className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+            />
+        </div>
+      </td>
+      <td className="w-8 text-center sticky left-8 z-20 bg-background border-r">
         {isDragEnabled && (
           <button
             {...attributes}
@@ -302,7 +363,7 @@ function SortableRow({
           </button>
         )}
       </td>
-      <td className="py-1 px-3 sticky left-0 bg-background border-r z-10 group-hover:bg-accent/30">
+      <td className="py-1 px-3 sticky left-16 bg-background border-r z-20 group-hover:bg-accent/30">
         <input
           type="text"
           value={task.title}
@@ -345,6 +406,39 @@ function SortableRow({
   );
 }
 
+// Group Header Component
+function GroupHeader({
+  title,
+  count,
+  color,
+  isExpanded,
+  onToggle,
+  colSpan
+}: {
+  title: string;
+  count: number;
+  color?: string;
+  isExpanded: boolean;
+  onToggle: () => void;
+  colSpan: number;
+}) {
+  return (
+    <tr>
+      <td colSpan={colSpan} className="bg-muted/30 border-b py-1.5 px-2">
+        <button
+          onClick={onToggle}
+          className="flex items-center gap-2 hover:bg-muted/50 rounded px-1 py-0.5 transition-colors text-left"
+        >
+          {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+          {color && <div className={`w-2 h-2 rounded-full ${color.split(" ")[0].replace("text-", "bg-")}`} />}
+          <span className="font-medium text-sm">{title}</span>
+          <span className="text-xs text-muted-foreground ml-1">{count}</span>
+        </button>
+      </td>
+    </tr>
+  );
+}
+
 export function TableView({
   board,
   tasks,
@@ -363,12 +457,31 @@ export function TableView({
   onReorderProperties,
   onRenameProperty,
   onAddPropertyAt,
+  onUpdateAggregation,
+  groupBy,
+  onBulkDeleteTasks,
 }: TableViewProps) {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [isAddingTask, setIsAddingTask] = useState(false);
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const [resizing, setResizing] = useState<{ id: string; startX: number; startWidth: number } | null>(null);
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const AGGREGATION_LABELS: Record<string, string> = {
+    [AggregationType.COUNT]: "Đếm tất cả",
+    [AggregationType.COUNT_EMPTY]: "Đếm trống",
+    [AggregationType.COUNT_NOT_EMPTY]: "Đếm có dữ liệu",
+    [AggregationType.PERCENT_EMPTY]: "% Trống",
+    [AggregationType.PERCENT_NOT_EMPTY]: "% Có dữ liệu",
+    [AggregationType.SUM]: "Tổng",
+    [AggregationType.AVERAGE]: "Trung bình",
+    [AggregationType.MEDIAN]: "Trung vị",
+    [AggregationType.MIN]: "Nhỏ nhất",
+    [AggregationType.MAX]: "Lớn nhất",
+    [AggregationType.RANGE]: "Khoảng",
+  };
 
   // Dnd Sensors
   const sensors = useSensors(
@@ -486,6 +599,121 @@ export function TableView({
     return result;
   }, [tasks, searchQuery, filters, sorts, board.properties]);
 
+  // Group tasks logic
+  const groupedTasks = useMemo(() => {
+    if (!groupBy) return null;
+
+    const property = board.properties.find(p => p.id === groupBy);
+    if (!property) return null;
+
+    const groups: { id: string; title: string; color?: string; tasks: TaskData[] }[] = [];
+    const noValueTasks: TaskData[] = [];
+
+    // Initialize groups based on property type
+    if (property.type === PropertyType.SELECT || property.type === PropertyType.STATUS || property.type === PropertyType.MULTI_SELECT) {
+      property.options?.forEach(opt => {
+        groups.push({
+          id: opt.id,
+          title: opt.label,
+          color: opt.color,
+          tasks: []
+        });
+      });
+    } else if (property.type === PropertyType.PERSON || property.type === PropertyType.USER) {
+      users.forEach(user => {
+        groups.push({
+          id: user.id,
+          title: user.name,
+          tasks: []
+        });
+      });
+    }
+
+    // Distribute tasks
+    processedTasks.forEach(task => {
+      const value = (task.properties || {})[groupBy];
+
+      if (!value) {
+        noValueTasks.push(task);
+        return;
+      }
+
+      if (Array.isArray(value)) {
+        // Multi-select: task can be in multiple groups? Or just first one?
+        // Usually grouping by multi-select duplicates the task or picks primary.
+        // For simplicity, let's put in first matching group or no value.
+        if (value.length === 0) {
+          noValueTasks.push(task);
+        } else {
+          const firstVal = value[0];
+          const group = groups.find(g => g.id === firstVal);
+          if (group) {
+            group.tasks.push(task);
+          } else {
+            noValueTasks.push(task);
+          }
+        }
+      } else {
+        const group = groups.find(g => g.id === String(value));
+        if (group) {
+          group.tasks.push(task);
+        } else {
+          noValueTasks.push(task);
+        }
+      }
+    });
+
+    // Add "No Value" group at the end
+    if (noValueTasks.length > 0) {
+      groups.push({
+        id: "no_value",
+        title: "Không có giá trị",
+        tasks: noValueTasks
+      });
+    }
+
+    // Filter out empty groups if desired, or keep them.
+    // Usually we keep them to allow dragging into them (if we supported drag).
+    return groups;
+  }, [processedTasks, groupBy, board.properties, users]);
+
+  // Initialize expanded state for new groups
+  useEffect(() => {
+    if (groupedTasks) {
+      setExpandedGroups(prev => {
+        const next = { ...prev };
+        groupedTasks.forEach(g => {
+          if (next[g.id] === undefined) {
+            next[g.id] = true; // Default expanded
+          }
+        });
+        return next;
+      });
+    }
+  }, [groupedTasks]);
+
+  const toggleGroup = (groupId: string) => {
+    setExpandedGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
+  };
+
+  const handleSelectAll = () => {
+    if (selectedTaskIds.size === processedTasks.length && processedTasks.length > 0) {
+      setSelectedTaskIds(new Set());
+    } else {
+      setSelectedTaskIds(new Set(processedTasks.map(t => t._id)));
+    }
+  };
+
+  const handleToggleSelect = (taskId: string) => {
+    const newSelected = new Set(selectedTaskIds);
+    if (newSelected.has(taskId)) {
+      newSelected.delete(taskId);
+    } else {
+      newSelected.add(taskId);
+    }
+    setSelectedTaskIds(newSelected);
+  };
+
   const handleAddTask = async () => {
     if (!newTaskTitle.trim()) return;
     const result = await onCreateTask(newTaskTitle.trim());
@@ -534,8 +762,8 @@ export function TableView({
     }
   };
 
-  // Disable row drag if sorted or filtered
-  const isRowDragEnabled = !searchQuery && filters.length === 0 && sorts.length === 0;
+  // Disable row drag if sorted or filtered OR grouped
+  const isRowDragEnabled = !searchQuery && filters.length === 0 && sorts.length === 0 && !groupBy;
 
   return (
     <DndContext
@@ -549,8 +777,18 @@ export function TableView({
           <table className="w-full border-collapse text-sm min-w-max">
             <thead className="sticky top-0 bg-background z-10">
               <tr className="border-b">
-                <th className="w-8 bg-background" />
-                <th className="text-left font-medium text-muted-foreground py-2 px-3 min-w-[200px] bg-background sticky left-0 z-20 border-r">
+                <th className="w-8 bg-background border-r p-0 sticky left-0 z-30">
+                    <div className="flex items-center justify-center h-full w-full">
+                        <input
+                            type="checkbox"
+                            checked={processedTasks.length > 0 && selectedTaskIds.size === processedTasks.length}
+                            onChange={handleSelectAll}
+                            className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                        />
+                    </div>
+                </th>
+                <th className="w-8 bg-background sticky left-8 z-30 border-r" />
+                <th className="text-left font-medium text-muted-foreground py-2 px-3 min-w-[200px] bg-background sticky left-16 z-30 border-r">
                   Tiêu đề
                 </th>
                 <SortableContext
@@ -575,28 +813,73 @@ export function TableView({
             </thead>
 
             <tbody>
-              <SortableContext
-                items={processedTasks.map(t => t._id)}
-                strategy={verticalListSortingStrategy}
-                disabled={!isRowDragEnabled}
-              >
-                {processedTasks.map((task) => (
-                  <SortableRow
-                    key={task._id}
-                    task={task}
-                    visibleProperties={visibleProperties}
-                    columnWidths={columnWidths}
-                    onUpdateTask={onUpdateTask}
-                    onDeleteTask={onDeleteTask}
-                    users={users}
-                    onAddPropertyOption={onAddPropertyOption}
-                    isDragEnabled={isRowDragEnabled}
-                  />
-                ))}
-              </SortableContext>
+              {groupedTasks ? (
+                // Grouped View
+                groupedTasks.map(group => (
+                  <>
+                    <GroupHeader
+                      key={group.id}
+                      title={group.title}
+                      count={group.tasks.length}
+                      color={group.color}
+                      isExpanded={!!expandedGroups[group.id]}
+                      onToggle={() => toggleGroup(group.id)}
+                      colSpan={visibleProperties.length + 4}
+                    />
+                    {expandedGroups[group.id] && (
+                      <SortableContext
+                        items={group.tasks.map(t => t._id)}
+                        strategy={verticalListSortingStrategy}
+                        disabled={true} // Disable drag in grouped view for now
+                      >
+                        {group.tasks.map((task) => (
+                          <SortableRow
+                            key={task._id}
+                            task={task}
+                            visibleProperties={visibleProperties}
+                            columnWidths={columnWidths}
+                            onUpdateTask={onUpdateTask}
+                            onDeleteTask={onDeleteTask}
+                            users={users}
+                            onAddPropertyOption={onAddPropertyOption}
+                            isDragEnabled={false}
+                            isSelected={selectedTaskIds.has(task._id)}
+                            onToggleSelect={handleToggleSelect}
+                          />
+                        ))}
+                      </SortableContext>
+                    )}
+                  </>
+                ))
+              ) : (
+                // Flat View
+                <SortableContext
+                  items={processedTasks.map(t => t._id)}
+                  strategy={verticalListSortingStrategy}
+                  disabled={!isRowDragEnabled}
+                >
+                  {processedTasks.map((task) => (
+                    <SortableRow
+                      key={task._id}
+                      task={task}
+                      visibleProperties={visibleProperties}
+                      columnWidths={columnWidths}
+                      onUpdateTask={onUpdateTask}
+                      onDeleteTask={onDeleteTask}
+                      users={users}
+                      onAddPropertyOption={onAddPropertyOption}
+                      isDragEnabled={isRowDragEnabled}
+                      isSelected={selectedTaskIds.has(task._id)}
+                      onToggleSelect={handleToggleSelect}
+                    />
+                  ))}
+                </SortableContext>
+              )}
 
               <tr className="border-b">
-                <td className="w-8" /><td colSpan={visibleProperties.length + 2} className="py-1 px-3">
+                <td className="w-8 border-r bg-background sticky left-0 z-20" />
+                <td className="w-8 border-r bg-background sticky left-8 z-20" />
+                <td colSpan={visibleProperties.length + 2} className="py-1 px-3">
                   {isAddingTask ? (
                     <input
                       ref={inputRef}
@@ -620,6 +903,88 @@ export function TableView({
                 </td>
               </tr>
             </tbody>
+            <tfoot className="sticky bottom-0 bg-background z-10 border-t shadow-sm">
+              <tr>
+                <td className="w-8 border-r sticky left-0 bg-background z-20" />
+                <td className="w-8 border-r sticky left-8 bg-background z-20" />
+                <td className="py-2 px-3 border-r font-medium text-muted-foreground text-right sticky left-16 bg-background z-20">
+                  <div className="flex items-center justify-end gap-2">
+                    <span className="text-xs uppercase">Đếm:</span>
+                    <span>{processedTasks.length}</span>
+                  </div>
+                </td>
+                {visibleProperties.map((property) => {
+                  const aggregation = view.config.aggregations?.find(a => a.propertyId === property.id);
+                  const value = aggregation ? calculateAggregation(processedTasks, property, aggregation.type) : null;
+
+                  return (
+                    <td key={property.id} className="py-2 px-3 border-r">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button className="w-full text-right text-xs text-muted-foreground hover:text-foreground truncate h-full min-h-[20px] flex items-center justify-end">
+                            {aggregation ? (
+                              <span className="font-medium">
+                                {value}
+                              </span>
+                            ) : (
+                              <span className="opacity-0 hover:opacity-50">Tính toán</span>
+                            )}
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Tính toán</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, null)}>
+                            Không
+                          </DropdownMenuItem>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.COUNT)}>
+                            Đếm tất cả
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.COUNT_EMPTY)}>
+                            Đếm trống
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.COUNT_NOT_EMPTY)}>
+                            Đếm có dữ liệu
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.PERCENT_EMPTY)}>
+                            % Trống
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.PERCENT_NOT_EMPTY)}>
+                            % Có dữ liệu
+                          </DropdownMenuItem>
+
+                          {(property.type === PropertyType.NUMBER || property.type === PropertyType.CURRENCY) && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.SUM)}>
+                                Tổng
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.AVERAGE)}>
+                                Trung bình
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.MIN)}>
+                                Nhỏ nhất
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.MAX)}>
+                                Lớn nhất
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.MEDIAN)}>
+                                Trung vị
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.RANGE)}>
+                                Khoảng
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  );
+                })}
+                <td className="w-10" />
+              </tr>
+            </tfoot>
           </table>
         </div>
 
@@ -629,6 +994,12 @@ export function TableView({
             {processedTasks.map((task) => (
               <div key={task._id} className="p-4 space-y-3">
                 <div className="flex items-start gap-2">
+                  <input
+                    type="checkbox"
+                    checked={selectedTaskIds.has(task._id)}
+                    onChange={() => handleToggleSelect(task._id)}
+                    className="mt-1.5 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
                   <button className="cursor-grab p-1 text-muted-foreground hover:text-foreground mt-0.5">
                     <GripVertical className="h-4 w-4" />
                   </button>
@@ -725,6 +1096,31 @@ export function TableView({
                 Thêm hồ sơ đầu tiên
               </button>
             )}
+          </div>
+        )}
+
+        {selectedTaskIds.size > 0 && (
+          <div className="fixed bottom-12 left-1/2 -translate-x-1/2 bg-foreground text-background px-4 py-2 rounded-full shadow-lg flex items-center gap-4 z-50">
+            <span className="text-sm font-medium">{selectedTaskIds.size} đã chọn</span>
+            <div className="h-4 w-[1px] bg-background/20" />
+            <button
+              onClick={() => {
+                if (onBulkDeleteTasks) {
+                  onBulkDeleteTasks(Array.from(selectedTaskIds));
+                  setSelectedTaskIds(new Set());
+                }
+              }}
+              className="text-sm font-medium hover:text-red-400 flex items-center gap-2"
+            >
+              <Trash2 className="h-4 w-4" />
+              Xóa
+            </button>
+            <button
+                onClick={() => setSelectedTaskIds(new Set())}
+                className="ml-2 p-1 hover:bg-background/20 rounded-full"
+            >
+                <X className="h-4 w-4" />
+            </button>
           </div>
         )}
       </div>

@@ -12,7 +12,8 @@ import {
   type Property,
   type SortConfig,
   type FilterConfig,
-  ViewType
+  ViewType,
+  AggregationType,
 } from "@/types/board";
 
 interface BoardData extends Omit<Board, "createdAt" | "updatedAt"> {
@@ -324,6 +325,125 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
     setSorts([]);
   }, []);
 
+  // Group By handler
+  const handleGroupByChange = useCallback(
+    async (propertyId: string | undefined) => {
+      if (!activeView) return;
+
+      const updatedView = {
+        ...activeView,
+        config: {
+          ...activeView.config,
+          groupBy: propertyId,
+        },
+      };
+
+      const updatedViews = board.views.map(v => v.id === activeView.id ? updatedView : v);
+
+      // Optimistic update
+      setBoard(prev => ({ ...prev, views: updatedViews }));
+
+      try {
+        await fetch(`/api/boards/${board._id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ views: updatedViews }),
+        });
+      } catch (error) {
+        console.error("Failed to update group by:", error);
+      }
+    },
+    [board._id, board.views, activeView]
+  );
+
+  // Toggle column visibility
+  const handleToggleColumnVisibility = useCallback(
+    async (propertyId: string) => {
+      if (!activeView) return;
+
+      const currentVisible = activeView.config.visibleProperties || board.properties.map(p => p.id);
+      let newVisible;
+
+      if (currentVisible.includes(propertyId)) {
+        newVisible = currentVisible.filter(id => id !== propertyId);
+      } else {
+        newVisible = [...currentVisible, propertyId];
+      }
+
+      const updatedView = {
+        ...activeView,
+        config: {
+          ...activeView.config,
+          visibleProperties: newVisible,
+        },
+      };
+
+      const updatedViews = board.views.map(v => v.id === activeView.id ? updatedView : v);
+
+      // Optimistic update
+      setBoard(prev => ({ ...prev, views: updatedViews }));
+
+      try {
+        await fetch(`/api/boards/${board._id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ views: updatedViews }),
+        });
+      } catch (error) {
+        console.error("Failed to update column visibility:", error);
+      }
+    },
+    [board._id, board.views, activeView, board.properties]
+  );
+
+  // Update aggregation
+  const handleUpdateAggregation = useCallback(
+    async (propertyId: string, type: AggregationType | null) => {
+      if (!activeView) return;
+
+      const currentAggregations = activeView.config.aggregations || [];
+      let newAggregations;
+
+      if (type === null) {
+        // Remove aggregation
+        newAggregations = currentAggregations.filter(a => a.propertyId !== propertyId);
+      } else {
+        // Add or update aggregation
+        const existingIndex = currentAggregations.findIndex(a => a.propertyId === propertyId);
+        if (existingIndex >= 0) {
+          newAggregations = [...currentAggregations];
+          newAggregations[existingIndex] = { propertyId, type };
+        } else {
+          newAggregations = [...currentAggregations, { propertyId, type }];
+        }
+      }
+
+      const updatedView = {
+        ...activeView,
+        config: {
+          ...activeView.config,
+          aggregations: newAggregations,
+        },
+      };
+
+      const updatedViews = board.views.map(v => v.id === activeView.id ? updatedView : v);
+
+      // Optimistic update
+      setBoard(prev => ({ ...prev, views: updatedViews }));
+
+      try {
+        await fetch(`/api/boards/${board._id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ views: updatedViews }),
+        });
+      } catch (error) {
+        console.error("Failed to update aggregation:", error);
+      }
+    },
+    [board._id, board.views, activeView]
+  );
+
   // Create new task
   const handleCreateTask = useCallback(
     async (title: string) => {
@@ -438,6 +558,31 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
     [board._id]
   );
 
+  // Bulk delete tasks
+  const handleBulkDeleteTasks = useCallback(
+    async (taskIds: string[]) => {
+      // Optimistic update
+      setTasks((prev) => prev.filter((t) => !taskIds.includes(t._id)));
+
+      try {
+        // We can either call delete API for each task or create a bulk delete API
+        // For now, let's call delete for each task in parallel
+        await Promise.all(
+          taskIds.map((id) =>
+            fetch(`/api/boards/${board._id}/tasks/${id}`, {
+              method: "DELETE",
+            })
+          )
+        );
+      } catch (error) {
+        console.error("Failed to bulk delete tasks:", error);
+        // Revert on error (simplified - would need to refetch tasks)
+        setTasks(initialBoard.tasks);
+      }
+    },
+    [board._id, initialBoard.tasks]
+  );
+
   return (
     <div className="flex flex-col h-screen">
       <BoardHeader
@@ -452,6 +597,8 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
         properties={board.properties}
         filters={filters}
         sorts={sorts}
+        groupBy={activeView?.config.groupBy}
+        visibleProperties={activeView?.config.visibleProperties}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onAddPropertyClick={() => handleOpenAddProperty()}
@@ -462,6 +609,8 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
         onAddSort={handleAddSort}
         onRemoveSort={handleRemoveSort}
         onClearSorts={handleClearSorts}
+        onGroupByChange={handleGroupByChange}
+        onToggleColumnVisibility={handleToggleColumnVisibility}
       />
 
       <div className="flex-1 overflow-auto">
@@ -484,6 +633,8 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
             onReorderProperties={handleReorderProperties}
             onRenameProperty={handleRenameProperty}
             onAddPropertyAt={handleOpenAddProperty}
+            onUpdateAggregation={handleUpdateAggregation}
+            onBulkDeleteTasks={handleBulkDeleteTasks}
           />
         )}
 

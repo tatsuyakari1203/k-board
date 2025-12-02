@@ -94,11 +94,36 @@ export const sortSchema = z.object({
 export type Sort = z.infer<typeof sortSchema>;
 export type SortConfig = Sort; // Alias for component usage
 
+export const AggregationType = {
+  COUNT: "count",
+  COUNT_EMPTY: "count_empty",
+  COUNT_NOT_EMPTY: "count_not_empty",
+  PERCENT_EMPTY: "percent_empty",
+  PERCENT_NOT_EMPTY: "percent_not_empty",
+  SUM: "sum",
+  AVERAGE: "average",
+  MEDIAN: "median",
+  MIN: "min",
+  MAX: "max",
+  RANGE: "range",
+} as const;
+
+export type AggregationType = (typeof AggregationType)[keyof typeof AggregationType];
+
+export const aggregationSchema = z.object({
+  propertyId: z.string(),
+  type: z.nativeEnum(AggregationType),
+});
+
+export type Aggregation = z.infer<typeof aggregationSchema>;
+export type AggregationConfig = Aggregation;
+
 export const viewConfigSchema = z.object({
-  groupBy: z.string().uuid().optional(), // For Kanban
+  groupBy: z.string().uuid().optional(), // For Kanban or Table grouping
   sortBy: z.array(sortSchema).optional(),
   filters: z.array(filterSchema).optional(),
   visibleProperties: z.array(z.string().uuid()).optional(),
+  aggregations: z.array(aggregationSchema).optional(),
 });
 
 export type ViewConfig = z.infer<typeof viewConfigSchema>;
