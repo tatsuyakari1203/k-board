@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
-import { Check } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -14,14 +14,37 @@ import { Badge } from "@/components/ui/badge";
 import { type Property, PropertyType } from "@/types/board";
 import { cn } from "@/lib/utils";
 
+// Random color for new options
+const OPTION_COLORS = [
+  "bg-gray-100 text-gray-800",
+  "bg-red-100 text-red-800",
+  "bg-orange-100 text-orange-800",
+  "bg-yellow-100 text-yellow-800",
+  "bg-green-100 text-green-800",
+  "bg-blue-100 text-blue-800",
+  "bg-purple-100 text-purple-800",
+  "bg-pink-100 text-pink-800",
+];
+
+function getRandomColor() {
+  return OPTION_COLORS[Math.floor(Math.random() * OPTION_COLORS.length)];
+}
+
+interface SelectOption {
+  id: string;
+  label: string;
+  color?: string;
+}
+
 interface PropertyCellProps {
   property: Property;
   value: unknown;
   onChange: (value: unknown) => void;
+  onAddOption?: (propertyId: string, option: SelectOption) => void;
   compact?: boolean;
 }
 
-export function PropertyCell({ property, value, onChange, compact = false }: PropertyCellProps) {
+export function PropertyCell({ property, value, onChange, onAddOption, compact = false }: PropertyCellProps) {
   switch (property.type) {
     case PropertyType.TEXT:
       return <TextCell value={value as string} onChange={onChange} compact={compact} />;
@@ -39,6 +62,7 @@ export function PropertyCell({ property, value, onChange, compact = false }: Pro
           value={value as string}
           options={property.options || []}
           onChange={onChange}
+          onAddOption={onAddOption ? (opt) => onAddOption(property.id, opt) : undefined}
           compact={compact}
         />
       );
@@ -49,6 +73,7 @@ export function PropertyCell({ property, value, onChange, compact = false }: Pro
           value={(value as string[]) || []}
           options={property.options || []}
           onChange={onChange}
+          onAddOption={onAddOption ? (opt) => onAddOption(property.id, opt) : undefined}
           compact={compact}
         />
       );
@@ -233,25 +258,34 @@ function DateCell({
 // SELECT CELL
 // ============================================
 
-interface SelectOption {
-  id: string;
-  label: string;
-  color?: string;
-}
-
 function SelectCell({
   value,
   options,
   onChange,
+  onAddOption,
   compact = false,
 }: {
   value: string;
   options: SelectOption[];
   onChange: (v: string) => void;
+  onAddOption?: (option: SelectOption) => void;
   compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [newOptionLabel, setNewOptionLabel] = useState("");
   const selectedOption = options.find((o) => o.id === value);
+
+  const handleAddOption = () => {
+    if (!newOptionLabel.trim() || !onAddOption) return;
+    const newOption: SelectOption = {
+      id: crypto.randomUUID(),
+      label: newOptionLabel.trim(),
+      color: getRandomColor(),
+    };
+    onAddOption(newOption);
+    onChange(newOption.id); // Auto-select new option
+    setNewOptionLabel("");
+  };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -272,7 +306,7 @@ function SelectCell({
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-48 p-1" align="start">
+      <PopoverContent className="w-52 p-1" align="start">
         <div className="space-y-0.5">
           {options.map((option) => (
             <button
@@ -297,6 +331,37 @@ function SelectCell({
               )}
             </button>
           ))}
+
+          {/* Add new option */}
+          {onAddOption && (
+            <>
+              <div className="border-t my-1" />
+              <div className="flex items-center gap-1 px-1">
+                <input
+                  type="text"
+                  value={newOptionLabel}
+                  onChange={(e) => setNewOptionLabel(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddOption();
+                    }
+                  }}
+                  placeholder="Thêm mới..."
+                  className="flex-1 text-sm px-2 py-1.5 bg-transparent border-none outline-none focus:ring-0"
+                />
+                {newOptionLabel.trim() && (
+                  <button
+                    onClick={handleAddOption}
+                    className="p-1 text-primary hover:bg-accent rounded"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </>
+          )}
+
           {value && (
             <>
               <div className="border-t my-1" />
@@ -325,14 +390,17 @@ function MultiSelectCell({
   value,
   options,
   onChange,
+  onAddOption,
   compact = false,
 }: {
   value: string[];
   options: SelectOption[];
   onChange: (v: string[]) => void;
+  onAddOption?: (option: SelectOption) => void;
   compact?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [newOptionLabel, setNewOptionLabel] = useState("");
   const selectedOptions = options.filter((o) => value.includes(o.id));
 
   const toggleOption = (optionId: string) => {
@@ -341,6 +409,18 @@ function MultiSelectCell({
     } else {
       onChange([...value, optionId]);
     }
+  };
+
+  const handleAddOption = () => {
+    if (!newOptionLabel.trim() || !onAddOption) return;
+    const newOption: SelectOption = {
+      id: crypto.randomUUID(),
+      label: newOptionLabel.trim(),
+      color: getRandomColor(),
+    };
+    onAddOption(newOption);
+    onChange([...value, newOption.id]); // Auto-select new option
+    setNewOptionLabel("");
   };
 
   return (
@@ -365,7 +445,7 @@ function MultiSelectCell({
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-48 p-1" align="start">
+      <PopoverContent className="w-52 p-1" align="start">
         <div className="space-y-0.5">
           {options.map((option) => (
             <button
@@ -393,6 +473,36 @@ function MultiSelectCell({
               </Badge>
             </button>
           ))}
+
+          {/* Add new option */}
+          {onAddOption && (
+            <>
+              <div className="border-t my-1" />
+              <div className="flex items-center gap-1 px-1">
+                <input
+                  type="text"
+                  value={newOptionLabel}
+                  onChange={(e) => setNewOptionLabel(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddOption();
+                    }
+                  }}
+                  placeholder="Thêm mới..."
+                  className="flex-1 text-sm px-2 py-1.5 bg-transparent border-none outline-none focus:ring-0"
+                />
+                {newOptionLabel.trim() && (
+                  <button
+                    onClick={handleAddOption}
+                    className="p-1 text-primary hover:bg-accent rounded"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                )}
+              </div>
+            </>
+          )}
         </div>
       </PopoverContent>
     </Popover>

@@ -49,6 +49,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
         _id: t._id.toString(),
         boardId: t.boardId.toString(),
         createdBy: t.createdBy.toString(),
+        properties: t.properties || {},
       })),
     });
   } catch (error) {

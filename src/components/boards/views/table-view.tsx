@@ -38,6 +38,7 @@ interface TableViewProps {
   onUpdateTask: (taskId: string, updates: Partial<TaskData>) => void;
   onDeleteTask: (taskId: string) => void;
   onRemoveProperty?: (propertyId: string) => void;
+  onAddPropertyOption?: (propertyId: string, option: { id: string; label: string; color?: string }) => void;
 }
 
 // Helper to compare values for sorting
@@ -102,6 +103,7 @@ export function TableView({
   onUpdateTask,
   onDeleteTask,
   onRemoveProperty,
+  onAddPropertyOption,
 }: TableViewProps) {
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [isAddingTask, setIsAddingTask] = useState(false);
@@ -259,6 +261,7 @@ export function TableView({
                             properties: { ...taskProps, [property.id]: value },
                           })
                         }
+                        onAddOption={onAddPropertyOption}
                       />
                     </td>
                   );
@@ -349,6 +352,7 @@ export function TableView({
                             properties: { ...taskProps, [property.id]: value },
                           })
                         }
+                        onAddOption={onAddPropertyOption}
                         compact
                       />
                     </div>

@@ -115,6 +115,43 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
     [board._id, board.properties]
   );
 
+  // Add option to select/multi-select/status property
+  const handleAddPropertyOption = useCallback(
+    async (propertyId: string, option: { id: string; label: string; color?: string }) => {
+      const property = board.properties.find((p) => p.id === propertyId);
+      if (!property) return;
+
+      const updatedProperty = {
+        ...property,
+        options: [...(property.options || []), option],
+      };
+
+      const updatedProperties = board.properties.map((p) =>
+        p.id === propertyId ? updatedProperty : p
+      );
+
+      // Optimistic update
+      setBoard((prev) => ({ ...prev, properties: updatedProperties }));
+
+      try {
+        const res = await fetch(`/api/boards/${board._id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ properties: updatedProperties }),
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          setBoard((prev) => ({ ...prev, ...updated }));
+        }
+      } catch (error) {
+        console.error("Failed to add property option:", error);
+        // Revert on error
+        setBoard((prev) => ({ ...prev, properties: board.properties }));
+      }
+    },
+    [board._id, board.properties]
+  );
+
   // Filter handlers
   const handleAddFilter = useCallback((filter: FilterConfig) => {
     setFilters((prev) => [...prev, filter]);
@@ -275,6 +312,7 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
             onUpdateTask={handleUpdateTask}
             onDeleteTask={handleDeleteTask}
             onRemoveProperty={handleRemoveProperty}
+            onAddPropertyOption={handleAddPropertyOption}
           />
         )}
 
