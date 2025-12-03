@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import {
   AlertDialog,
@@ -117,6 +118,11 @@ export function KanbanCardModal({
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl max-h-[85vh] p-0 gap-0 overflow-hidden">
+          {/* Visually hidden title for accessibility */}
+          <DialogTitle className="sr-only">
+            {task.title || "Chi tiết công việc"}
+          </DialogTitle>
+
           {/* Header - Notion style: large title, minimal chrome */}
           <div className="px-10 pt-8 pb-4">
             <div className="flex items-start justify-between gap-4">
