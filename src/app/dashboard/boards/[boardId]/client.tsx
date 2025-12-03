@@ -5,7 +5,6 @@ import { BoardHeader } from "@/components/boards/board-header";
 import { BoardToolbar } from "@/components/boards/board-toolbar";
 import { TableView } from "@/components/boards/views/table-view";
 import { AddPropertyDialog } from "@/components/boards/add-property-dialog";
-import { arrayMove } from "@dnd-kit/sortable";
 import {
   type Board,
   type Task,
@@ -13,9 +12,10 @@ import {
   type SortConfig,
   type FilterConfig,
   ViewType,
-  AggregationType,
 } from "@/types/board";
 import { type BoardRole, type BoardPermissions } from "@/types/board-member";
+import { useBoardTasks, type TaskData } from "@/hooks/use-board-tasks";
+import { useBoardProperties, useBoardViews, type BoardData as HookBoardData } from "@/hooks/use-board-properties";
 
 interface BoardData extends Omit<Board, "createdAt" | "updatedAt"> {
   _id: string;
@@ -25,12 +25,6 @@ interface BoardData extends Omit<Board, "createdAt" | "updatedAt"> {
   tasks: TaskData[];
   userRole?: BoardRole;
   userPermissions?: BoardPermissions;
-}
-
-interface TaskData extends Omit<Task, "createdAt" | "updatedAt"> {
-  _id: string;
-  createdAt: string;
-  updatedAt: string;
 }
 
 interface UserOption {
@@ -46,14 +40,7 @@ interface BoardDetailClientProps {
 
 export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
   const [board, setBoard] = useState(initialBoard);
-  // Ensure tasks are sorted by order initially
-  const [tasks, setTasks] = useState(() =>
-    [...initialBoard.tasks].sort((a, b) => a.order - b.order)
-  );
   const [users, setUsers] = useState<UserOption[]>([]);
-  const [activeViewId, setActiveViewId] = useState(
-    board.views.find((v) => v.isDefault)?.id || board.views[0]?.id
-  );
 
   // Toolbar state
   const [searchQuery, setSearchQuery] = useState("");
@@ -64,7 +51,71 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
   const [isAddPropertyOpen, setIsAddPropertyOpen] = useState(false);
   const [addPropertyIndex, setAddPropertyIndex] = useState<number | null>(null);
 
-  const activeView = board.views.find((v) => v.id === activeViewId);
+  // Convert board to hook format
+  const hookBoardData: HookBoardData = {
+    _id: board._id,
+    name: board.name,
+    description: board.description,
+    icon: board.icon,
+    ownerId: board.ownerId,
+    properties: board.properties,
+    views: board.views,
+    createdAt: board.createdAt,
+    updatedAt: board.updatedAt,
+  };
+
+  // Board update handler
+  const handleBoardUpdate = useCallback((updated: HookBoardData) => {
+    setBoard((prev) => ({ ...prev, ...updated }));
+  }, []);
+
+  // ============================================
+  // USE HOOKS
+  // ============================================
+
+  // Views hook
+  const {
+    activeViewId,
+    activeView,
+    setActiveViewId,
+    updateGroupBy,
+    updateAggregation,
+    toggleColumnVisibility,
+  } = useBoardViews({
+    board: hookBoardData,
+    onBoardUpdate: handleBoardUpdate,
+  });
+
+  // Tasks hook
+  const {
+    tasks,
+    createTask,
+    updateTask,
+    deleteTask,
+    bulkDeleteTasks,
+    reorderTasks,
+    moveTaskToGroup,
+    getTasksByGroup,
+  } = useBoardTasks({
+    boardId: board._id,
+    initialTasks: initialBoard.tasks,
+    groupByPropertyId: activeView?.config.groupBy,
+  });
+
+  // Properties hook
+  const {
+    properties,
+    addProperty,
+    removeProperty,
+    renameProperty,
+    reorderProperties,
+    updatePropertyWidth,
+    addPropertyOption,
+    updatePropertyOption,
+  } = useBoardProperties({
+    board: hookBoardData,
+    onBoardUpdate: handleBoardUpdate,
+  });
 
   // Fetch board members for assignment (not all users)
   useEffect(() => {
@@ -82,7 +133,7 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
       .catch((err) => console.error("Failed to fetch board members:", err));
   }, [board._id]);
 
-  // Update board
+  // Update board (for non-property/view updates like name, icon, etc.)
   const handleUpdateBoard = useCallback(
     async (updates: Partial<BoardData>) => {
       try {
@@ -102,244 +153,19 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
     [board._id]
   );
 
-  // Add property
-  const handleAddProperty = useCallback(
-    async (property: Omit<Property, "id" | "order">) => {
-      // Calculate order based on insertion index or append to end
-      let newOrder = board.properties.length;
-      let updatedProperties = [...board.properties];
-
-      if (addPropertyIndex !== null) {
-        newOrder = addPropertyIndex;
-        // Shift existing properties
-        updatedProperties = updatedProperties.map(p => ({
-          ...p,
-          order: p.order >= newOrder ? p.order + 1 : p.order
-        }));
-      }
-
-      const newProperty: Property = {
-        ...property,
-        id: crypto.randomUUID(),
-        order: newOrder,
-      };
-
-      updatedProperties.push(newProperty);
-
-      // Ensure properties are sorted by order
-      updatedProperties.sort((a, b) => a.order - b.order);
-
-      // Optimistic update
-      setBoard((prev) => ({ ...prev, properties: updatedProperties }));
-
-      try {
-        const res = await fetch(`/api/boards/${board._id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            properties: updatedProperties,
-          }),
-        });
-        if (res.ok) {
-          const updated = await res.json();
-          setBoard((prev) => ({ ...prev, ...updated }));
-        }
-      } catch (error) {
-        console.error("Failed to add property:", error);
-        // Revert on error (simplified)
-        setBoard((prev) => ({ ...prev, properties: board.properties }));
-      } finally {
-        setAddPropertyIndex(null);
-      }
-    },
-    [board._id, board.properties, addPropertyIndex]
-  );
-
   // Open Add Property Dialog
   const handleOpenAddProperty = useCallback((index?: number) => {
     setAddPropertyIndex(typeof index === "number" ? index : null);
     setIsAddPropertyOpen(true);
   }, []);
 
-  // Rename property
-  const handleRenameProperty = useCallback(
-    async (propertyId: string, newName: string) => {
-      const updatedProperties = board.properties.map((p) =>
-        p.id === propertyId ? { ...p, name: newName } : p
-      );
-
-      // Optimistic update
-      setBoard((prev) => ({ ...prev, properties: updatedProperties }));
-
-      try {
-        const res = await fetch(`/api/boards/${board._id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ properties: updatedProperties }),
-        });
-        if (res.ok) {
-          const updated = await res.json();
-          setBoard((prev) => ({ ...prev, ...updated }));
-        }
-      } catch (error) {
-        console.error("Failed to rename property:", error);
-        setBoard((prev) => ({ ...prev, properties: board.properties }));
-      }
+  // Handle add property with index
+  const handleAddProperty = useCallback(
+    async (property: Omit<Property, "id" | "order">) => {
+      await addProperty(property, addPropertyIndex ?? undefined);
+      setAddPropertyIndex(null);
     },
-    [board._id, board.properties]
-  );
-
-  // Remove property
-  const handleRemoveProperty = useCallback(
-    async (propertyId: string) => {
-      try {
-        const res = await fetch(`/api/boards/${board._id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            properties: board.properties.filter((p) => p.id !== propertyId),
-          }),
-        });
-        if (res.ok) {
-          const updated = await res.json();
-          setBoard((prev) => ({ ...prev, ...updated }));
-        }
-      } catch (error) {
-        console.error("Failed to remove property:", error);
-      }
-    },
-    [board._id, board.properties]
-  );
-
-  // Add option to select/multi-select/status property
-  const handleAddPropertyOption = useCallback(
-    async (propertyId: string, option: { id: string; label: string; color?: string }) => {
-      const property = board.properties.find((p) => p.id === propertyId);
-      if (!property) return;
-
-      const updatedProperty = {
-        ...property,
-        options: [...(property.options || []), option],
-      };
-
-      const updatedProperties = board.properties.map((p) =>
-        p.id === propertyId ? updatedProperty : p
-      );
-
-      // Optimistic update
-      setBoard((prev) => ({ ...prev, properties: updatedProperties }));
-
-      try {
-        const res = await fetch(`/api/boards/${board._id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ properties: updatedProperties }),
-        });
-        if (res.ok) {
-          const updated = await res.json();
-          setBoard((prev) => ({ ...prev, ...updated }));
-        }
-      } catch (error) {
-        console.error("Failed to add property option:", error);
-        // Revert on error
-        setBoard((prev) => ({ ...prev, properties: board.properties }));
-      }
-    },
-    [board._id, board.properties]
-  );
-
-  // Update option in select/multi-select/status property (e.g., change color)
-  const handleUpdatePropertyOption = useCallback(
-    async (propertyId: string, updatedOption: { id: string; label: string; color?: string }) => {
-      const property = board.properties.find((p) => p.id === propertyId);
-      if (!property) return;
-
-      const updatedOptions = (property.options || []).map((opt) =>
-        opt.id === updatedOption.id ? { ...opt, ...updatedOption } : opt
-      );
-
-      const updatedProperty = {
-        ...property,
-        options: updatedOptions,
-      };
-
-      const updatedProperties = board.properties.map((p) =>
-        p.id === propertyId ? updatedProperty : p
-      );
-
-      // Optimistic update
-      setBoard((prev) => ({ ...prev, properties: updatedProperties }));
-
-      try {
-        const res = await fetch(`/api/boards/${board._id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ properties: updatedProperties }),
-        });
-        if (res.ok) {
-          const updated = await res.json();
-          setBoard((prev) => ({ ...prev, ...updated }));
-        }
-      } catch (error) {
-        console.error("Failed to update property option:", error);
-        // Revert on error
-        setBoard((prev) => ({ ...prev, properties: board.properties }));
-      }
-    },
-    [board._id, board.properties]
-  );
-
-  // Update property width (column resize)
-  const handleUpdatePropertyWidth = useCallback(
-    async (propertyId: string, width: number) => {
-      const updatedProperties = board.properties.map((p) =>
-        p.id === propertyId ? { ...p, width } : p
-      );
-
-      try {
-        const res = await fetch(`/api/boards/${board._id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ properties: updatedProperties }),
-        });
-        if (res.ok) {
-          const updated = await res.json();
-          setBoard((prev) => ({ ...prev, ...updated }));
-        }
-      } catch (error) {
-        console.error("Failed to update property width:", error);
-      }
-    },
-    [board._id, board.properties]
-  );
-
-  // Reorder properties
-  const handleReorderProperties = useCallback(
-    async (oldIndex: number, newIndex: number) => {
-      if (oldIndex === newIndex) return;
-
-      // Sort properties by order first to ensure we are moving the right indices
-      const sortedProperties = [...board.properties].sort((a, b) => a.order - b.order);
-
-      const newProperties = arrayMove(sortedProperties, oldIndex, newIndex).map((p, index) => ({
-        ...p,
-        order: index,
-      }));
-
-      // Optimistic update
-      setBoard((prev) => ({ ...prev, properties: newProperties }));
-
-      try {
-        await fetch(`/api/boards/${board._id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ properties: newProperties }),
-        });
-      } catch (error) {
-        console.error("Failed to reorder properties:", error);
-      }
-    },
-    [board._id, board.properties]
+    [addProperty, addPropertyIndex]
   );
 
   // Filter handlers
@@ -377,263 +203,26 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
     setSorts([]);
   }, []);
 
-  // Group By handler
-  const handleGroupByChange = useCallback(
-    async (propertyId: string | undefined) => {
-      if (!activeView) return;
-
-      const updatedView = {
-        ...activeView,
-        config: {
-          ...activeView.config,
-          groupBy: propertyId,
-        },
-      };
-
-      const updatedViews = board.views.map(v => v.id === activeView.id ? updatedView : v);
-
-      // Optimistic update
-      setBoard(prev => ({ ...prev, views: updatedViews }));
-
-      try {
-        await fetch(`/api/boards/${board._id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ views: updatedViews }),
-        });
-      } catch (error) {
-        console.error("Failed to update group by:", error);
-      }
-    },
-    [board._id, board.views, activeView]
-  );
-
-  // Toggle column visibility
-  const handleToggleColumnVisibility = useCallback(
-    async (propertyId: string) => {
-      if (!activeView) return;
-
-      const currentVisible = activeView.config.visibleProperties || board.properties.map(p => p.id);
-      let newVisible;
-
-      if (currentVisible.includes(propertyId)) {
-        newVisible = currentVisible.filter(id => id !== propertyId);
-      } else {
-        newVisible = [...currentVisible, propertyId];
-      }
-
-      const updatedView = {
-        ...activeView,
-        config: {
-          ...activeView.config,
-          visibleProperties: newVisible,
-        },
-      };
-
-      const updatedViews = board.views.map(v => v.id === activeView.id ? updatedView : v);
-
-      // Optimistic update
-      setBoard(prev => ({ ...prev, views: updatedViews }));
-
-      try {
-        await fetch(`/api/boards/${board._id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ views: updatedViews }),
-        });
-      } catch (error) {
-        console.error("Failed to update column visibility:", error);
-      }
-    },
-    [board._id, board.views, activeView, board.properties]
-  );
-
-  // Update aggregation
-  const handleUpdateAggregation = useCallback(
-    async (propertyId: string, type: AggregationType | null) => {
-      if (!activeView) return;
-
-      const currentAggregations = activeView.config.aggregations || [];
-      let newAggregations;
-
-      if (type === null) {
-        // Remove aggregation
-        newAggregations = currentAggregations.filter(a => a.propertyId !== propertyId);
-      } else {
-        // Add or update aggregation
-        const existingIndex = currentAggregations.findIndex(a => a.propertyId === propertyId);
-        if (existingIndex >= 0) {
-          newAggregations = [...currentAggregations];
-          newAggregations[existingIndex] = { propertyId, type };
-        } else {
-          newAggregations = [...currentAggregations, { propertyId, type }];
-        }
-      }
-
-      const updatedView = {
-        ...activeView,
-        config: {
-          ...activeView.config,
-          aggregations: newAggregations,
-        },
-      };
-
-      const updatedViews = board.views.map(v => v.id === activeView.id ? updatedView : v);
-
-      // Optimistic update
-      setBoard(prev => ({ ...prev, views: updatedViews }));
-
-      try {
-        await fetch(`/api/boards/${board._id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ views: updatedViews }),
-        });
-      } catch (error) {
-        console.error("Failed to update aggregation:", error);
-      }
-    },
-    [board._id, board.views, activeView]
-  );
-
-  // Create new task
+  // Wrapper for task operations to match expected interface
   const handleCreateTask = useCallback(
     async (title: string) => {
-      try {
-        const res = await fetch(`/api/boards/${board._id}/tasks`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title, properties: {} }),
-        });
-        if (res.ok) {
-          const newTask = await res.json();
-          setTasks((prev) => [...prev, newTask]);
-          return newTask;
-        }
-      } catch (error) {
-        console.error("Failed to create task:", error);
-      }
-      return null;
+      return await createTask({ title, properties: {} });
     },
-    [board._id]
+    [createTask]
   );
 
-  // Update task
   const handleUpdateTask = useCallback(
     async (taskId: string, updates: Partial<TaskData>) => {
-      // Optimistic update - merge properties correctly
-      setTasks((prev) =>
-        prev.map((t) => {
-          if (t._id !== taskId) return t;
-
-          // If updating properties, merge with existing
-          if (updates.properties) {
-            return {
-              ...t,
-              ...updates,
-              properties: {
-                ...(t.properties || {}),
-                ...updates.properties,
-              },
-            };
-          }
-          return { ...t, ...updates };
-        })
-      );
-
-      try {
-        const res = await fetch(`/api/boards/${board._id}/tasks/${taskId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(updates),
-        });
-        if (res.ok) {
-          // Update with server response to ensure consistency
-          const updatedTask = await res.json();
-          setTasks((prev) =>
-            prev.map((t) => (t._id === taskId ? { ...t, ...updatedTask } : t))
-          );
-        } else {
-          // Revert on error
-          setTasks(initialBoard.tasks);
-        }
-      } catch (error) {
-        console.error("Failed to update task:", error);
-        setTasks(initialBoard.tasks);
-      }
+      await updateTask(taskId, updates);
     },
-    [board._id, initialBoard.tasks]
+    [updateTask]
   );
 
-  // Reorder tasks
-  const handleReorderTasks = useCallback(
-    async (oldIndex: number, newIndex: number) => {
-      if (oldIndex === newIndex) return;
-
-      // Ensure we are working with sorted tasks
-      const sortedTasks = [...tasks].sort((a, b) => a.order - b.order);
-
-      const newTasks = arrayMove(sortedTasks, oldIndex, newIndex).map((t, index) => ({
-        ...t,
-        order: index,
-      }));
-
-      setTasks(newTasks);
-
-      try {
-        await fetch(`/api/boards/${board._id}/tasks/reorder`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ taskIds: newTasks.map((t) => t._id) }),
-        });
-      } catch (error) {
-        console.error("Failed to reorder tasks:", error);
-      }
-    },
-    [board._id, tasks]
-  );
-
-  // Delete task
-  const handleDeleteTask = useCallback(
-    async (taskId: string) => {
-      try {
-        const res = await fetch(`/api/boards/${board._id}/tasks/${taskId}`, {
-          method: "DELETE",
-        });
-        if (res.ok) {
-          setTasks((prev) => prev.filter((t) => t._id !== taskId));
-        }
-      } catch (error) {
-        console.error("Failed to delete task:", error);
-      }
-    },
-    [board._id]
-  );
-
-  // Bulk delete tasks
-  const handleBulkDeleteTasks = useCallback(
-    async (taskIds: string[]) => {
-      // Optimistic update
-      setTasks((prev) => prev.filter((t) => !taskIds.includes(t._id)));
-
-      try {
-        // We can either call delete API for each task or create a bulk delete API
-        // For now, let's call delete for each task in parallel
-        await Promise.all(
-          taskIds.map((id) =>
-            fetch(`/api/boards/${board._id}/tasks/${id}`, {
-              method: "DELETE",
-            })
-          )
-        );
-      } catch (error) {
-        console.error("Failed to bulk delete tasks:", error);
-        // Revert on error (simplified - would need to refetch tasks)
-        setTasks(initialBoard.tasks);
-      }
-    },
-    [board._id, initialBoard.tasks]
-  );
+  // Board data with synced properties for child components
+  const boardWithSyncedProps = {
+    ...board,
+    properties,
+  };
 
   return (
     <div className="flex flex-col h-screen">
@@ -648,7 +237,7 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
       />
 
       <BoardToolbar
-        properties={board.properties}
+        properties={properties}
         filters={filters}
         sorts={sorts}
         groupBy={activeView?.config.groupBy}
@@ -656,21 +245,21 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
         onAddPropertyClick={() => handleOpenAddProperty()}
-        onRemoveProperty={handleRemoveProperty}
+        onRemoveProperty={removeProperty}
         onAddFilter={handleAddFilter}
         onRemoveFilter={handleRemoveFilter}
         onClearFilters={handleClearFilters}
         onAddSort={handleAddSort}
         onRemoveSort={handleRemoveSort}
         onClearSorts={handleClearSorts}
-        onGroupByChange={handleGroupByChange}
-        onToggleColumnVisibility={handleToggleColumnVisibility}
+        onGroupByChange={updateGroupBy}
+        onToggleColumnVisibility={toggleColumnVisibility}
       />
 
       <div className="flex-1 overflow-auto">
         {activeView?.type === ViewType.TABLE && (
           <TableView
-            board={board}
+            board={boardWithSyncedProps}
             tasks={tasks}
             view={activeView}
             searchQuery={searchQuery}
@@ -679,17 +268,17 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
             users={users}
             onCreateTask={handleCreateTask}
             onUpdateTask={handleUpdateTask}
-            onDeleteTask={handleDeleteTask}
-            onRemoveProperty={handleRemoveProperty}
-            onAddPropertyOption={handleAddPropertyOption}
-            onUpdatePropertyOption={handleUpdatePropertyOption}
-            onUpdatePropertyWidth={handleUpdatePropertyWidth}
-            onReorderTasks={handleReorderTasks}
-            onReorderProperties={handleReorderProperties}
-            onRenameProperty={handleRenameProperty}
+            onDeleteTask={deleteTask}
+            onRemoveProperty={removeProperty}
+            onAddPropertyOption={addPropertyOption}
+            onUpdatePropertyOption={updatePropertyOption}
+            onUpdatePropertyWidth={updatePropertyWidth}
+            onReorderTasks={reorderTasks}
+            onReorderProperties={reorderProperties}
+            onRenameProperty={renameProperty}
             onAddPropertyAt={handleOpenAddProperty}
-            onUpdateAggregation={handleUpdateAggregation}
-            onBulkDeleteTasks={handleBulkDeleteTasks}
+            onUpdateAggregation={updateAggregation}
+            onBulkDeleteTasks={bulkDeleteTasks}
           />
         )}
 
