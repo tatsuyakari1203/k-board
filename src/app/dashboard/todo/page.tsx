@@ -39,8 +39,14 @@ import {
   Clock,
   Eye,
   EyeOff,
+  CalendarDays,
+  TrendingUp,
+  Target,
+  Zap,
+  User,
+  MessageSquare,
 } from "lucide-react";
-import { format, isToday, isPast, isThisWeek, startOfDay } from "date-fns";
+import { format, isToday, isPast, isThisWeek, startOfDay, formatDistanceToNow, differenceInDays } from "date-fns";
 import { vi } from "date-fns/locale";
 
 import { Button } from "@/components/ui/button";
@@ -437,19 +443,60 @@ export default function TodoPage() {
   const stats = useMemo(() => {
     let overdue = 0;
     let today = 0;
+    let thisWeek = 0;
+    let noDate = 0;
+    let completed = 0;
+    const statusCounts: Record<string, { label: string; color?: string; count: number }> = {};
+    const boardCounts: Record<string, number> = {};
 
     tasks.forEach(t => {
       const board = getBoard(t.boardId);
+
+      // Count by board
+      boardCounts[t.boardId] = (boardCounts[t.boardId] || 0) + 1;
+
+      // Count by status
+      const status = getTaskStatus(t, board);
+      if (status) {
+        if (!statusCounts[status.id]) {
+          statusCounts[status.id] = { label: status.label, color: status.color, count: 0 };
+        }
+        statusCounts[status.id].count++;
+
+        // Check if completed (green status or contains "done", "hoàn thành", etc.)
+        const isCompleted = status.color?.includes("green") ||
+          status.label.toLowerCase().includes("done") ||
+          status.label.toLowerCase().includes("hoàn thành") ||
+          status.label.toLowerCase().includes("xong");
+        if (isCompleted) completed++;
+      }
+
+      // Count by due date
       const dueDate = getTaskDueDate(t, board);
       if (dueDate) {
         const date = startOfDay(new Date(dueDate));
         if (isToday(date)) today++;
         else if (isPast(date)) overdue++;
+        if (isThisWeek(date, { weekStartsOn: 1 })) thisWeek++;
+      } else {
+        noDate++;
       }
     });
 
-    return { overdue, today, total: tasks.length };
-  }, [tasks, getBoard, getTaskDueDate]);
+    const completionRate = tasks.length > 0 ? Math.round((completed / tasks.length) * 100) : 0;
+
+    return {
+      overdue,
+      today,
+      thisWeek,
+      noDate,
+      completed,
+      completionRate,
+      total: tasks.length,
+      statusCounts,
+      boardCounts,
+    };
+  }, [tasks, getBoard, getTaskDueDate, getTaskStatus]);
 
   // Active filter count
   const activeFilterCount = useMemo(() => {
@@ -507,21 +554,9 @@ export default function TodoPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-2xl font-bold">Công việc của tôi</h1>
-          <div className="flex items-center gap-3 mt-1 text-sm text-muted-foreground">
-            <span>{stats.total} công việc</span>
-            {stats.overdue > 0 && (
-              <span className="flex items-center gap-1 text-red-500">
-                <AlertCircle className="h-3 w-3" />
-                {stats.overdue} quá hạn
-              </span>
-            )}
-            {stats.today > 0 && (
-              <span className="flex items-center gap-1 text-orange-500">
-                <Clock className="h-3 w-3" />
-                {stats.today} hôm nay
-              </span>
-            )}
-          </div>
+          <p className="text-sm text-muted-foreground mt-1">
+            Quản lý và theo dõi các công việc được giao
+          </p>
         </div>
 
         {/* Show all tasks toggle (for admin/owner) */}
@@ -539,6 +574,205 @@ export default function TodoPage() {
           </div>
         )}
       </div>
+
+      {/* Stats Cards */}
+      {tasks.length > 0 && (
+        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+          {/* Total Tasks */}
+          <div className="relative overflow-hidden rounded-lg border bg-card p-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-blue-100 dark:bg-blue-500/20">
+                <Target className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{stats.total}</p>
+                <p className="text-xs text-muted-foreground">Tổng công việc</p>
+              </div>
+            </div>
+            {stats.completionRate > 0 && (
+              <div className="mt-3">
+                <div className="flex items-center justify-between text-xs mb-1">
+                  <span className="text-muted-foreground">Hoàn thành</span>
+                  <span className="font-medium">{stats.completionRate}%</span>
+                </div>
+                <div className="h-1.5 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-green-500 rounded-full transition-all"
+                    style={{ width: `${stats.completionRate}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Overdue */}
+          <div
+            className={cn(
+              "relative overflow-hidden rounded-lg border p-4 cursor-pointer transition-colors hover:bg-muted/50",
+              stats.overdue > 0 ? "bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/30" : "bg-card"
+            )}
+            onClick={() => handleDueDateFilterChange(dueDateFilter === "overdue" ? "all" : "overdue")}
+          >
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "p-2 rounded-lg",
+                stats.overdue > 0 ? "bg-red-100 dark:bg-red-500/20" : "bg-muted"
+              )}>
+                <AlertCircle className={cn(
+                  "h-5 w-5",
+                  stats.overdue > 0 ? "text-red-600 dark:text-red-400" : "text-muted-foreground"
+                )} />
+              </div>
+              <div>
+                <p className={cn(
+                  "text-2xl font-bold",
+                  stats.overdue > 0 && "text-red-600 dark:text-red-400"
+                )}>{stats.overdue}</p>
+                <p className="text-xs text-muted-foreground">Quá hạn</p>
+              </div>
+            </div>
+            {dueDateFilter === "overdue" && (
+              <div className="absolute top-2 right-2">
+                <Badge variant="secondary" className="text-[10px]">Đang lọc</Badge>
+              </div>
+            )}
+          </div>
+
+          {/* Today */}
+          <div
+            className={cn(
+              "relative overflow-hidden rounded-lg border p-4 cursor-pointer transition-colors hover:bg-muted/50",
+              stats.today > 0 ? "bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-500/30" : "bg-card"
+            )}
+            onClick={() => handleDueDateFilterChange(dueDateFilter === "today" ? "all" : "today")}
+          >
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "p-2 rounded-lg",
+                stats.today > 0 ? "bg-orange-100 dark:bg-orange-500/20" : "bg-muted"
+              )}>
+                <Clock className={cn(
+                  "h-5 w-5",
+                  stats.today > 0 ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground"
+                )} />
+              </div>
+              <div>
+                <p className={cn(
+                  "text-2xl font-bold",
+                  stats.today > 0 && "text-orange-600 dark:text-orange-400"
+                )}>{stats.today}</p>
+                <p className="text-xs text-muted-foreground">Hôm nay</p>
+              </div>
+            </div>
+            {dueDateFilter === "today" && (
+              <div className="absolute top-2 right-2">
+                <Badge variant="secondary" className="text-[10px]">Đang lọc</Badge>
+              </div>
+            )}
+          </div>
+
+          {/* This Week */}
+          <div
+            className={cn(
+              "relative overflow-hidden rounded-lg border bg-card p-4 cursor-pointer transition-colors hover:bg-muted/50"
+            )}
+            onClick={() => handleDueDateFilterChange(dueDateFilter === "week" ? "all" : "week")}
+          >
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-purple-100 dark:bg-purple-500/20">
+                <CalendarDays className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              </div>
+              <div>
+                <p className="text-2xl font-bold">{stats.thisWeek}</p>
+                <p className="text-xs text-muted-foreground">Tuần này</p>
+              </div>
+            </div>
+            {dueDateFilter === "week" && (
+              <div className="absolute top-2 right-2">
+                <Badge variant="secondary" className="text-[10px]">Đang lọc</Badge>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Status & Board Summary */}
+      {tasks.length > 0 && (Object.keys(stats.statusCounts).length > 0 || boards.length > 1) && (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {/* Status Distribution */}
+          {Object.keys(stats.statusCounts).length > 0 && (
+            <div className="rounded-lg border bg-card p-4">
+              <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                Phân bố trạng thái
+              </h3>
+              <div className="space-y-2">
+                {Object.entries(stats.statusCounts).map(([id, data]) => (
+                  <div key={id} className="flex items-center gap-2">
+                    <div
+                      className={cn(
+                        "w-3 h-3 rounded-full shrink-0",
+                        data.color?.includes("green") && "bg-green-500",
+                        data.color?.includes("yellow") && "bg-yellow-500",
+                        data.color?.includes("red") && "bg-red-500",
+                        data.color?.includes("blue") && "bg-blue-500",
+                        data.color?.includes("purple") && "bg-purple-500",
+                        data.color?.includes("gray") && "bg-gray-400",
+                        !data.color && "bg-gray-400"
+                      )}
+                    />
+                    <span className="text-sm flex-1 truncate">{data.label}</span>
+                    <span className="text-sm font-medium">{data.count}</span>
+                    <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
+                      <div
+                        className={cn(
+                          "h-full rounded-full",
+                          data.color?.includes("green") && "bg-green-500",
+                          data.color?.includes("yellow") && "bg-yellow-500",
+                          data.color?.includes("red") && "bg-red-500",
+                          data.color?.includes("blue") && "bg-blue-500",
+                          data.color?.includes("purple") && "bg-purple-500",
+                          data.color?.includes("gray") && "bg-gray-400",
+                          !data.color && "bg-gray-400"
+                        )}
+                        style={{ width: `${(data.count / stats.total) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Board Distribution */}
+          {boards.length > 1 && (
+            <div className="rounded-lg border bg-card p-4">
+              <h3 className="text-sm font-medium mb-3 flex items-center gap-2">
+                <Zap className="h-4 w-4 text-muted-foreground" />
+                Theo board
+              </h3>
+              <div className="space-y-2">
+                {boards.map(board => {
+                  const count = stats.boardCounts[board._id] || 0;
+                  if (count === 0) return null;
+                  return (
+                    <div key={board._id} className="flex items-center gap-2">
+                      <span className="text-sm flex-1 truncate">{board.name}</span>
+                      <span className="text-sm font-medium">{count}</span>
+                      <div className="w-20 h-1.5 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className="h-full bg-primary rounded-full"
+                          style={{ width: `${(count / stats.total) * 100}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Toolbar */}
       <div className="flex flex-wrap items-center gap-2">
@@ -923,6 +1157,38 @@ function TaskRow({
     return isToday(new Date(dueDate));
   }, [dueDate]);
 
+  const dueDateInfo = useMemo(() => {
+    if (!dueDate) return null;
+    const date = new Date(dueDate);
+    const days = differenceInDays(startOfDay(date), startOfDay(new Date()));
+
+    if (days < 0) {
+      return { text: `Quá hạn ${Math.abs(days)} ngày`, urgent: true };
+    } else if (days === 0) {
+      return { text: "Hôm nay", urgent: true };
+    } else if (days === 1) {
+      return { text: "Ngày mai", urgent: false };
+    } else if (days <= 7) {
+      return { text: `Còn ${days} ngày`, urgent: false };
+    }
+    return null;
+  }, [dueDate]);
+
+  // Get assignee info from task properties
+  const assigneeInfo = useMemo(() => {
+    if (!board) return null;
+    const personProps = board.properties.filter(p =>
+      p.type === PropertyType.PERSON || p.type === PropertyType.USER
+    );
+    for (const prop of personProps) {
+      const value = task.properties[prop.id];
+      if (value) {
+        return { propName: prop.name, value };
+      }
+    }
+    return null;
+  }, [board, task.properties]);
+
   // Handle status change
   const handleStatusChange = (newStatusId: string) => {
     if (!statusProp) return;
@@ -940,7 +1206,7 @@ function TaskRow({
   };
 
   return (
-    <div className="flex items-center gap-2 px-3 py-2.5 hover:bg-muted/50 transition-colors group">
+    <div className="flex items-center gap-2 px-3 py-3 hover:bg-muted/50 transition-colors group">
       {/* Drag handle */}
       {dragHandleProps && (
         <div
@@ -956,11 +1222,11 @@ function TaskRow({
         <DropdownMenuTrigger asChild disabled={!statusProp || isUpdating}>
           <button className="shrink-0 focus:outline-none" disabled={isUpdating}>
             {isUpdating ? (
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
             ) : status ? (
               <div
                 className={cn(
-                  "w-4 h-4 rounded-full border-2 transition-transform hover:scale-110",
+                  "w-5 h-5 rounded-full border-2 transition-transform hover:scale-110 flex items-center justify-center",
                   status.color?.includes("green") && "border-green-500 bg-green-100",
                   status.color?.includes("yellow") && "border-yellow-500 bg-yellow-100",
                   status.color?.includes("red") && "border-red-500 bg-red-100",
@@ -969,9 +1235,13 @@ function TaskRow({
                   status.color?.includes("gray") && "border-gray-400 bg-gray-100",
                   !status.color && "border-gray-300"
                 )}
-              />
+              >
+                {status.color?.includes("green") && (
+                  <CheckCircle2 className="h-3 w-3 text-green-600" />
+                )}
+              </div>
             ) : (
-              <Circle className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+              <Circle className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
             )}
           </button>
         </DropdownMenuTrigger>
@@ -999,101 +1269,129 @@ function TaskRow({
         </DropdownMenuContent>
       </DropdownMenu>
 
-      {/* Title - link to board */}
-      <Link
-        href={`/dashboard/boards/${task.boardId}`}
-        className="flex-1 min-w-0"
-      >
-        <p className="text-sm truncate hover:text-primary transition-colors">
-          {task.title || "Untitled"}
-        </p>
-      </Link>
+      {/* Main content */}
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          {/* Title - link to board */}
+          <Link
+            href={`/dashboard/boards/${task.boardId}`}
+            className="min-w-0 flex-1"
+          >
+            <p className="text-sm font-medium truncate hover:text-primary transition-colors">
+              {task.title || "Untitled"}
+            </p>
+          </Link>
+        </div>
 
-      {/* Board name */}
-      {showBoard && board && (
-        <span className="text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded shrink-0 hidden sm:inline-block">
-          {board.name}
-        </span>
-      )}
+        {/* Meta info row */}
+        <div className="flex items-center gap-2 mt-1 flex-wrap">
+          {/* Board name */}
+          {showBoard && board && (
+            <span className="text-xs text-muted-foreground px-1.5 py-0.5 bg-muted rounded">
+              {board.name}
+            </span>
+          )}
 
-      {/* Status badge - clickable */}
-      {status && (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild disabled={!statusProp || isUpdating}>
+          {/* Updated time */}
+          <span className="text-xs text-muted-foreground">
+            {formatDistanceToNow(new Date(task.updatedAt), { addSuffix: true, locale: vi })}
+          </span>
+
+          {/* Due date urgent info */}
+          {dueDateInfo && (
+            <span className={cn(
+              "text-xs px-1.5 py-0.5 rounded",
+              dueDateInfo.urgent
+                ? "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400"
+                : "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400"
+            )}>
+              {dueDateInfo.text}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Right side actions */}
+      <div className="flex items-center gap-1 shrink-0">
+        {/* Status badge - clickable */}
+        {status && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild disabled={!statusProp || isUpdating}>
+              <button
+                className={cn(
+                  "text-xs px-2 py-1 rounded transition-opacity hover:opacity-80 hidden sm:inline-flex",
+                  status.color || "bg-gray-100 text-gray-700"
+                )}
+                disabled={isUpdating}
+              >
+                {status.label}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {statusProp?.options?.map((opt) => (
+                <DropdownMenuItem
+                  key={opt.id}
+                  onClick={() => handleStatusChange(opt.id)}
+                >
+                  <span
+                    className={cn(
+                      "inline-flex items-center px-2 py-0.5 rounded text-xs mr-2",
+                      opt.color || "bg-gray-100 text-gray-700"
+                    )}
+                  >
+                    {opt.label}
+                  </span>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
+
+        {/* Due date - clickable calendar */}
+        <Popover>
+          <PopoverTrigger asChild disabled={!dateProp || isUpdating}>
             <button
               className={cn(
-                "text-xs px-2 py-0.5 rounded shrink-0 transition-opacity hover:opacity-80",
-                status.color || "bg-gray-100 text-gray-700"
+                "flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors",
+                dueDate ? (
+                  isOverdue ? "text-red-600 bg-red-100 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-400" :
+                  isDueToday ? "text-orange-600 bg-orange-100 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400" :
+                  "text-muted-foreground bg-muted hover:bg-muted/80"
+                ) : "text-muted-foreground hover:bg-muted opacity-0 group-hover:opacity-100"
               )}
               disabled={isUpdating}
             >
-              {status.label}
+              <Calendar className="h-3.5 w-3.5" />
+              {dueDate ? (
+                <span>{format(new Date(dueDate), "dd/MM/yyyy", { locale: vi })}</span>
+              ) : (
+                <span>Thêm ngày</span>
+              )}
             </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {statusProp?.options?.map((opt) => (
-              <DropdownMenuItem
-                key={opt.id}
-                onClick={() => handleStatusChange(opt.id)}
-              >
-                <span
-                  className={cn(
-                    "inline-flex items-center px-2 py-0.5 rounded text-xs mr-2",
-                    opt.color || "bg-gray-100 text-gray-700"
-                  )}
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="end">
+            <CalendarComponent
+              mode="single"
+              selected={dueDate ? new Date(dueDate) : undefined}
+              onSelect={handleDueDateChange}
+              locale={vi}
+              initialFocus
+            />
+            {dueDate && (
+              <div className="p-2 border-t">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="w-full text-destructive"
+                  onClick={() => handleDueDateChange(undefined)}
                 >
-                  {opt.label}
-                </span>
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-
-      {/* Due date - clickable calendar */}
-      <Popover>
-        <PopoverTrigger asChild disabled={!dateProp || isUpdating}>
-          <button
-            className={cn(
-              "flex items-center gap-1 text-xs shrink-0 px-1.5 py-0.5 rounded transition-colors",
-              dueDate ? (
-                isOverdue ? "text-red-500 bg-red-50 hover:bg-red-100" :
-                isDueToday ? "text-orange-500 bg-orange-50 hover:bg-orange-100" :
-                "text-muted-foreground hover:bg-muted"
-              ) : "text-muted-foreground hover:bg-muted opacity-0 group-hover:opacity-100"
+                  Xóa ngày
+                </Button>
+              </div>
             )}
-            disabled={isUpdating}
-          >
-            <Calendar className="h-3 w-3" />
-            {dueDate ? (
-              <span>{format(new Date(dueDate), "dd/MM", { locale: vi })}</span>
-            ) : (
-              <span>Thêm</span>
-            )}
-          </button>
-        </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="end">
-          <CalendarComponent
-            mode="single"
-            selected={dueDate ? new Date(dueDate) : undefined}
-            onSelect={handleDueDateChange}
-            locale={vi}
-            initialFocus
-          />
-          {dueDate && (
-            <div className="p-2 border-t">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="w-full text-destructive"
-                onClick={() => handleDueDateChange(undefined)}
-              >
-                Xóa ngày
-              </Button>
-            </div>
-          )}
-        </PopoverContent>
-      </Popover>
+          </PopoverContent>
+        </Popover>
+      </div>
     </div>
   );
 }
