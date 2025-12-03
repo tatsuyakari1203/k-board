@@ -16,3 +16,6 @@ export type { IAuditLog } from "./audit-log.model";
 
 export { default as Activity, ACTIVITY_TYPES } from "./activity.model";
 export type { IActivity } from "./activity.model";
+
+export { default as TodoPreference } from "./todo-preference.model";
+export type { ITodoPreference, ITodoPreferenceDocument } from "./todo-preference.model";

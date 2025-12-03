@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import {
   LayoutGrid,
   Users,
-  Package,
+  CheckSquare,
   FileText,
   Settings,
   Search,
@@ -46,9 +46,9 @@ export default async function DashboardLayout({
           {/* Navigation */}
           <nav className="flex-1 space-y-1 px-4 py-3">
             <NavItem href="/dashboard" icon={LayoutGrid} label="Tổng quan" />
+            <NavItem href="/dashboard/todo" icon={CheckSquare} label="Việc của tôi" />
             <NavItem href="/dashboard/boards" icon={ClipboardList} label="Quản lý công việc" />
             <NavItem href="/dashboard/users" icon={Users} label="Nhân sự" />
-            <NavItem href="/dashboard/products" icon={Package} label="Sản phẩm" />
             <NavItem href="/dashboard/reports" icon={FileText} label="Báo cáo" />
             <NavItem href="/dashboard/settings" icon={Settings} label="Cài đặt" />
           </nav>
