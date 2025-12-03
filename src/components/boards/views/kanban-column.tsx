@@ -17,11 +17,18 @@ import { cn } from "@/lib/utils";
 // TYPES
 // ============================================
 
+interface Aggregation {
+  type: "count" | "sum" | "average" | "min" | "max";
+  value: number;
+  label?: string;
+}
+
 interface KanbanColumnProps {
   id: string;
   title: string;
   color?: string;
   count: number;
+  aggregations?: Aggregation[];
   isOver?: boolean;
   children: React.ReactNode;
   onAddCard?: () => void;
@@ -55,11 +62,19 @@ const dotColors: Record<string, string> = {
 // COMPONENT
 // ============================================
 
+// Format number for display
+function formatAggregationValue(type: Aggregation["type"], value: number): string {
+  if (type === "count") return value.toString();
+  if (Number.isInteger(value)) return value.toLocaleString("vi-VN");
+  return value.toLocaleString("vi-VN", { maximumFractionDigits: 2 });
+}
+
 export function KanbanColumn({
   id,
   title,
   color,
   count,
+  aggregations = [],
   isOver,
   children,
   onAddCard,
@@ -74,7 +89,7 @@ export function KanbanColumn({
   return (
     <div
       ref={setNodeRef}
-      className="flex flex-col w-[280px] min-w-[280px] shrink-0"
+      className="flex flex-col w-[280px] min-w-[280px] md:w-[280px] md:min-w-[280px] w-[240px] min-w-[240px] shrink-0"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -93,6 +108,22 @@ export function KanbanColumn({
           <span className="text-xs text-muted-foreground tabular-nums">
             {count}
           </span>
+
+          {/* Aggregations */}
+          {aggregations.length > 0 && (
+            <div className="flex items-center gap-2 ml-2 pl-2 border-l border-border">
+              {aggregations.map((agg, idx) => (
+                <span
+                  key={idx}
+                  className="text-xs text-muted-foreground tabular-nums"
+                  title={`${agg.label || agg.type}: ${formatAggregationValue(agg.type, agg.value)}`}
+                >
+                  {agg.label && <span className="mr-1 opacity-70">{agg.label}:</span>}
+                  {formatAggregationValue(agg.type, agg.value)}
+                </span>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Actions - show on hover */}

@@ -304,6 +304,36 @@ export function KanbanView({
       .slice(0, 4); // Max 4 properties on card
   }, [board.properties, view.config.visibleProperties, groupByPropertyId]);
 
+  // Calculate aggregations per column
+  const columnAggregations = useMemo(() => {
+    const aggregations: Record<string, { sum: number; count: number }> = {};
+
+    // Find number/currency properties for aggregation
+    const numberProps = board.properties.filter(
+      (p) => p.type === PropertyType.NUMBER || p.type === PropertyType.CURRENCY
+    );
+
+    columns.forEach((col) => {
+      const colTasks = tasksByColumn[col.id] || [];
+      let totalSum = 0;
+      let countWithValue = 0;
+
+      colTasks.forEach((task) => {
+        numberProps.forEach((prop) => {
+          const value = task.properties?.[prop.id];
+          if (typeof value === "number") {
+            totalSum += value;
+            countWithValue++;
+          }
+        });
+      });
+
+      aggregations[col.id] = { sum: totalSum, count: countWithValue };
+    });
+
+    return aggregations;
+  }, [columns, tasksByColumn, board.properties]);
+
   // ============================================
   // DRAG HANDLERS
   // ============================================
@@ -413,53 +443,61 @@ export function KanbanView({
       onDragEnd={handleDragEnd}
     >
       {/* Notion-style: horizontal scroll, generous padding, clean gaps */}
-      <div className="flex h-full overflow-x-auto px-6 py-4 gap-6">
-        {columns.map((column) => (
-          <KanbanColumn
-            key={column.id}
-            id={column.id}
-            title={column.title}
-            color={column.color}
-            count={tasksByColumn[column.id]?.length || 0}
-            isOver={overId === column.id}
-            onAddCard={() => handleCreateTaskInColumn(column.id)}
-          >
-            <SortableContext
-              items={tasksByColumn[column.id]?.map((t) => t._id) || []}
-              strategy={verticalListSortingStrategy}
-            >
-              <div className="flex flex-col">
-                {tasksByColumn[column.id]?.map((task) => (
-                  <KanbanCard
-                    key={task._id}
-                    task={task}
-                    properties={cardProperties}
-                    allProperties={board.properties}
-                    users={users}
-                    onUpdate={(updates: Partial<TaskData>) => onUpdateTask(task._id, updates)}
-                    onDelete={() => onDeleteTask(task._id)}
-                    onAddPropertyOption={onAddPropertyOption}
-                    onUpdatePropertyOption={onUpdatePropertyOption}
-                  />
-                ))}
-              </div>
-            </SortableContext>
+      <div className="flex h-full overflow-x-auto px-6 py-4 gap-6 md:px-6 px-3 md:gap-6 gap-3">
+        {columns.map((column) => {
+          const agg = columnAggregations[column.id];
+          const aggregations = agg && agg.sum > 0
+            ? [{ type: "sum" as const, value: agg.sum, label: "Σ" }]
+            : [];
 
-            {/* Add card button - Notion style: text only, subtle */}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 mt-1"
-              onClick={() => handleCreateTaskInColumn(column.id)}
+          return (
+            <KanbanColumn
+              key={column.id}
+              id={column.id}
+              title={column.title}
+              color={column.color}
+              count={tasksByColumn[column.id]?.length || 0}
+              aggregations={aggregations}
+              isOver={overId === column.id}
+              onAddCard={() => handleCreateTaskInColumn(column.id)}
             >
-              <Plus className="h-4 w-4 mr-1.5" />
-              <span className="text-sm">Thêm thẻ</span>
-            </Button>
-          </KanbanColumn>
-        ))}
+              <SortableContext
+                items={tasksByColumn[column.id]?.map((t) => t._id) || []}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="flex flex-col">
+                  {tasksByColumn[column.id]?.map((task) => (
+                    <KanbanCard
+                      key={task._id}
+                      task={task}
+                      properties={cardProperties}
+                      allProperties={board.properties}
+                      users={users}
+                      onUpdate={(updates: Partial<TaskData>) => onUpdateTask(task._id, updates)}
+                      onDelete={() => onDeleteTask(task._id)}
+                      onAddPropertyOption={onAddPropertyOption}
+                      onUpdatePropertyOption={onUpdatePropertyOption}
+                    />
+                  ))}
+                </div>
+              </SortableContext>
+
+              {/* Add card button - Notion style: text only, subtle */}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="w-full justify-start text-muted-foreground hover:text-foreground hover:bg-muted/50 mt-1"
+                onClick={() => handleCreateTaskInColumn(column.id)}
+              >
+                <Plus className="h-4 w-4 mr-1.5" />
+                <span className="text-sm">Thêm thẻ</span>
+              </Button>
+            </KanbanColumn>
+          );
+        })}
 
         {/* Add column button - future feature */}
-        <div className="w-[280px] min-w-[280px] shrink-0 opacity-0 hover:opacity-100 transition-opacity">
+        <div className="w-[280px] min-w-[280px] md:w-[280px] md:min-w-[280px] w-[240px] min-w-[240px] shrink-0 opacity-0 hover:opacity-100 transition-opacity">
           <Button
             variant="ghost"
             className="w-full h-10 justify-start text-muted-foreground hover:text-foreground"
