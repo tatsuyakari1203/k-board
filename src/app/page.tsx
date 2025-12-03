@@ -1,7 +1,5 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { getCurrentUser } from "@/lib/auth-utils";
 import {
   ArrowRight,
@@ -10,7 +8,7 @@ import {
   CheckSquare,
   Layers,
   Lock,
-  Sparkles,
+  Zap,
 } from "lucide-react";
 
 export default async function HomePage() {
@@ -19,23 +17,23 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/40">
-        <div className="mx-auto flex h-16 max-w-screen-xl items-center justify-between px-6">
-          <span className="text-xl font-semibold tracking-tight">K-ERP</span>
-          <nav className="flex items-center gap-3">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md">
+        <div className="mx-auto flex h-14 max-w-screen-xl items-center justify-between px-6">
+          <span className="text-base font-medium">K-ERP</span>
+          <nav className="flex items-center gap-2">
             {user ? (
-              <Button asChild>
+              <Button size="sm" asChild>
                 <Link href="/dashboard">
                   Vào Dashboard
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                 </Link>
               </Button>
             ) : (
               <>
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" size="sm" asChild>
                   <Link href="/auth/login">Đăng nhập</Link>
                 </Button>
-                <Button asChild>
+                <Button size="sm" asChild>
                   <Link href="/auth/register">Bắt đầu ngay</Link>
                 </Button>
               </>
@@ -45,41 +43,36 @@ export default async function HomePage() {
       </header>
 
       {/* Hero */}
-      <main className="mx-auto max-w-screen-xl px-6 pt-32 pb-20">
-        <div className="max-w-2xl">
-          <Badge variant="secondary" className="mb-6">
-            <Sparkles className="h-3 w-3 mr-1.5" />
-            Nền tảng quản lý công việc
-          </Badge>
-
-          <h1 className="text-4xl md:text-5xl font-semibold tracking-tight leading-[1.1] text-foreground">
+      <main className="mx-auto max-w-screen-xl px-6 pt-28 pb-16">
+        <div className="max-w-xl">
+          <h1 className="text-3xl md:text-4xl font-medium tracking-tight leading-[1.15] text-foreground">
             Tổ chức công việc
             <br />
             một cách thông minh
           </h1>
 
-          <p className="mt-6 text-lg text-muted-foreground leading-relaxed">
+          <p className="mt-4 text-muted-foreground leading-relaxed">
             Quản lý dự án, theo dõi tiến độ và cộng tác với đội nhóm
-            trên một nền tảng duy nhất, đơn giản và hiệu quả.
+            trên một nền tảng duy nhất.
           </p>
 
-          <div className="mt-10 flex items-center gap-4">
+          <div className="mt-8 flex items-center gap-3">
             {user ? (
-              <Button size="lg" asChild>
+              <Button asChild>
                 <Link href="/dashboard">
                   Tiếp tục làm việc
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ml-1.5 h-4 w-4" />
                 </Link>
               </Button>
             ) : (
               <>
-                <Button size="lg" asChild>
+                <Button asChild>
                   <Link href="/auth/register">
                     Dùng thử miễn phí
-                    <ArrowRight className="ml-2 h-4 w-4" />
+                    <ArrowRight className="ml-1.5 h-4 w-4" />
                   </Link>
                 </Button>
-                <Button variant="outline" size="lg" asChild>
+                <Button variant="ghost" asChild>
                   <Link href="/auth/login">Đăng nhập</Link>
                 </Button>
               </>
@@ -88,99 +81,85 @@ export default async function HomePage() {
         </div>
 
         {/* Features */}
-        <div className="mt-28">
-          <div className="mb-12">
-            <h2 className="text-2xl font-semibold text-foreground">
-              Mọi thứ bạn cần
-            </h2>
-            <p className="mt-2 text-muted-foreground">
-              Công cụ mạnh mẽ cho mọi quy mô dự án
-            </p>
-          </div>
+        <div className="mt-24">
+          <h2 className="text-lg font-medium text-foreground mb-8">
+            Tính năng
+          </h2>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            <FeatureCard
-              icon={<LayoutGrid className="h-5 w-5" />}
+          <div className="grid gap-x-8 gap-y-6 md:grid-cols-2 lg:grid-cols-3">
+            <FeatureItem
+              icon={<LayoutGrid className="h-4 w-4" />}
               title="Bảng dự án"
-              description="Tạo và quản lý nhiều bảng với các trường thông tin linh hoạt theo nhu cầu."
+              description="Tạo và quản lý nhiều bảng với các trường thông tin linh hoạt."
             />
-            <FeatureCard
-              icon={<Layers className="h-5 w-5" />}
+            <FeatureItem
+              icon={<Layers className="h-4 w-4" />}
               title="Đa dạng chế độ xem"
-              description="Chuyển đổi giữa dạng bảng và Kanban để theo dõi công việc thuận tiện."
+              description="Chuyển đổi giữa dạng bảng và Kanban dễ dàng."
             />
-            <FeatureCard
-              icon={<Users className="h-5 w-5" />}
+            <FeatureItem
+              icon={<Users className="h-4 w-4" />}
               title="Cộng tác nhóm"
-              description="Mời thành viên, phân công nhiệm vụ và làm việc cùng nhau hiệu quả."
+              description="Mời thành viên và làm việc cùng nhau hiệu quả."
             />
-            <FeatureCard
-              icon={<Lock className="h-5 w-5" />}
-              title="Kiểm soát quyền truy cập"
-              description="Thiết lập quyền xem, chỉnh sửa cho từng thành viên trong dự án."
+            <FeatureItem
+              icon={<Lock className="h-4 w-4" />}
+              title="Phân quyền"
+              description="Thiết lập quyền xem, chỉnh sửa cho từng thành viên."
             />
-            <FeatureCard
-              icon={<CheckSquare className="h-5 w-5" />}
+            <FeatureItem
+              icon={<CheckSquare className="h-4 w-4" />}
               title="Quản lý công việc"
-              description="Theo dõi các nhiệm vụ được giao, cập nhật trạng thái dễ dàng."
+              description="Theo dõi nhiệm vụ được giao, cập nhật trạng thái."
             />
-            <FeatureCard
-              icon={<Sparkles className="h-5 w-5" />}
-              title="Giao diện trực quan"
-              description="Thiết kế đơn giản, dễ sử dụng ngay từ lần đầu tiên."
+            <FeatureItem
+              icon={<Zap className="h-4 w-4" />}
+              title="Nhanh chóng"
+              description="Giao diện đơn giản, dễ sử dụng ngay lập tức."
             />
           </div>
         </div>
 
         {/* CTA */}
-        <div className="mt-28 text-center">
-          <Card className="border-dashed">
-            <CardContent className="py-12">
-              <h2 className="text-2xl font-semibold text-foreground">
-                Bắt đầu ngay hôm nay
-              </h2>
-              <p className="mt-2 text-muted-foreground max-w-md mx-auto">
-                Tạo tài khoản miễn phí và khám phá cách quản lý công việc hiệu quả hơn.
-              </p>
-              <div className="mt-8">
-                {!user && (
-                  <Button size="lg" asChild>
-                    <Link href="/auth/register">
-                      Tạo tài khoản miễn phí
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                )}
-                {user && (
-                  <Button size="lg" asChild>
-                    <Link href="/dashboard">
-                      Vào Dashboard
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
+        <div className="mt-24 py-12 px-8 rounded-lg bg-muted/50">
+          <h2 className="text-lg font-medium text-foreground">
+            Sẵn sàng bắt đầu?
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Tạo tài khoản miễn phí và khám phá ngay.
+          </p>
+          <div className="mt-6">
+            {!user && (
+              <Button asChild>
+                <Link href="/auth/register">
+                  Tạo tài khoản
+                  <ArrowRight className="ml-1.5 h-4 w-4" />
+                </Link>
+              </Button>
+            )}
+            {user && (
+              <Button asChild>
+                <Link href="/dashboard">
+                  Vào Dashboard
+                  <ArrowRight className="ml-1.5 h-4 w-4" />
+                </Link>
+              </Button>
+            )}
+          </div>
         </div>
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-border/40 mt-12">
-        <div className="mx-auto max-w-screen-xl px-6 py-8 flex justify-between items-center">
-          <p className="text-sm text-muted-foreground">
-            © 2024 K-ERP
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Made with care
-          </p>
+      <footer className="mt-8">
+        <div className="mx-auto max-w-screen-xl px-6 py-6 flex justify-between items-center">
+          <p className="text-xs text-muted-foreground">© 2024 K-ERP</p>
         </div>
       </footer>
     </div>
   );
 }
 
-function FeatureCard({
+function FeatureItem({
   icon,
   title,
   description,
@@ -190,14 +169,12 @@ function FeatureCard({
   description: string;
 }) {
   return (
-    <Card className="group hover:border-foreground/20 transition-colors">
-      <CardContent className="pt-6">
-        <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-muted text-foreground mb-4">
-          {icon}
-        </div>
-        <h3 className="font-medium text-foreground mb-2">{title}</h3>
-        <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
-      </CardContent>
-    </Card>
+    <div className="group">
+      <div className="flex items-center gap-2 mb-1.5">
+        <span className="text-muted-foreground">{icon}</span>
+        <h3 className="text-sm font-medium text-foreground">{title}</h3>
+      </div>
+      <p className="text-sm text-muted-foreground leading-relaxed">{description}</p>
+    </div>
   );
 }
