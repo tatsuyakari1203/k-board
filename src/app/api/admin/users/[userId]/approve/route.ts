@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import User from "@/models/user.model";
 import { USER_ROLES, USER_STATUS } from "@/types/user";
 import { approveUserSchema } from "@/lib/validations/admin";
+import { logUserApproved, logUserRejected } from "@/lib/audit";
 
 // Helper to check admin access
 async function checkAdminAccess() {
@@ -65,10 +66,25 @@ export async function POST(
       user.approvedBy = authResult.session.user.id as unknown as typeof user.approvedBy;
       user.approvedAt = new Date();
       user.rejectedReason = undefined;
+
+      // Log audit
+      await logUserApproved(
+        authResult.session.user.id,
+        userId,
+        user.name
+      );
     } else {
       user.status = USER_STATUS.REJECTED;
       user.isActive = false;
       user.rejectedReason = validated.data.rejectedReason || "Không đáp ứng yêu cầu";
+
+      // Log audit
+      await logUserRejected(
+        authResult.session.user.id,
+        userId,
+        user.name,
+        user.rejectedReason
+      );
     }
 
     await user.save();

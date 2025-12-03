@@ -5,6 +5,7 @@ import Board from "@/models/board.model";
 import Task from "@/models/task.model";
 import { checkBoardAccess } from "@/lib/board-permissions";
 import { createTaskSchema } from "@/types/board";
+import { logTaskCreated } from "@/lib/audit";
 
 interface RouteParams {
   params: Promise<{ boardId: string }>;
@@ -142,6 +143,14 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       ...validation.data,
       createdBy: session.user.id,
     });
+
+    // Log activity
+    await logTaskCreated(
+      boardId,
+      task._id.toString(),
+      session.user.id,
+      task.title
+    );
 
     return NextResponse.json(
       {

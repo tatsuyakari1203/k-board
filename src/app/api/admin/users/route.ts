@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import User from "@/models/user.model";
 import { USER_ROLES, USER_STATUS } from "@/types/user";
 import { createUserSchema, userFilterSchema } from "@/lib/validations/admin";
+import { logUserCreated } from "@/lib/audit";
 
 // Helper to check admin access
 async function checkAdminAccess() {
@@ -161,6 +162,14 @@ export async function POST(request: NextRequest) {
       approvedAt: new Date(),
       createdBy: authResult.session.user.id,
     });
+
+    // Log audit
+    await logUserCreated(
+      authResult.session.user.id,
+      user._id.toString(),
+      user.name,
+      { email: user.email, role: user.role }
+    );
 
     return NextResponse.json(
       {

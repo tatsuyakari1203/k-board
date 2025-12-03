@@ -10,6 +10,7 @@ import {
 } from "@/models/system-settings.model";
 import { USER_ROLES } from "@/types/user";
 import { updateSettingsSchema } from "@/lib/validations/admin";
+import { logSettingsUpdated } from "@/lib/audit";
 
 // Helper to check admin access
 async function checkAdminAccess() {
@@ -85,14 +86,30 @@ export async function PATCH(request: NextRequest) {
     await connectDB();
 
     const updates: Record<string, unknown> = {};
+    const previousValues: Record<string, unknown> = {};
 
     if (validated.data.user_registration_mode) {
+      // Get previous value for audit
+      const previousMode = await getSetting<RegistrationMode>(
+        SETTING_KEYS.USER_REGISTRATION_MODE
+      );
+      previousValues.user_registration_mode = previousMode || REGISTRATION_MODE.MANUAL_APPROVE;
+
       await setSetting(
         SETTING_KEYS.USER_REGISTRATION_MODE,
         validated.data.user_registration_mode,
         authResult.session.user.id
       );
       updates.user_registration_mode = validated.data.user_registration_mode;
+    }
+
+    // Log audit
+    if (Object.keys(updates).length > 0) {
+      await logSettingsUpdated(
+        authResult.session.user.id,
+        previousValues,
+        updates
+      );
     }
 
     return NextResponse.json({

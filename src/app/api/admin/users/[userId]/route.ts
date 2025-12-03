@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import User from "@/models/user.model";
 import { USER_ROLES } from "@/types/user";
 import { updateUserSchema } from "@/lib/validations/admin";
+import { logUserUpdated, logUserDeleted, logUserRoleChanged } from "@/lib/audit";
 
 // Helper to check admin access
 async function checkAdminAccess() {
@@ -124,6 +125,7 @@ export async function PATCH(
 
     // Update user
     const updateData: Record<string, unknown> = { ...validated.data };
+    const previousRole = user.role;
 
     // If password is provided, it will be hashed by the pre-save hook
     if (validated.data.password) {
@@ -138,6 +140,26 @@ export async function PATCH(
       { $set: updateData },
       { new: true }
     ).select("-password");
+
+    // Log audit for role change
+    if (validated.data.role && validated.data.role !== previousRole) {
+      await logUserRoleChanged(
+        authResult.session.user.id,
+        userId,
+        user.name,
+        previousRole,
+        validated.data.role
+      );
+    } else if (updatedUser) {
+      // Log general update
+      await logUserUpdated(
+        authResult.session.user.id,
+        userId,
+        user.name,
+        { name: user.name, email: user.email },
+        { name: validated.data.name || user.name, email: validated.data.email || user.email }
+      );
+    }
 
     return NextResponse.json({
       message: "Cập nhật thành công",
@@ -189,7 +211,11 @@ export async function DELETE(
       );
     }
 
+    const userName = user.name;
     await User.findByIdAndDelete(userId);
+
+    // Log audit
+    await logUserDeleted(authResult.session.user.id, userId, userName);
 
     return NextResponse.json({
       message: "Xóa người dùng thành công",

@@ -3,9 +3,11 @@ import { auth } from "@/lib/auth";
 import { connectDB } from "@/lib/db";
 import BoardMember from "@/models/board-member.model";
 import Board from "@/models/board.model";
+import User from "@/models/user.model";
 import { checkBoardAccess } from "@/lib/board-permissions";
 import { updateBoardMemberSchema } from "@/lib/validations/board-member";
-import { BOARD_ROLES, type BoardRole } from "@/types/board-member";
+import { BOARD_ROLES, BOARD_ROLE_LABELS, type BoardRole } from "@/types/board-member";
+import { logBoardMemberRemoved, logBoardMemberRoleChanged } from "@/lib/audit";
 
 interface RouteContext {
   params: Promise<{ boardId: string; memberId: string }>;
@@ -75,8 +77,22 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       );
     }
 
+    const oldRole = member.role;
     member.role = validated.data.role as BoardRole;
     await member.save();
+
+    // Get user name for activity log
+    const memberUser = await User.findById(member.userId).select("name").lean();
+
+    // Log activity
+    await logBoardMemberRoleChanged(
+      boardId,
+      session.user.id,
+      member.userId.toString(),
+      memberUser?.name || "Unknown",
+      BOARD_ROLE_LABELS[oldRole] || oldRole,
+      BOARD_ROLE_LABELS[member.role] || member.role
+    );
 
     return NextResponse.json({
       message: "Đã cập nhật vai trò thành công",
@@ -155,7 +171,18 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       );
     }
 
+    // Get user name for activity log before deleting
+    const memberUser = await User.findById(member.userId).select("name").lean();
+
     await BoardMember.deleteOne({ _id: memberId });
+
+    // Log activity
+    await logBoardMemberRemoved(
+      boardId,
+      session.user.id,
+      member.userId.toString(),
+      memberUser?.name || "Unknown"
+    );
 
     return NextResponse.json({
       message: isSelfRemove ? "Bạn đã rời khỏi board" : "Đã xóa thành viên thành công",

@@ -1,5 +1,6 @@
 import { getCurrentUser } from "@/lib/auth-utils";
 import { Plus } from "lucide-react";
+import { PendingInvitations } from "@/components/board/PendingInvitations";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
@@ -25,6 +26,9 @@ export default async function DashboardPage() {
           Tạo mới
         </button>
       </div>
+
+      {/* Pending Invitations */}
+      <PendingInvitations />
 
       {/* Stats */}
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">

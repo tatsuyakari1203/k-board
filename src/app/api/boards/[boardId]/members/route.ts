@@ -8,7 +8,8 @@ import { checkBoardAccess } from "@/lib/board-permissions";
 import {
   addBoardMemberSchema,
 } from "@/lib/validations/board-member";
-import { BOARD_ROLES, type BoardRole } from "@/types/board-member";
+import { BOARD_ROLES, BOARD_ROLE_LABELS, type BoardRole } from "@/types/board-member";
+import { logBoardMemberAdded } from "@/lib/audit";
 
 interface RouteContext {
   params: Promise<{ boardId: string }>;
@@ -46,15 +47,16 @@ export async function GET(request: NextRequest, context: RouteContext) {
       .select("ownerId")
       .lean();
 
+    // Check if current user is the owner
+    const boardOwnerId = board?.ownerId && (typeof board.ownerId === 'object' && '_id' in board.ownerId)
+      ? (board.ownerId as any)._id
+      : board?.ownerId;
+    const isOwner = session.user.id === boardOwnerId?.toString();
+
     return NextResponse.json({
       members: members.map((m) => {
         const user = m.userId as unknown as { _id: { toString: () => string }; name: string; email: string };
         const addedByUser = m.addedBy as unknown as { _id: { toString: () => string }; name: string } | null;
-
-        // Handle ownerId whether it's populated or not
-        const boardOwnerId = board?.ownerId && (typeof board.ownerId === 'object' && '_id' in board.ownerId)
-          ? (board.ownerId as any)._id
-          : board?.ownerId;
 
         return {
           _id: m._id.toString(),
@@ -77,6 +79,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       currentUserRole: access.role,
       canManageMembers: access.permissions?.canManageMembers,
       canEditBoard: access.permissions?.canEditBoard,
+      isOwner,
     });
   } catch (error) {
     console.error("GET /api/boards/[boardId]/members error:", error);
@@ -158,6 +161,15 @@ export async function POST(request: NextRequest, context: RouteContext) {
       addedBy: session.user.id,
       addedAt: new Date(),
     });
+
+    // Log activity
+    await logBoardMemberAdded(
+      boardId,
+      session.user.id,
+      user._id.toString(),
+      user.name,
+      BOARD_ROLE_LABELS[role as BoardRole] || role
+    );
 
     return NextResponse.json({
       message: "Đã thêm thành viên thành công",

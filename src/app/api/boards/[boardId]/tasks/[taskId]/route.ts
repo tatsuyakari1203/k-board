@@ -5,6 +5,7 @@ import Task from "@/models/task.model";
 import Board from "@/models/board.model";
 import { checkBoardAccess } from "@/lib/board-permissions";
 import { updateTaskSchema } from "@/types/board";
+import { logTaskDeleted } from "@/lib/audit";
 
 interface RouteParams {
   params: Promise<{ boardId: string; taskId: string }>;
@@ -112,7 +113,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
       const isCreator = existingTask.createdBy.toString() === session.user.id;
       // Check if assigned (assuming value is array of user IDs)
-      const assigneeValue = existingTask.properties?.[assigneeProp?.id];
+      const assigneeValue = assigneeProp?.id ? existingTask.properties?.[assigneeProp.id] : undefined;
       const isAssigned = Array.isArray(assigneeValue)
         ? assigneeValue.includes(session.user.id)
         : assigneeValue === session.user.id;
@@ -198,6 +199,14 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
         { status: 404 }
       );
     }
+
+    // Log activity
+    await logTaskDeleted(
+      boardId,
+      taskId,
+      session.user.id,
+      task.title
+    );
 
     return NextResponse.json({ success: true });
   } catch (error) {

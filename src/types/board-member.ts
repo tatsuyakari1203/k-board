@@ -155,5 +155,10 @@ export function hasPermission(
   role: BoardRole,
   permission: keyof BoardPermissions
 ): boolean {
-  return BOARD_ROLE_PERMISSIONS[role][permission];
+  const value = BOARD_ROLE_PERMISSIONS[role][permission];
+  // viewScope and editScope are strings, not booleans
+  if (permission === "viewScope" || permission === "editScope") {
+    return true; // These are scope identifiers, not boolean permissions
+  }
+  return value === true;
 }

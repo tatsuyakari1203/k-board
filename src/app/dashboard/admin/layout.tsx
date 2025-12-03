@@ -2,7 +2,7 @@ import { getCurrentUser } from "@/lib/auth-utils";
 import { redirect } from "next/navigation";
 import { USER_ROLES } from "@/types/user";
 import Link from "next/link";
-import { Users, Settings, Shield, ChevronLeft } from "lucide-react";
+import { Users, Settings, Shield, ChevronLeft, ClipboardList } from "lucide-react";
 
 export default async function AdminLayout({
   children,
@@ -46,6 +46,7 @@ export default async function AdminLayout({
             <NavItem href="/dashboard/admin" icon={Shield} label="Tổng quan" />
             <NavItem href="/dashboard/admin/users" icon={Users} label="Quản lý người dùng" />
             <NavItem href="/dashboard/admin/settings" icon={Settings} label="Cài đặt hệ thống" />
+            <NavItem href="/dashboard/admin/audit-logs" icon={ClipboardList} label="Nhật ký hoạt động" />
           </nav>
         </aside>
 

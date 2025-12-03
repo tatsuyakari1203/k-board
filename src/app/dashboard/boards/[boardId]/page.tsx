@@ -43,8 +43,8 @@ async function getBoard(boardId: string, userId: string, userRole: string) {
       updatedAt: t.updatedAt.toISOString(),
       properties: t.properties || {},
     })),
-    userRole: access.role,
-    userPermissions: access.permissions,
+    userRole: access.role || undefined,
+    userPermissions: access.permissions || undefined,
   };
 }
 
