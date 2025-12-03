@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import { arrayMove } from "@dnd-kit/sortable";
+import { showToast } from "@/lib/toast";
 
 // ============================================
 // TYPES
@@ -96,9 +97,12 @@ export function useBoardTasks({
           const newTask = await res.json();
           setTasks((prev) => [...prev, newTask]);
           return newTask;
+        } else {
+          showToast.error("Không thể tạo công việc");
         }
       } catch (error) {
         console.error("Failed to create task:", error);
+        showToast.error("Không thể tạo công việc");
       }
       return null;
     },
@@ -148,10 +152,12 @@ export function useBoardTasks({
         } else {
           // Revert on error
           setTasks(previousTasksRef.current);
+          showToast.error("Không thể cập nhật công việc");
         }
       } catch (error) {
         console.error("Failed to update task:", error);
         setTasks(previousTasksRef.current);
+        showToast.error("Không thể cập nhật công việc");
       }
     },
     [boardId, tasks]
@@ -174,10 +180,14 @@ export function useBoardTasks({
 
         if (!res.ok) {
           setTasks(previousTasksRef.current);
+          showToast.error("Không thể xóa công việc");
+        } else {
+          showToast.success("Đã xóa công việc");
         }
       } catch (error) {
         console.error("Failed to delete task:", error);
         setTasks(previousTasksRef.current);
+        showToast.error("Không thể xóa công việc");
       }
     },
     [boardId, tasks]
@@ -201,9 +211,11 @@ export function useBoardTasks({
             })
           )
         );
+        showToast.success(`Đã xóa ${taskIds.length} công việc`);
       } catch (error) {
         console.error("Failed to bulk delete tasks:", error);
         setTasks(previousTasksRef.current);
+        showToast.error("Không thể xóa một số công việc");
       }
     },
     [boardId, tasks]

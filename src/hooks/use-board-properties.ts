@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { arrayMove } from "@dnd-kit/sortable";
 import { type Property, type View, type AggregationType, PropertyType } from "@/types/board";
+import { showToast } from "@/lib/toast";
 
 // ============================================
 // TYPES
@@ -80,10 +81,12 @@ export function useBoardProperties({
         } else {
           // Revert on error
           setProperties(board.properties);
+          showToast.error("Không thể cập nhật thuộc tính");
         }
       } catch (error) {
         console.error("Failed to update properties:", error);
         setProperties(board.properties);
+        showToast.error("Không thể cập nhật thuộc tính");
       }
     },
     [board, onBoardUpdate]

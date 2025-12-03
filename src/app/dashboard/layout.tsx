@@ -8,9 +8,11 @@ import {
   FileText,
   Settings,
   Search,
-  ClipboardList
+  ClipboardList,
+  Shield,
 } from "lucide-react";
 import Link from "next/link";
+import { USER_ROLES } from "@/types/user";
 
 export default async function DashboardLayout({
   children,
@@ -22,6 +24,8 @@ export default async function DashboardLayout({
   if (!user) {
     redirect("/auth/login");
   }
+
+  const isAdmin = user.role === USER_ROLES.ADMIN;
 
   return (
     <div className="min-h-screen bg-background">
@@ -51,6 +55,19 @@ export default async function DashboardLayout({
             <NavItem href="/dashboard/users" icon={Users} label="Nhân sự" />
             <NavItem href="/dashboard/reports" icon={FileText} label="Báo cáo" />
             <NavItem href="/dashboard/settings" icon={Settings} label="Cài đặt" />
+
+            {/* Admin section - only visible to admins */}
+            {isAdmin && (
+              <>
+                <div className="my-3 border-t" />
+                <NavItem
+                  href="/dashboard/admin"
+                  icon={Shield}
+                  label="Quản trị hệ thống"
+                  highlight
+                />
+              </>
+            )}
           </nav>
 
           {/* User */}
@@ -74,15 +91,21 @@ function NavItem({
   href,
   icon: Icon,
   label,
+  highlight,
 }: {
   href: string;
   icon: React.ComponentType<{ className?: string }>;
   label: string;
+  highlight?: boolean;
 }) {
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 rounded-md px-3 py-2.5 text-base text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+      className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-base transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground ${
+        highlight
+          ? "text-orange-600 dark:text-orange-400 font-medium"
+          : "text-muted-foreground"
+      }`}
     >
       <Icon className="h-5 w-5" />
       <span>{label}</span>

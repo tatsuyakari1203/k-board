@@ -1,12 +1,19 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
 import User from "@/models/user.model";
 import { getRegistrationMode, REGISTRATION_MODE } from "@/models/system-settings.model";
 import { registerSchema } from "@/lib/validations/auth";
 import { USER_ROLES, USER_STATUS } from "@/types/user";
+import { checkRateLimit } from "@/lib/rate-limit";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    // Rate limiting for auth endpoints
+    const rateLimitResult = checkRateLimit(request, "AUTH");
+    if (!rateLimitResult.allowed) {
+      return rateLimitResult.response;
+    }
+
     const body = await request.json();
 
     const validated = registerSchema.safeParse(body);
