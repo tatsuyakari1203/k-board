@@ -483,19 +483,22 @@ function DateCell({
     dateValue.to ? format(new Date(dateValue.to), "HH:mm") : "17:00"
   );
 
-  // Sync state when value or open changes
+  // Sync state when popover opens - this is intentional to reset picker state
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
-    const parsed = parseDateValue(value);
-    setSelectedRange({
-      // eslint-disable-line react-hooks/set-state-in-effect
-      from: parsed.from ? new Date(parsed.from) : undefined,
-      to: parsed.to ? new Date(parsed.to) : undefined,
-    });
-    setIsRange(!!parsed.to);
-    setIncludeTime(parsed.hasTime);
-    if (parsed.from) setStartTime(format(new Date(parsed.from), "HH:mm"));
-    if (parsed.to) setEndTime(format(new Date(parsed.to), "HH:mm"));
-  }, [value, open]);
+    if (open) {
+      const parsed = parseDateValue(value);
+      setSelectedRange({
+        from: parsed.from ? new Date(parsed.from) : undefined,
+        to: parsed.to ? new Date(parsed.to) : undefined,
+      });
+      setIsRange(!!parsed.to);
+      setIncludeTime(parsed.hasTime);
+      if (parsed.from) setStartTime(format(new Date(parsed.from), "HH:mm"));
+      if (parsed.to) setEndTime(format(new Date(parsed.to), "HH:mm"));
+    }
+  }, [open, value]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const handleSave = (
     range: DateRange | undefined,

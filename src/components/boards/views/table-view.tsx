@@ -1,7 +1,15 @@
 "use client";
 
 import { useState, useRef, useMemo, useCallback, useEffect, useId } from "react";
-import { Plus, GripVertical, Trash2, MoreHorizontal, ChevronRight, ChevronDown, X } from "lucide-react";
+import {
+  Plus,
+  GripVertical,
+  Trash2,
+  MoreHorizontal,
+  ChevronRight,
+  ChevronDown,
+  X,
+} from "lucide-react";
 import { PropertyCell } from "./property-cell";
 import {
   type Property,
@@ -67,8 +75,14 @@ interface TableViewProps {
   onUpdateTask: (taskId: string, updates: Partial<TaskData>) => void;
   onDeleteTask: (taskId: string) => void;
   onRemoveProperty?: (propertyId: string) => void;
-  onAddPropertyOption?: (propertyId: string, option: { id: string; label: string; color?: string }) => void;
-  onUpdatePropertyOption?: (propertyId: string, option: { id: string; label: string; color?: string }) => void;
+  onAddPropertyOption?: (
+    propertyId: string,
+    option: { id: string; label: string; color?: string }
+  ) => void;
+  onUpdatePropertyOption?: (
+    propertyId: string,
+    option: { id: string; label: string; color?: string }
+  ) => void;
   onUpdatePropertyWidth?: (propertyId: string, width: number) => void;
   onReorderTasks?: (oldIndex: number, newIndex: number) => void;
   onReorderProperties?: (oldIndex: number, newIndex: number) => void;
@@ -82,41 +96,57 @@ interface TableViewProps {
 // Helper to extract date value
 function getDateValue(value: unknown): string | null {
   if (!value) return null;
-  if (typeof value === 'string') return value;
-  if (typeof value === 'object' && value !== null && 'from' in value) {
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && value !== null && "from" in value) {
     return (value as Record<string, unknown>).from as string;
   }
   return String(value);
 }
 
 // Helper to calculate aggregation
-function calculateAggregation(tasks: TaskData[], property: Property, type: AggregationType): string | number {
-  const values = tasks.map(t => (t.properties || {})[property.id]).filter(v => v !== undefined && v !== null && v !== "");
+function calculateAggregation(
+  tasks: TaskData[],
+  property: Property,
+  type: AggregationType
+): string | number {
+  const values = tasks
+    .map((t) => (t.properties || {})[property.id])
+    .filter((v) => v !== undefined && v !== null && v !== "");
   const allCount = tasks.length;
   const notEmptyCount = values.length;
   const emptyCount = allCount - notEmptyCount;
 
   switch (type) {
-    case AggregationType.COUNT: return allCount;
-    case AggregationType.COUNT_EMPTY: return emptyCount;
-    case AggregationType.COUNT_NOT_EMPTY: return notEmptyCount;
-    case AggregationType.PERCENT_EMPTY: return allCount ? Math.round((emptyCount / allCount) * 100) + "%" : "0%";
-    case AggregationType.PERCENT_NOT_EMPTY: return allCount ? Math.round((notEmptyCount / allCount) * 100) + "%" : "0%";
+    case AggregationType.COUNT:
+      return allCount;
+    case AggregationType.COUNT_EMPTY:
+      return emptyCount;
+    case AggregationType.COUNT_NOT_EMPTY:
+      return notEmptyCount;
+    case AggregationType.PERCENT_EMPTY:
+      return allCount ? Math.round((emptyCount / allCount) * 100) + "%" : "0%";
+    case AggregationType.PERCENT_NOT_EMPTY:
+      return allCount ? Math.round((notEmptyCount / allCount) * 100) + "%" : "0%";
   }
 
   // Numeric calculations
   if (property.type === PropertyType.NUMBER || property.type === PropertyType.CURRENCY) {
-    const numbers = values.map(v => Number(v)).filter(n => !isNaN(n));
+    const numbers = values.map((v) => Number(v)).filter((n) => !isNaN(n));
     if (numbers.length === 0) return 0;
 
     const sum = numbers.reduce((a, b) => a + b, 0);
 
     switch (type) {
-      case AggregationType.SUM: return sum;
-      case AggregationType.AVERAGE: return Math.round((sum / numbers.length) * 100) / 100;
-      case AggregationType.MIN: return Math.min(...numbers);
-      case AggregationType.MAX: return Math.max(...numbers);
-      case AggregationType.RANGE: return Math.max(...numbers) - Math.min(...numbers);
+      case AggregationType.SUM:
+        return sum;
+      case AggregationType.AVERAGE:
+        return Math.round((sum / numbers.length) * 100) / 100;
+      case AggregationType.MIN:
+        return Math.min(...numbers);
+      case AggregationType.MAX:
+        return Math.max(...numbers);
+      case AggregationType.RANGE:
+        return Math.max(...numbers) - Math.min(...numbers);
       case AggregationType.MEDIAN: {
         numbers.sort((a, b) => a - b);
         const mid = Math.floor(numbers.length / 2);
@@ -156,7 +186,7 @@ function matchesFilter(task: TaskData, filter: FilterConfig, properties: Propert
   let value = taskProps[filter.propertyId];
 
   // Handle date objects for filtering
-  const property = properties.find(p => p.id === filter.propertyId);
+  const property = properties.find((p) => p.id === filter.propertyId);
   if (property?.type === PropertyType.DATE) {
     value = getDateValue(value);
   }
@@ -271,7 +301,9 @@ function SortableHeader({
               onPointerDown={(e) => e.stopPropagation()}
             />
           ) : (
-            <span className="truncate text-xs font-medium text-muted-foreground">{property.name}</span>
+            <span className="truncate text-xs font-medium text-muted-foreground">
+              {property.name}
+            </span>
           )}
         </div>
 
@@ -283,15 +315,11 @@ function SortableHeader({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {onRename && (
-              <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                Đổi tên
-              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsEditing(true)}>Đổi tên</DropdownMenuItem>
             )}
             {onAddAt && (
               <>
-                <DropdownMenuItem onClick={() => onAddAt(index)}>
-                  Thêm cột trái
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onAddAt(index)}>Thêm cột trái</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onAddAt(index + 1)}>
                   Thêm cột phải
                 </DropdownMenuItem>
@@ -299,10 +327,7 @@ function SortableHeader({
             )}
             {(onRemove || onRename || onAddAt) && <DropdownMenuSeparator />}
             {onRemove && (
-              <DropdownMenuItem
-                onClick={() => onRemove(property.id)}
-                className="text-destructive"
-              >
+              <DropdownMenuItem onClick={() => onRemove(property.id)} className="text-destructive">
                 Xóa cột
               </DropdownMenuItem>
             )}
@@ -321,13 +346,7 @@ function SortableHeader({
   );
 }
 // Title Cell Component
-function TitleCell({
-  value,
-  onChange,
-}: {
-  value: string;
-  onChange: (value: string) => void;
-}) {
+function TitleCell({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -379,12 +398,21 @@ function SortableRow({
   onDeleteTask: (id: string) => void;
   users?: UserOption[];
   onAddPropertyOption?: (id: string, option: { id: string; label: string; color?: string }) => void;
-  onUpdatePropertyOption?: (id: string, option: { id: string; label: string; color?: string }) => void;
+  onUpdatePropertyOption?: (
+    id: string,
+    option: { id: string; label: string; color?: string }
+  ) => void;
   isDragEnabled: boolean;
   isSelected: boolean;
   onToggleSelect: (id: string) => void;
   visualIndex: number;
-  onFillStart: (e: React.MouseEvent, taskId: string, propertyId: string, value: unknown, index: number) => void;
+  onFillStart: (
+    e: React.MouseEvent,
+    taskId: string,
+    propertyId: string,
+    value: unknown,
+    index: number
+  ) => void;
   onFillMove: (index: number) => void;
   fillRange: { start: number; end: number; propertyId: string } | null;
   isTitleVisible: boolean;
@@ -415,15 +443,15 @@ function SortableRow({
     >
       <td className="w-8 text-center border-b border-border/40 p-0 bg-background sticky left-0 z-20 group-hover:bg-accent/40 transition-colors">
         <div className="flex items-center justify-center h-full w-full">
-            <input
-                type="checkbox"
-                checked={isSelected}
-                onChange={(e) => {
-                    e.stopPropagation();
-                    onToggleSelect(task._id);
-                }}
-                className="h-3.5 w-3.5 rounded-sm border-muted-foreground/30 text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer"
-            />
+          <input
+            type="checkbox"
+            checked={isSelected}
+            onChange={(e) => {
+              e.stopPropagation();
+              onToggleSelect(task._id);
+            }}
+            className="h-3.5 w-3.5 rounded-sm border-muted-foreground/30 text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer"
+          />
         </div>
       </td>
       <td className="w-6 text-center sticky left-8 z-20 bg-background border-b border-border/40 group-hover:bg-accent/40 transition-colors">
@@ -447,7 +475,8 @@ function SortableRow({
       )}
       {visibleProperties.map((property) => {
         const taskProps = task.properties || {};
-        const isInFillRange = fillRange &&
+        const isInFillRange =
+          fillRange &&
           fillRange.propertyId === property.id &&
           visualIndex >= Math.min(fillRange.start, fillRange.end) &&
           visualIndex <= Math.max(fillRange.start, fillRange.end);
@@ -504,7 +533,7 @@ function GroupHeader({
   color,
   isExpanded,
   onToggle,
-  colSpan
+  colSpan,
 }: {
   title: string;
   count: number;
@@ -515,13 +544,24 @@ function GroupHeader({
 }) {
   return (
     <tr>
-      <td colSpan={colSpan} className="border-b border-border/40 px-2 h-8 sticky left-0 z-10 bg-background">
+      <td
+        colSpan={colSpan}
+        className="border-b border-border/40 px-2 h-8 sticky left-0 z-10 bg-background"
+      >
         <button
           onClick={onToggle}
           className="flex items-center gap-1.5 hover:bg-accent/50 rounded px-1 py-0.5 transition-colors text-left"
         >
-          {isExpanded ? <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" /> : <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />}
-          {color && <div className={`w-2 h-2 rounded-full ${color.split(" ")[0].replace("text-", "bg-")}`} />}
+          {isExpanded ? (
+            <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+          ) : (
+            <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+          )}
+          {color && (
+            <div
+              className={`w-2 h-2 rounded-full ${color.split(" ")[0].replace("text-", "bg-")}`}
+            />
+          )}
           <span className="font-medium text-xs">{title}</span>
           <span className="text-xs text-muted-foreground">{count}</span>
         </button>
@@ -555,10 +595,19 @@ export function TableView({
 }: TableViewProps) {
   const dndId = useId();
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
-  const [resizing, setResizing] = useState<{ id: string; startX: number; startWidth: number } | null>(null);
+  const [resizing, setResizing] = useState<{
+    id: string;
+    startX: number;
+    startWidth: number;
+  } | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
   const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
-  const [fillRange, setFillRange] = useState<{ start: number; end: number; propertyId: string; value: unknown } | null>(null);
+  const [fillRange, setFillRange] = useState<{
+    start: number;
+    end: number;
+    propertyId: string;
+    value: unknown;
+  } | null>(null);
 
   // Dnd Sensors
   const sensors = useSensors(
@@ -582,11 +631,14 @@ export function TableView({
   }, [board.properties]);
 
   // Column resize handlers
-  const handleMouseDown = useCallback((e: React.MouseEvent, propertyId: string) => {
-    e.preventDefault();
-    const startWidth = columnWidths[propertyId] || 150;
-    setResizing({ id: propertyId, startX: e.clientX, startWidth });
-  }, [columnWidths]);
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent, propertyId: string) => {
+      e.preventDefault();
+      const startWidth = columnWidths[propertyId] || 150;
+      setResizing({ id: propertyId, startX: e.clientX, startWidth });
+    },
+    [columnWidths]
+  );
 
   useEffect(() => {
     if (!resizing) return;
@@ -624,7 +676,8 @@ export function TableView({
       : sortedProperties;
   }, [sortedProperties, view.config.visibleProperties]);
 
-  const isTitleVisible = !view.config.visibleProperties || view.config.visibleProperties.includes("title");
+  const isTitleVisible =
+    !view.config.visibleProperties || view.config.visibleProperties.includes("title");
 
   // Apply search, filters and sorts to tasks
   const processedTasks = useMemo(() => {
@@ -633,7 +686,7 @@ export function TableView({
     // Search filter
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(task => {
+      result = result.filter((task) => {
         if (task.title.toLowerCase().includes(query)) return true;
         const taskProps = task.properties || {};
         for (const prop of board.properties) {
@@ -648,8 +701,8 @@ export function TableView({
 
     // Apply filters
     if (filters.length > 0) {
-      result = result.filter(task =>
-        filters.every(filter => matchesFilter(task, filter, board.properties))
+      result = result.filter((task) =>
+        filters.every((filter) => matchesFilter(task, filter, board.properties))
       );
     }
 
@@ -657,7 +710,7 @@ export function TableView({
     if (sorts.length > 0) {
       result.sort((a, b) => {
         for (const sort of sorts) {
-          const prop = board.properties.find(p => p.id === sort.propertyId);
+          const prop = board.properties.find((p) => p.id === sort.propertyId);
           if (!prop) continue;
 
           const aVal = (a.properties || {})[sort.propertyId];
@@ -682,34 +735,38 @@ export function TableView({
   const groupedTasks = useMemo(() => {
     if (!groupBy) return null;
 
-    const property = board.properties.find(p => p.id === groupBy);
+    const property = board.properties.find((p) => p.id === groupBy);
     if (!property) return null;
 
     const groups: { id: string; title: string; color?: string; tasks: TaskData[] }[] = [];
     const noValueTasks: TaskData[] = [];
 
     // Initialize groups based on property type
-    if (property.type === PropertyType.SELECT || property.type === PropertyType.STATUS || property.type === PropertyType.MULTI_SELECT) {
-      property.options?.forEach(opt => {
+    if (
+      property.type === PropertyType.SELECT ||
+      property.type === PropertyType.STATUS ||
+      property.type === PropertyType.MULTI_SELECT
+    ) {
+      property.options?.forEach((opt) => {
         groups.push({
           id: opt.id,
           title: opt.label,
           color: opt.color,
-          tasks: []
+          tasks: [],
         });
       });
     } else if (property.type === PropertyType.PERSON || property.type === PropertyType.USER) {
-      users.forEach(user => {
+      users.forEach((user) => {
         groups.push({
           id: user.id,
           title: user.name,
-          tasks: []
+          tasks: [],
         });
       });
     }
 
     // Distribute tasks
-    processedTasks.forEach(task => {
+    processedTasks.forEach((task) => {
       const value = (task.properties || {})[groupBy];
 
       if (!value) {
@@ -725,7 +782,7 @@ export function TableView({
           noValueTasks.push(task);
         } else {
           const firstVal = value[0];
-          const group = groups.find(g => g.id === firstVal);
+          const group = groups.find((g) => g.id === firstVal);
           if (group) {
             group.tasks.push(task);
           } else {
@@ -733,7 +790,7 @@ export function TableView({
           }
         }
       } else {
-        const group = groups.find(g => g.id === String(value));
+        const group = groups.find((g) => g.id === String(value));
         if (group) {
           group.tasks.push(task);
         } else {
@@ -747,7 +804,7 @@ export function TableView({
       groups.push({
         id: "no_value",
         title: "Không có giá trị",
-        tasks: noValueTasks
+        tasks: noValueTasks,
       });
     }
 
@@ -760,9 +817,10 @@ export function TableView({
   const visualTasks = useMemo(() => {
     if (groupedTasks) {
       const tasks: TaskData[] = [];
-      groupedTasks.forEach(g => {
-        if (expandedGroups[g.id] !== false) { // Default true
-           tasks.push(...g.tasks);
+      groupedTasks.forEach((g) => {
+        if (expandedGroups[g.id] !== false) {
+          // Default true
+          tasks.push(...g.tasks);
         }
       });
       return tasks;
@@ -772,11 +830,17 @@ export function TableView({
 
   // Fill Handle Logic
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleFillStart = (_e: React.MouseEvent, _taskId: string, propertyId: string, value: unknown, index: number) => {
+  const handleFillStart = (
+    _e: React.MouseEvent,
+    _taskId: string,
+    propertyId: string,
+    value: unknown,
+    index: number
+  ) => {
     setFillRange({ start: index, end: index, propertyId, value });
 
     const handleMouseUp = () => {
-      setFillRange(prev => {
+      setFillRange((prev) => {
         if (prev && prev.start !== prev.end) {
           // Apply changes - unused for now
           // const _start = Math.min(prev.start, prev.end);
@@ -808,27 +872,27 @@ export function TableView({
         const end = Math.max(fillRange.start, fillRange.end);
         const tasksToUpdate = visualTasksRef.current.slice(start, end + 1);
 
-        tasksToUpdate.forEach(task => {
-            // Skip the source task if it's included (it is)
-            // Actually we want to copy TO the range.
-            // If dragging down: start is source.
-            // If dragging up: end is source?
-            // Excel logic: The source is the cell you started dragging FROM.
-            // So we apply `fillRange.value` to all tasks in range.
-            if (task.properties[fillRange.propertyId] !== fillRange.value) {
-                onUpdateTask(task._id, {
-                    properties: { ...task.properties, [fillRange.propertyId]: fillRange.value }
-                });
-            }
+        tasksToUpdate.forEach((task) => {
+          // Skip the source task if it's included (it is)
+          // Actually we want to copy TO the range.
+          // If dragging down: start is source.
+          // If dragging up: end is source?
+          // Excel logic: The source is the cell you started dragging FROM.
+          // So we apply `fillRange.value` to all tasks in range.
+          if (task.properties[fillRange.propertyId] !== fillRange.value) {
+            onUpdateTask(task._id, {
+              properties: { ...task.properties, [fillRange.propertyId]: fillRange.value },
+            });
+          }
         });
       }
       setFillRange(null);
     };
 
     const onMouseUp = () => {
-        handleMouseUp();
-        document.removeEventListener("mouseup", onMouseUp);
-    }
+      handleMouseUp();
+      document.removeEventListener("mouseup", onMouseUp);
+    };
     document.addEventListener("mouseup", onMouseUp);
     return () => document.removeEventListener("mouseup", onMouseUp);
   }, [fillRange, onUpdateTask]); // Re-binds if fillRange changes, which happens on move. This is inefficient.
@@ -843,49 +907,55 @@ export function TableView({
 
   const [isFilling, setIsFilling] = useState(false);
 
-  const onFillStartAction = (e: React.MouseEvent, taskId: string, propertyId: string, value: unknown, index: number) => {
-      setIsFilling(true);
-      setFillRange({ start: index, end: index, propertyId, value });
+  const onFillStartAction = (
+    e: React.MouseEvent,
+    taskId: string,
+    propertyId: string,
+    value: unknown,
+    index: number
+  ) => {
+    setIsFilling(true);
+    setFillRange({ start: index, end: index, propertyId, value });
   };
 
   const onFillMoveAction = (index: number) => {
-      if (isFilling && fillRange) {
-          setFillRange({ ...fillRange, end: index });
-      }
+    if (isFilling && fillRange) {
+      setFillRange({ ...fillRange, end: index });
+    }
   };
 
   useEffect(() => {
-      if (!isFilling) return;
+    if (!isFilling) return;
 
-      const handleMouseUp = () => {
-          setIsFilling(false);
-          if (fillRange && fillRange.start !== fillRange.end) {
-              const start = Math.min(fillRange.start, fillRange.end);
-              const end = Math.max(fillRange.start, fillRange.end);
-              const tasksToUpdate = visualTasksRef.current.slice(start, end + 1);
+    const handleMouseUp = () => {
+      setIsFilling(false);
+      if (fillRange && fillRange.start !== fillRange.end) {
+        const start = Math.min(fillRange.start, fillRange.end);
+        const end = Math.max(fillRange.start, fillRange.end);
+        const tasksToUpdate = visualTasksRef.current.slice(start, end + 1);
 
-              tasksToUpdate.forEach(task => {
-                  // Don't update if value is same (optimization)
-                  // Also skip the source task ideally, but updating it with same value is harmless
-                  onUpdateTask(task._id, {
-                      properties: { ...task.properties, [fillRange.propertyId]: fillRange.value }
-                  });
-              });
-          }
-          setFillRange(null);
-      };
+        tasksToUpdate.forEach((task) => {
+          // Don't update if value is same (optimization)
+          // Also skip the source task ideally, but updating it with same value is harmless
+          onUpdateTask(task._id, {
+            properties: { ...task.properties, [fillRange.propertyId]: fillRange.value },
+          });
+        });
+      }
+      setFillRange(null);
+    };
 
-      document.addEventListener("mouseup", handleMouseUp);
-      return () => document.removeEventListener("mouseup", handleMouseUp);
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => document.removeEventListener("mouseup", handleMouseUp);
   }, [isFilling, fillRange, onUpdateTask]);
-
 
   // Initialize expanded state for new groups
   useEffect(() => {
     if (groupedTasks) {
-      setExpandedGroups(prev => { // eslint-disable-line react-hooks/set-state-in-effect
+      setExpandedGroups((prev) => {
+        // eslint-disable-line react-hooks/set-state-in-effect
         const next = { ...prev };
-        groupedTasks.forEach(g => {
+        groupedTasks.forEach((g) => {
           if (next[g.id] === undefined) {
             next[g.id] = true;
           }
@@ -896,14 +966,14 @@ export function TableView({
   }, [groupedTasks]);
 
   const toggleGroup = (groupId: string) => {
-    setExpandedGroups(prev => ({ ...prev, [groupId]: !prev[groupId] }));
+    setExpandedGroups((prev) => ({ ...prev, [groupId]: !prev[groupId] }));
   };
 
   const handleSelectAll = () => {
     if (selectedTaskIds.size === processedTasks.length && processedTasks.length > 0) {
       setSelectedTaskIds(new Set());
     } else {
-      setSelectedTaskIds(new Set(processedTasks.map(t => t._id)));
+      setSelectedTaskIds(new Set(processedTasks.map((t) => t._id)));
     }
   };
 
@@ -929,7 +999,7 @@ export function TableView({
     if (active.id === over.id) return;
 
     const activeData = active.data.current;
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
     const _overData = over.data.current;
 
     if (activeData?.type === "COLUMN" && onReorderProperties) {
@@ -964,14 +1034,16 @@ export function TableView({
             <thead className="sticky top-0 bg-background z-30">
               <tr>
                 <th className="w-8 border-b border-border/50 p-0 sticky left-0 z-40 bg-background">
-                    <div className="flex items-center justify-center h-full w-full">
-                        <input
-                            type="checkbox"
-                            checked={processedTasks.length > 0 && selectedTaskIds.size === processedTasks.length}
-                            onChange={handleSelectAll}
-                            className="h-3.5 w-3.5 rounded-sm border-muted-foreground/30 text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer"
-                        />
-                    </div>
+                  <div className="flex items-center justify-center h-full w-full">
+                    <input
+                      type="checkbox"
+                      checked={
+                        processedTasks.length > 0 && selectedTaskIds.size === processedTasks.length
+                      }
+                      onChange={handleSelectAll}
+                      className="h-3.5 w-3.5 rounded-sm border-muted-foreground/30 text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer"
+                    />
+                  </div>
                 </th>
                 <th className="w-6 sticky left-8 z-40 border-b border-border/50 bg-background" />
                 {isTitleVisible && (
@@ -980,7 +1052,7 @@ export function TableView({
                   </th>
                 )}
                 <SortableContext
-                  items={visibleProperties.map(p => p.id)}
+                  items={visibleProperties.map((p) => p.id)}
                   strategy={horizontalListSortingStrategy}
                 >
                   {visibleProperties.map((property, index) => (
@@ -1003,7 +1075,7 @@ export function TableView({
             <tbody>
               {groupedTasks ? (
                 // Grouped View
-                groupedTasks.map(group => {
+                groupedTasks.map((group) => {
                   // Calculate starting index for this group
                   // We need to know how many tasks were in previous groups
                   // This is expensive to calculate in render loop if we don't have it pre-calculated.
@@ -1014,57 +1086,59 @@ export function TableView({
                   // Let's use a running index counter? No, React render must be pure.
                   // We can pre-calculate group start indices.
                   return (
-                  <>
-                    <GroupHeader
-                      key={group.id}
-                      title={group.title}
-                      count={group.tasks.length}
-                      color={group.color}
-                      isExpanded={!!expandedGroups[group.id]}
-                      onToggle={() => toggleGroup(group.id)}
-                      colSpan={visibleProperties.length + (isTitleVisible ? 4 : 3)}
-                    />
-                    {expandedGroups[group.id] && (
-                      <SortableContext
-                        items={group.tasks.map(t => t._id)}
-                        strategy={verticalListSortingStrategy}
-                        disabled={true} // Disable drag in grouped view for now
-                      >
-                        {group.tasks.map((task) => {
-                           // Find index in visualTasks
-                           // This is O(N*M) where N is total tasks and M is group tasks.
-                           // Optimization: Create a map of taskId -> index
-                           const vIndex = visualTasks.findIndex(t => t._id === task._id);
+                    <>
+                      <GroupHeader
+                        key={group.id}
+                        title={group.title}
+                        count={group.tasks.length}
+                        color={group.color}
+                        isExpanded={!!expandedGroups[group.id]}
+                        onToggle={() => toggleGroup(group.id)}
+                        colSpan={visibleProperties.length + (isTitleVisible ? 4 : 3)}
+                      />
+                      {expandedGroups[group.id] && (
+                        <SortableContext
+                          items={group.tasks.map((t) => t._id)}
+                          strategy={verticalListSortingStrategy}
+                          disabled={true} // Disable drag in grouped view for now
+                        >
+                          {group.tasks.map((task) => {
+                            // Find index in visualTasks
+                            // This is O(N*M) where N is total tasks and M is group tasks.
+                            // Optimization: Create a map of taskId -> index
+                            const vIndex = visualTasks.findIndex((t) => t._id === task._id);
 
-                           return (
-                          <SortableRow
-                            key={task._id}
-                            task={task}
-                            visibleProperties={visibleProperties}
-                            columnWidths={columnWidths}
-                            onUpdateTask={onUpdateTask}
-                            onDeleteTask={onDeleteTask}
-                            users={users}
-                            onAddPropertyOption={onAddPropertyOption}
-                            onUpdatePropertyOption={onUpdatePropertyOption}
-                            isDragEnabled={false}
-                            isSelected={selectedTaskIds.has(task._id)}
-                            onToggleSelect={handleToggleSelect}
-                            visualIndex={vIndex}
-                            onFillStart={onFillStartAction}
-                            onFillMove={onFillMoveAction}
-                            fillRange={fillRange}
-                            isTitleVisible={isTitleVisible}
-                          />
-                        )})}
-                      </SortableContext>
-                    )}
-                  </>
-                )})
+                            return (
+                              <SortableRow
+                                key={task._id}
+                                task={task}
+                                visibleProperties={visibleProperties}
+                                columnWidths={columnWidths}
+                                onUpdateTask={onUpdateTask}
+                                onDeleteTask={onDeleteTask}
+                                users={users}
+                                onAddPropertyOption={onAddPropertyOption}
+                                onUpdatePropertyOption={onUpdatePropertyOption}
+                                isDragEnabled={false}
+                                isSelected={selectedTaskIds.has(task._id)}
+                                onToggleSelect={handleToggleSelect}
+                                visualIndex={vIndex}
+                                onFillStart={onFillStartAction}
+                                onFillMove={onFillMoveAction}
+                                fillRange={fillRange}
+                                isTitleVisible={isTitleVisible}
+                              />
+                            );
+                          })}
+                        </SortableContext>
+                      )}
+                    </>
+                  );
+                })
               ) : (
                 // Flat View
                 <SortableContext
-                  items={processedTasks.map(t => t._id)}
+                  items={processedTasks.map((t) => t._id)}
                   strategy={verticalListSortingStrategy}
                   disabled={!isRowDragEnabled}
                 >
@@ -1096,10 +1170,11 @@ export function TableView({
                 <td className="w-8 border-b border-border/40 bg-background sticky left-0 z-20 h-8" />
                 <td className="w-6 border-b border-border/40 bg-background sticky left-8 z-20 h-8" />
                 {isTitleVisible && (
-                  <td className="px-2 sticky left-[56px] z-20 bg-background border-b border-border/40 h-8 hover:bg-accent/40 transition-colors cursor-pointer" onClick={startAddingTask}>
-                    <button
-                      className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors w-full h-full text-xs"
-                    >
+                  <td
+                    className="px-2 sticky left-[56px] z-20 bg-background border-b border-border/40 h-8 hover:bg-accent/40 transition-colors cursor-pointer"
+                    onClick={startAddingTask}
+                  >
+                    <button className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors w-full h-full text-xs">
                       <Plus className="h-3.5 w-3.5" />
                       <span>New</span>
                     </button>
@@ -1108,7 +1183,7 @@ export function TableView({
                 {visibleProperties.map((p, index) => (
                   <td key={p.id} className="border-b border-border/40 h-8">
                     {!isTitleVisible && index === 0 && (
-                       <button
+                      <button
                         onClick={startAddingTask}
                         className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors w-full h-full text-xs px-2"
                       >
@@ -1134,8 +1209,12 @@ export function TableView({
                   </td>
                 )}
                 {visibleProperties.map((property) => {
-                  const aggregation = view.config.aggregations?.find(a => a.propertyId === property.id);
-                  const value = aggregation ? calculateAggregation(processedTasks, property, aggregation.type) : null;
+                  const aggregation = view.config.aggregations?.find(
+                    (a) => a.propertyId === property.id
+                  );
+                  const value = aggregation
+                    ? calculateAggregation(processedTasks, property, aggregation.type)
+                    : null;
 
                   return (
                     <td key={property.id} className="px-2 border-t border-border/50 h-7">
@@ -1143,56 +1222,103 @@ export function TableView({
                         <DropdownMenuTrigger asChild>
                           <button className="w-full text-right text-[10px] text-muted-foreground hover:text-foreground truncate h-full flex items-center justify-end group/calc">
                             {aggregation ? (
-                              <span className="text-xs">
-                                {value}
-                              </span>
+                              <span className="text-xs">{value}</span>
                             ) : (
-                              <span className="opacity-0 group-hover/calc:opacity-40 transition-opacity">Calculate</span>
+                              <span className="opacity-0 group-hover/calc:opacity-40 transition-opacity">
+                                Calculate
+                              </span>
                             )}
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuLabel className="text-xs">Calculate</DropdownMenuLabel>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, null)}>
+                          <DropdownMenuItem
+                            onClick={() => onUpdateAggregation?.(property.id, null)}
+                          >
                             None
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.COUNT)}>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              onUpdateAggregation?.(property.id, AggregationType.COUNT)
+                            }
+                          >
                             Count all
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.COUNT_EMPTY)}>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              onUpdateAggregation?.(property.id, AggregationType.COUNT_EMPTY)
+                            }
+                          >
                             Count empty
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.COUNT_NOT_EMPTY)}>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              onUpdateAggregation?.(property.id, AggregationType.COUNT_NOT_EMPTY)
+                            }
+                          >
                             Count not empty
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.PERCENT_EMPTY)}>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              onUpdateAggregation?.(property.id, AggregationType.PERCENT_EMPTY)
+                            }
+                          >
                             Percent empty
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.PERCENT_NOT_EMPTY)}>
+                          <DropdownMenuItem
+                            onClick={() =>
+                              onUpdateAggregation?.(property.id, AggregationType.PERCENT_NOT_EMPTY)
+                            }
+                          >
                             Percent not empty
                           </DropdownMenuItem>
 
-                          {(property.type === PropertyType.NUMBER || property.type === PropertyType.CURRENCY) && (
+                          {(property.type === PropertyType.NUMBER ||
+                            property.type === PropertyType.CURRENCY) && (
                             <>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.SUM)}>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  onUpdateAggregation?.(property.id, AggregationType.SUM)
+                                }
+                              >
                                 Sum
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.AVERAGE)}>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  onUpdateAggregation?.(property.id, AggregationType.AVERAGE)
+                                }
+                              >
                                 Average
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.MIN)}>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  onUpdateAggregation?.(property.id, AggregationType.MIN)
+                                }
+                              >
                                 Min
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.MAX)}>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  onUpdateAggregation?.(property.id, AggregationType.MAX)
+                                }
+                              >
                                 Max
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.MEDIAN)}>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  onUpdateAggregation?.(property.id, AggregationType.MEDIAN)
+                                }
+                              >
                                 Median
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => onUpdateAggregation?.(property.id, AggregationType.RANGE)}>
+                              <DropdownMenuItem
+                                onClick={() =>
+                                  onUpdateAggregation?.(property.id, AggregationType.RANGE)
+                                }
+                              >
                                 Range
                               </DropdownMenuItem>
                             </>
@@ -1237,7 +1363,10 @@ export function TableView({
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => onDeleteTask(task._id)} className="text-destructive text-xs">
+                      <DropdownMenuItem
+                        onClick={() => onDeleteTask(task._id)}
+                        className="text-destructive text-xs"
+                      >
                         <Trash2 className="h-3.5 w-3.5 mr-1.5" />
                         Delete
                       </DropdownMenuItem>
@@ -1299,7 +1428,10 @@ export function TableView({
               {filters.length > 0 || searchQuery ? "No results found" : "No records yet"}
             </p>
             {!filters.length && !searchQuery && (
-              <button onClick={startAddingTask} className="text-xs text-muted-foreground hover:text-foreground">
+              <button
+                onClick={startAddingTask}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
                 Add first record
               </button>
             )}
@@ -1323,10 +1455,10 @@ export function TableView({
               Delete
             </button>
             <button
-                onClick={() => setSelectedTaskIds(new Set())}
-                className="p-0.5 hover:bg-background/20 rounded"
+              onClick={() => setSelectedTaskIds(new Set())}
+              className="p-0.5 hover:bg-background/20 rounded"
             >
-                <X className="h-3 w-3" />
+              <X className="h-3 w-3" />
             </button>
           </div>
         )}
