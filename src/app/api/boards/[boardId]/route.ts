@@ -27,7 +27,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     await dbConnect();
 
     // Check board access
-    const access = await checkBoardAccess(boardId, session.user.id);
+    const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess) {
       return NextResponse.json(
         { error: "Bạn không có quyền truy cập board này" },
@@ -89,7 +89,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     await dbConnect();
 
     // Check board access - need canEditBoard permission
-    const access = await checkBoardAccess(boardId, session.user.id);
+    const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess || !access.permissions?.canEditBoard) {
       return NextResponse.json(
         { error: "Bạn không có quyền chỉnh sửa board này" },
@@ -147,7 +147,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     await dbConnect();
 
     // Check board access - need canDeleteBoard permission (owner only)
-    const access = await checkBoardAccess(boardId, session.user.id);
+    const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess || !access.permissions?.canDeleteBoard) {
       return NextResponse.json(
         { error: "Chỉ chủ sở hữu mới có thể xóa board" },

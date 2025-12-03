@@ -1,21 +1,26 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Board from "@/models/board.model";
 import Task from "@/models/task.model";
+import { checkBoardAccess } from "@/lib/board-permissions";
 import { BoardDetailClient } from "./client";
 
 interface PageProps {
   params: Promise<{ boardId: string }>;
 }
 
-async function getBoard(boardId: string, userId: string) {
+async function getBoard(boardId: string, userId: string, userRole: string) {
   await dbConnect();
 
-  const board = await Board.findOne({
-    _id: boardId,
-    ownerId: userId,
-  }).lean();
+  // Check access
+  const access = await checkBoardAccess(boardId, userId, userRole);
+
+  if (!access.hasAccess) {
+    return null;
+  }
+
+  const board = await Board.findById(boardId).lean();
 
   if (!board) return null;
 
@@ -38,15 +43,19 @@ async function getBoard(boardId: string, userId: string) {
       updatedAt: t.updatedAt.toISOString(),
       properties: t.properties || {},
     })),
+    userRole: access.role,
+    userPermissions: access.permissions,
   };
 }
 
 export default async function BoardDetailPage({ params }: PageProps) {
   const session = await auth();
-  if (!session?.user?.id) return null;
+  if (!session?.user?.id) {
+    redirect("/login");
+  }
 
   const { boardId } = await params;
-  const board = await getBoard(boardId, session.user.id);
+  const board = await getBoard(boardId, session.user.id, session.user.role);
 
   if (!board) {
     notFound();

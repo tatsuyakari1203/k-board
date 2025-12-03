@@ -37,7 +37,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     await dbConnect();
 
     // Check board access - need canEditTasks permission
-    const access = await checkBoardAccess(boardId, session.user.id);
+    const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess || !access.permissions?.canEditTasks) {
       return NextResponse.json(
         { error: "Bạn không có quyền sắp xếp lại tasks" },

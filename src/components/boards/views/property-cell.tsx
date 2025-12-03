@@ -15,20 +15,74 @@ import { type Property, PropertyType } from "@/types/board";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
 
-// Random color for new options
+// Color palette for options
 const OPTION_COLORS = [
-  "bg-gray-100 text-gray-800",
-  "bg-red-100 text-red-800",
-  "bg-orange-100 text-orange-800",
-  "bg-yellow-100 text-yellow-800",
-  "bg-green-100 text-green-800",
-  "bg-blue-100 text-blue-800",
-  "bg-purple-100 text-purple-800",
-  "bg-pink-100 text-pink-800",
+  { value: "bg-gray-100 text-gray-800", label: "Xám", preview: "bg-gray-400" },
+  { value: "bg-red-100 text-red-800", label: "Đỏ", preview: "bg-red-400" },
+  { value: "bg-orange-100 text-orange-800", label: "Cam", preview: "bg-orange-400" },
+  { value: "bg-yellow-100 text-yellow-800", label: "Vàng", preview: "bg-yellow-400" },
+  { value: "bg-green-100 text-green-800", label: "Xanh lá", preview: "bg-green-400" },
+  { value: "bg-teal-100 text-teal-800", label: "Xanh ngọc", preview: "bg-teal-400" },
+  { value: "bg-blue-100 text-blue-800", label: "Xanh dương", preview: "bg-blue-400" },
+  { value: "bg-indigo-100 text-indigo-800", label: "Chàm", preview: "bg-indigo-400" },
+  { value: "bg-purple-100 text-purple-800", label: "Tím", preview: "bg-purple-400" },
+  { value: "bg-pink-100 text-pink-800", label: "Hồng", preview: "bg-pink-400" },
 ];
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function getRandomColor() {
-  return OPTION_COLORS[Math.floor(Math.random() * OPTION_COLORS.length)];
+  return OPTION_COLORS[Math.floor(Math.random() * OPTION_COLORS.length)].value;
+}
+
+// Color Picker Component
+function ColorPicker({
+  value,
+  onChange,
+  className
+}: {
+  value: string;
+  onChange: (color: string) => void;
+  className?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const currentColor = OPTION_COLORS.find(c => c.value === value) || OPTION_COLORS[0];
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <button
+          className={cn(
+            "w-6 h-6 rounded border border-border flex items-center justify-center hover:border-primary transition-colors",
+            className
+          )}
+          title="Chọn màu"
+        >
+          <div className={cn("w-4 h-4 rounded-sm", currentColor.preview)} />
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-2" align="start">
+        <div className="grid grid-cols-5 gap-1.5">
+          {OPTION_COLORS.map((color) => (
+            <button
+              key={color.value}
+              onClick={() => {
+                onChange(color.value);
+                setOpen(false);
+              }}
+              className={cn(
+                "w-7 h-7 rounded-md flex items-center justify-center transition-all hover:scale-110",
+                color.preview,
+                value === color.value && "ring-2 ring-primary ring-offset-1"
+              )}
+              title={color.label}
+            >
+              {value === color.value && <Check className="h-3.5 w-3.5 text-white" />}
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
 }
 
 interface SelectOption {
@@ -57,12 +111,13 @@ interface PropertyCellProps {
   value: unknown;
   onChange: (value: unknown) => void;
   onAddOption?: (propertyId: string, option: SelectOption) => void;
+  onUpdateOption?: (propertyId: string, option: SelectOption) => void;
   users?: UserOption[];
   compact?: boolean;
   className?: string;
 }
 
-export function PropertyCell({ property, value, onChange, onAddOption, users = [], compact = false, className }: PropertyCellProps) {
+export function PropertyCell({ property, value, onChange, onAddOption, onUpdateOption, users = [], compact = false, className }: PropertyCellProps) {
   switch (property.type) {
     case PropertyType.TEXT:
       return <TextCell value={value as string} onChange={onChange} compact={compact} className={className} />;
@@ -81,6 +136,7 @@ export function PropertyCell({ property, value, onChange, onAddOption, users = [
           options={property.options || []}
           onChange={onChange}
           onAddOption={onAddOption ? (opt) => onAddOption(property.id, opt) : undefined}
+          onUpdateOption={onUpdateOption ? (opt) => onUpdateOption(property.id, opt) : undefined}
           compact={compact}
           className={className}
         />
@@ -93,6 +149,7 @@ export function PropertyCell({ property, value, onChange, onAddOption, users = [
           options={property.options || []}
           onChange={onChange}
           onAddOption={onAddOption ? (opt) => onAddOption(property.id, opt) : undefined}
+          onUpdateOption={onUpdateOption ? (opt) => onUpdateOption(property.id, opt) : undefined}
           compact={compact}
           className={className}
         />
@@ -105,8 +162,10 @@ export function PropertyCell({ property, value, onChange, onAddOption, users = [
       return <CheckboxCell value={value as boolean} onChange={onChange} className={className} />;
 
     case PropertyType.PERSON:
+      return <UserCell value={value as string} users={users} onChange={onChange} compact={compact} className={className} multiSelect={false} />;
+
     case PropertyType.USER:
-      return <UserCell value={value as string} users={users} onChange={onChange} compact={compact} className={className} />;
+      return <UserCell value={value as string | string[]} users={users} onChange={onChange} compact={compact} className={className} multiSelect={true} />;
 
     case PropertyType.ATTACHMENT:
       return <AttachmentCell value={(value as AttachmentFile[]) || []} onChange={onChange} compact={compact} className={className} />;
@@ -567,6 +626,7 @@ function SelectCell({
   options,
   onChange,
   onAddOption,
+  onUpdateOption,
   compact = false,
   className,
 }: {
@@ -574,11 +634,13 @@ function SelectCell({
   options: SelectOption[];
   onChange: (v: string) => void;
   onAddOption?: (option: SelectOption) => void;
+  onUpdateOption?: (option: SelectOption) => void;
   compact?: boolean;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [newOptionLabel, setNewOptionLabel] = useState("");
+  const [newOptionColor, setNewOptionColor] = useState(OPTION_COLORS[0].value);
   const selectedOption = options.find((o) => o.id === value);
 
   const handleAddOption = () => {
@@ -586,11 +648,20 @@ function SelectCell({
     const newOption: SelectOption = {
       id: crypto.randomUUID(),
       label: newOptionLabel.trim(),
-      color: getRandomColor(),
+      color: newOptionColor,
     };
     onAddOption(newOption);
     onChange(newOption.id); // Auto-select new option
     setNewOptionLabel("");
+    setNewOptionColor(OPTION_COLORS[0].value);
+  };
+
+  const handleUpdateOptionColor = (optionId: string, newColor: string) => {
+    if (!onUpdateOption) return;
+    const option = options.find(o => o.id === optionId);
+    if (option) {
+      onUpdateOption({ ...option, color: newColor });
+    }
   };
 
   return (
@@ -613,37 +684,53 @@ function SelectCell({
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-52 p-1" align="start">
+      <PopoverContent className="w-56 p-1" align="start">
         <div className="space-y-0.5">
           {options.map((option) => (
-            <button
+            <div
               key={option.id}
-              onClick={() => {
-                onChange(option.id);
-                setOpen(false);
-              }}
               className={cn(
-                "flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded hover:bg-accent transition-colors",
+                "flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded hover:bg-accent transition-colors group",
                 value === option.id && "bg-accent"
               )}
             >
-              <Badge
-                variant="secondary"
-                className={cn("font-normal", option.color)}
-              >
-                {option.label}
-              </Badge>
-              {value === option.id && (
-                <Check className="h-4 w-4 ml-auto text-primary" />
+              {/* Color picker for existing option */}
+              {onUpdateOption && (
+                <ColorPicker
+                  value={option.color || OPTION_COLORS[0].value}
+                  onChange={(color) => handleUpdateOptionColor(option.id, color)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                />
               )}
-            </button>
+              <button
+                onClick={() => {
+                  onChange(option.id);
+                  setOpen(false);
+                }}
+                className="flex-1 flex items-center gap-2"
+              >
+                <Badge
+                  variant="secondary"
+                  className={cn("font-normal", option.color)}
+                >
+                  {option.label}
+                </Badge>
+              </button>
+              {value === option.id && (
+                <Check className="h-4 w-4 text-primary" />
+              )}
+            </div>
           ))}
 
           {/* Add new option */}
           {onAddOption && (
             <>
               <div className="border-t my-1" />
-              <div className="flex items-center gap-1 px-1">
+              <div className="flex items-center gap-1.5 px-1">
+                <ColorPicker
+                  value={newOptionColor}
+                  onChange={setNewOptionColor}
+                />
                 <input
                   type="text"
                   value={newOptionLabel}
@@ -661,6 +748,7 @@ function SelectCell({
                   <button
                     onClick={handleAddOption}
                     className="p-1 text-primary hover:bg-accent rounded"
+                    title="Thêm"
                   >
                     <Plus className="h-4 w-4" />
                   </button>
@@ -698,6 +786,7 @@ function MultiSelectCell({
   options,
   onChange,
   onAddOption,
+  onUpdateOption,
   compact = false,
   className,
 }: {
@@ -705,11 +794,13 @@ function MultiSelectCell({
   options: SelectOption[];
   onChange: (v: string[]) => void;
   onAddOption?: (option: SelectOption) => void;
+  onUpdateOption?: (option: SelectOption) => void;
   compact?: boolean;
   className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [newOptionLabel, setNewOptionLabel] = useState("");
+  const [newOptionColor, setNewOptionColor] = useState(OPTION_COLORS[0].value);
   const selectedOptions = options.filter((o) => value.includes(o.id));
 
   const toggleOption = (optionId: string) => {
@@ -725,11 +816,20 @@ function MultiSelectCell({
     const newOption: SelectOption = {
       id: crypto.randomUUID(),
       label: newOptionLabel.trim(),
-      color: getRandomColor(),
+      color: newOptionColor,
     };
     onAddOption(newOption);
     onChange([...value, newOption.id]); // Auto-select new option
     setNewOptionLabel("");
+    setNewOptionColor(OPTION_COLORS[0].value);
+  };
+
+  const handleUpdateOptionColor = (optionId: string, newColor: string) => {
+    if (!onUpdateOption) return;
+    const option = options.find(o => o.id === optionId);
+    if (option) {
+      onUpdateOption({ ...option, color: newColor });
+    }
   };
 
   return (
@@ -755,40 +855,56 @@ function MultiSelectCell({
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-52 p-1" align="start">
+      <PopoverContent className="w-56 p-1" align="start">
         <div className="space-y-0.5">
           {options.map((option) => (
-            <button
+            <div
               key={option.id}
-              onClick={() => toggleOption(option.id)}
-              className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded hover:bg-accent transition-colors"
+              className="flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded hover:bg-accent transition-colors group"
             >
-              <div
-                className={cn(
-                  "h-4 w-4 border rounded flex items-center justify-center",
-                  value.includes(option.id)
-                    ? "bg-primary border-primary"
-                    : "border-input"
-                )}
+              {/* Color picker for existing option */}
+              {onUpdateOption && (
+                <ColorPicker
+                  value={option.color || OPTION_COLORS[0].value}
+                  onChange={(color) => handleUpdateOptionColor(option.id, color)}
+                  className="opacity-0 group-hover:opacity-100 transition-opacity"
+                />
+              )}
+              <button
+                onClick={() => toggleOption(option.id)}
+                className="flex-1 flex items-center gap-2"
               >
-                {value.includes(option.id) && (
-                  <Check className="h-3 w-3 text-primary-foreground" />
-                )}
-              </div>
-              <Badge
-                variant="secondary"
-                className={cn("font-normal", option.color)}
-              >
-                {option.label}
-              </Badge>
-            </button>
+                <div
+                  className={cn(
+                    "h-4 w-4 border rounded flex items-center justify-center",
+                    value.includes(option.id)
+                      ? "bg-primary border-primary"
+                      : "border-input"
+                  )}
+                >
+                  {value.includes(option.id) && (
+                    <Check className="h-3 w-3 text-primary-foreground" />
+                  )}
+                </div>
+                <Badge
+                  variant="secondary"
+                  className={cn("font-normal", option.color)}
+                >
+                  {option.label}
+                </Badge>
+              </button>
+            </div>
           ))}
 
           {/* Add new option */}
           {onAddOption && (
             <>
               <div className="border-t my-1" />
-              <div className="flex items-center gap-1 px-1">
+              <div className="flex items-center gap-1.5 px-1">
+                <ColorPicker
+                  value={newOptionColor}
+                  onChange={setNewOptionColor}
+                />
                 <input
                   type="text"
                   value={newOptionLabel}
@@ -806,6 +922,7 @@ function MultiSelectCell({
                   <button
                     onClick={handleAddOption}
                     className="p-1 text-primary hover:bg-accent rounded"
+                    title="Thêm"
                   >
                     <Plus className="h-4 w-4" />
                   </button>
@@ -848,7 +965,7 @@ function CheckboxCell({
 }
 
 // ============================================
-// USER CELL - Select user from list
+// USER CELL - Select user(s) from list
 // ============================================
 
 function UserCell({
@@ -857,16 +974,21 @@ function UserCell({
   onChange,
   compact = false,
   className,
+  multiSelect = true,
 }: {
-  value: string;
+  value: string | string[];
   users: UserOption[];
-  onChange: (v: string) => void;
+  onChange: (v: string | string[]) => void;
   compact?: boolean;
   className?: string;
+  multiSelect?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const selectedUser = users.find((u) => u.id === value);
+
+  // Normalize value to array for easier handling
+  const valueArray = Array.isArray(value) ? value : (value ? [value] : []);
+  const selectedUsers = users.filter((u) => valueArray.includes(u.id));
 
   const filteredUsers = users.filter(
     (u) =>
@@ -874,33 +996,67 @@ function UserCell({
       u.email.toLowerCase().includes(search.toLowerCase())
   );
 
+  const toggleUser = (userId: string) => {
+    if (multiSelect) {
+      // Multi-select mode
+      if (valueArray.includes(userId)) {
+        onChange(valueArray.filter((id) => id !== userId));
+      } else {
+        onChange([...valueArray, userId]);
+      }
+    } else {
+      // Single select mode
+      onChange(userId);
+      setOpen(false);
+      setSearch("");
+    }
+  };
+
+  const clearAll = () => {
+    onChange(multiSelect ? [] : "");
+    setOpen(false);
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "flex items-center gap-1.5 text-sm text-left w-full flex-wrap",
+            "flex items-center gap-1 text-sm text-left w-full flex-wrap",
             compact ? "py-0.5 min-h-[24px]" : "py-0.5 min-h-[28px]",
             className
           )}
         >
-          {selectedUser ? (
-            <>
-              <div className="h-4 w-4 rounded-full bg-muted flex items-center justify-center text-[10px] font-medium text-muted-foreground">
-                {selectedUser.image ? (
-                  <img src={selectedUser.image} alt="" className="h-4 w-4 rounded-full object-cover" />
-                ) : (
-                  selectedUser.name.charAt(0).toUpperCase()
-                )}
-              </div>
-              <span className="text-xs">{selectedUser.name}</span>
-            </>
+          {selectedUsers.length > 0 ? (
+            <div className="flex items-center -space-x-1">
+              {selectedUsers.slice(0, 4).map((user) => (
+                <div
+                  key={user.id}
+                  className="h-5 w-5 rounded-full bg-primary/10 flex items-center justify-center text-[9px] font-medium text-primary border-2 border-background"
+                  title={user.name}
+                >
+                  {user.image ? (
+                    <img src={user.image} alt="" className="h-5 w-5 rounded-full object-cover" />
+                  ) : (
+                    user.name.split(" ").pop()?.charAt(0).toUpperCase()
+                  )}
+                </div>
+              ))}
+              {selectedUsers.length > 4 && (
+                <div className="h-5 w-5 rounded-full bg-muted flex items-center justify-center text-[9px] font-medium text-muted-foreground border-2 border-background">
+                  +{selectedUsers.length - 4}
+                </div>
+              )}
+              {selectedUsers.length === 1 && (
+                <span className="text-xs ml-1.5">{selectedUsers[0].name}</span>
+              )}
+            </div>
           ) : (
             <span className="text-muted-foreground/40"></span>
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-56 p-1" align="start">
+      <PopoverContent className="w-60 p-1" align="start">
         <div className="space-y-1">
           <input
             type="text"
@@ -909,33 +1065,64 @@ function UserCell({
             placeholder="Tìm kiếm..."
             className="w-full text-sm px-2 py-1.5 bg-transparent border-b outline-none focus:ring-0"
           />
+
+          {/* Selected users tags (only for multi-select) */}
+          {multiSelect && selectedUsers.length > 0 && (
+            <div className="px-2 py-1 border-b">
+              <div className="flex flex-wrap gap-1">
+                {selectedUsers.map((user) => (
+                  <button
+                    key={user.id}
+                    onClick={() => toggleUser(user.id)}
+                    className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-primary/10 text-primary text-xs rounded-full hover:bg-primary/20 transition-colors"
+                  >
+                    <span>{user.name}</span>
+                    <X className="h-3 w-3" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="max-h-48 overflow-y-auto space-y-0.5">
             {filteredUsers.length > 0 ? (
               filteredUsers.map((user) => (
                 <button
                   key={user.id}
-                  onClick={() => {
-                    onChange(user.id);
-                    setOpen(false);
-                    setSearch("");
-                  }}
+                  onClick={() => toggleUser(user.id)}
                   className={cn(
                     "flex items-center gap-2 w-full px-2 py-1.5 text-sm rounded hover:bg-accent transition-colors",
-                    value === user.id && "bg-accent"
+                    valueArray.includes(user.id) && "bg-accent"
                   )}
                 >
+                  {multiSelect && (
+                    <div
+                      className={cn(
+                        "h-4 w-4 border rounded flex items-center justify-center flex-shrink-0",
+                        valueArray.includes(user.id)
+                          ? "bg-primary border-primary"
+                          : "border-input"
+                      )}
+                    >
+                      {valueArray.includes(user.id) && (
+                        <Check className="h-3 w-3 text-primary-foreground" />
+                      )}
+                    </div>
+                  )}
                   <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary flex-shrink-0">
                     {user.image ? (
                       <img src={user.image} alt="" className="h-6 w-6 rounded-full object-cover" />
                     ) : (
-                      user.name.charAt(0).toUpperCase()
+                      user.name.split(" ").pop()?.charAt(0).toUpperCase()
                     )}
                   </div>
                   <div className="flex-1 min-w-0 text-left">
                     <div className="truncate font-medium">{user.name}</div>
                     <div className="truncate text-xs text-muted-foreground">{user.email}</div>
                   </div>
-                  {value === user.id && <Check className="h-4 w-4 text-primary flex-shrink-0" />}
+                  {!multiSelect && valueArray.includes(user.id) && (
+                    <Check className="h-4 w-4 text-primary flex-shrink-0" />
+                  )}
                 </button>
               ))
             ) : (
@@ -944,17 +1131,15 @@ function UserCell({
               </div>
             )}
           </div>
-          {value && (
+
+          {valueArray.length > 0 && (
             <>
               <div className="border-t my-1" />
               <button
-                onClick={() => {
-                  onChange("");
-                  setOpen(false);
-                }}
+                onClick={clearAll}
                 className="w-full px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground text-left rounded hover:bg-accent transition-colors"
               >
-                Xóa
+                Xóa {multiSelect && selectedUsers.length > 1 ? "tất cả" : ""}
               </button>
             </>
           )}

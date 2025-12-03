@@ -5,6 +5,7 @@ import dbConnect from "@/lib/db";
 import Board from "@/models/board.model";
 import BoardMember from "@/models/board-member.model";
 import { BOARD_ROLES } from "@/types/board-member";
+import { USER_ROLES } from "@/types/user";
 import {
   createBoardSchema,
   ViewType,
@@ -25,48 +26,61 @@ export async function GET() {
 
     await dbConnect();
 
-    // Get boards where user is owner
-    const ownedBoards = await Board.find({ ownerId: session.user.id })
-      .select("name description icon visibility createdAt updatedAt")
-      .lean();
+    let allBoards;
 
-    // Get boards where user is a member (but not owner)
-    const memberships = await BoardMember.find({
-      userId: session.user.id,
-    }).select("boardId role").lean();
+    // Check if user is admin
+    if (session.user.role === USER_ROLES.ADMIN) {
+      // Admin sees ALL boards with OWNER privileges
+      const boards = await Board.find({})
+        .select("name description icon visibility ownerId createdAt updatedAt")
+        .populate("ownerId", "name")
+        .lean();
 
-    const memberBoardIds = memberships
-      .map((m) => m.boardId.toString())
-      .filter((id) => !ownedBoards.some((b) => b._id.toString() === id));
+      allBoards = boards.map((b) => ({ ...b, role: BOARD_ROLES.OWNER }));
+    } else {
+      // Get boards where user is owner
+      const ownedBoards = await Board.find({ ownerId: session.user.id })
+        .select("name description icon visibility createdAt updatedAt")
+        .lean();
 
-    const memberBoards = await Board.find({
-      _id: { $in: memberBoardIds }
-    })
-      .select("name description icon visibility ownerId createdAt updatedAt")
-      .populate("ownerId", "name")
-      .lean();
+      // Get boards where user is a member (but not owner)
+      const memberships = await BoardMember.find({
+        userId: session.user.id,
+      }).select("boardId role").lean();
 
-    // Get workspace/public boards that user is not a member of
-    const publicBoards = await Board.find({
-      visibility: { $in: ["workspace", "public"] },
-      ownerId: { $ne: session.user.id },
-      _id: { $nin: memberBoardIds },
-    })
-      .select("name description icon visibility ownerId createdAt updatedAt")
-      .populate("ownerId", "name")
-      .lean();
+      const memberBoardIds = memberships
+        .map((m) => m.boardId.toString())
+        .filter((id) => !ownedBoards.some((b) => b._id.toString() === id));
 
-    // Combine all boards
-    const allBoards = [
-      ...ownedBoards.map((b) => ({ ...b, role: BOARD_ROLES.OWNER })),
-      ...memberBoards.map((b) => {
-        const membership = memberships.find(
-          (m) => m.boardId.toString() === b._id.toString()
-        );
-        return { ...b, role: membership?.role || BOARD_ROLES.VIEWER };
-      }),
-      ...publicBoards.map((b) => ({ ...b, role: BOARD_ROLES.VIEWER })),
-    ];
+      const memberBoards = await Board.find({
+        _id: { $in: memberBoardIds },
+      })
+        .select("name description icon visibility ownerId createdAt updatedAt")
+        .populate("ownerId", "name")
+        .lean();
+
+      // Get workspace/public boards that user is not a member of
+      const publicBoards = await Board.find({
+        visibility: { $in: ["workspace", "public"] },
+        ownerId: { $ne: session.user.id },
+        _id: { $nin: memberBoardIds },
+      })
+        .select("name description icon visibility ownerId createdAt updatedAt")
+        .populate("ownerId", "name")
+        .lean();
+
+      // Combine all boards
+      allBoards = [
+        ...ownedBoards.map((b) => ({ ...b, role: BOARD_ROLES.OWNER })),
+        ...memberBoards.map((b) => {
+          const membership = memberships.find(
+            (m) => m.boardId.toString() === b._id.toString()
+          );
+          return { ...b, role: membership?.role || BOARD_ROLES.VIEWER };
+        }),
+        ...publicBoards.map((b) => ({ ...b, role: BOARD_ROLES.VIEWER })),
+      ];
+    }
 
     // Get task counts
     const Task = (await import("@/models/task.model")).default;

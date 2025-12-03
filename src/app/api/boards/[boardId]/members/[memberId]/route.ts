@@ -23,7 +23,7 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
     await connectDB();
 
     // Check if user can manage members
-    const access = await checkBoardAccess(boardId, session.user.id);
+    const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess || !access.permissions?.canManageMembers) {
       return NextResponse.json(
         { error: "Bạn không có quyền quản lý thành viên" },
@@ -63,13 +63,14 @@ export async function PATCH(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Only owner can change admin roles
+    // Only owner and admin can change admin roles
     if (
       (member.role === BOARD_ROLES.ADMIN || validated.data.role === "admin") &&
-      access.role !== BOARD_ROLES.OWNER
+      access.role !== BOARD_ROLES.OWNER &&
+      access.role !== BOARD_ROLES.ADMIN
     ) {
       return NextResponse.json(
-        { error: "Chỉ chủ sở hữu mới có thể thay đổi vai trò admin" },
+        { error: "Bạn không có quyền thay đổi vai trò admin" },
         { status: 403 }
       );
     }
@@ -128,7 +129,7 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
     }
 
     // Check permissions
-    const access = await checkBoardAccess(boardId, session.user.id);
+    const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
 
     // User can remove themselves
     const isSelfRemove = member.userId.toString() === session.user.id;
@@ -141,10 +142,15 @@ export async function DELETE(request: NextRequest, context: RouteContext) {
       );
     }
 
-    // Only owner can remove admins
-    if (member.role === BOARD_ROLES.ADMIN && access.role !== BOARD_ROLES.OWNER && !isSelfRemove) {
+    // Only owner and admin can remove admins
+    if (
+      member.role === BOARD_ROLES.ADMIN &&
+      access.role !== BOARD_ROLES.OWNER &&
+      access.role !== BOARD_ROLES.ADMIN &&
+      !isSelfRemove
+    ) {
       return NextResponse.json(
-        { error: "Chỉ chủ sở hữu mới có thể xóa admin" },
+        { error: "Bạn không có quyền xóa admin" },
         { status: 403 }
       );
     }

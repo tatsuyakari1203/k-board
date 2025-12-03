@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   Users,
   UserPlus,
@@ -16,6 +16,10 @@ import {
   Lock,
   Building2,
   Settings,
+  UserCheck,
+  User,
+  Search,
+  Check,
 } from "lucide-react";
 import {
   BOARD_ROLES,
@@ -38,6 +42,12 @@ interface BoardMember {
   isOwner: boolean;
 }
 
+interface SystemUser {
+  _id: string;
+  name: string;
+  email: string;
+}
+
 interface BoardMembersModalProps {
   boardId: string;
   isOpen: boolean;
@@ -53,6 +63,8 @@ const ROLE_ICONS: Record<BoardRole, React.ReactNode> = {
   admin: <Shield className="h-4 w-4 text-blue-500" />,
   editor: <Pencil className="h-4 w-4 text-green-500" />,
   viewer: <Eye className="h-4 w-4 text-gray-500" />,
+  restricted_editor: <UserCheck className="h-4 w-4 text-orange-500" />,
+  restricted_viewer: <User className="h-4 w-4 text-gray-400" />,
 };
 
 const VISIBILITY_ICONS: Record<BoardVisibility, React.ReactNode> = {
@@ -79,7 +91,6 @@ export function BoardMembersModal({
   const [members, setMembers] = useState<BoardMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [addEmail, setAddEmail] = useState("");
   const [addRole, setAddRole] = useState<BoardRole>(BOARD_ROLES.VIEWER);
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState("");
@@ -87,6 +98,16 @@ export function BoardMembersModal({
   const [activeTab, setActiveTab] = useState<"members" | "settings">("members");
   const [visibility, setVisibility] = useState<BoardVisibility>(currentVisibility);
   const [visibilityLoading, setVisibilityLoading] = useState(false);
+  const [canManageMembersState, setCanManageMembersState] = useState(canManageMembers);
+  const [canEditBoardState, setCanEditBoardState] = useState(canEditBoard);
+
+  // User selection states
+  const [allUsers, setAllUsers] = useState<SystemUser[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedUser, setSelectedUser] = useState<SystemUser | null>(null);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
 
   const fetchMembers = useCallback(async () => {
     try {
@@ -94,6 +115,12 @@ export function BoardMembersModal({
       if (res.ok) {
         const data = await res.json();
         setMembers(data.members);
+        if (typeof data.canManageMembers === 'boolean') {
+          setCanManageMembersState(data.canManageMembers);
+        }
+        if (typeof data.canEditBoard === 'boolean') {
+          setCanEditBoardState(data.canEditBoard);
+        }
       }
     } catch (error) {
       console.error("Failed to fetch members:", error);
@@ -102,13 +129,54 @@ export function BoardMembersModal({
     }
   }, [boardId]);
 
+  const fetchAllUsers = useCallback(async () => {
+    setUsersLoading(true);
+    try {
+      const res = await fetch("/api/users");
+      if (res.ok) {
+        const data = await res.json();
+        setAllUsers(data.users || []);
+      }
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+    } finally {
+      setUsersLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (isOpen) {
       setLoading(true);
       fetchMembers();
+      fetchAllUsers();
       setVisibility(currentVisibility);
+      setCanManageMembersState(canManageMembers);
+      setCanEditBoardState(canEditBoard);
     }
-  }, [isOpen, fetchMembers, currentVisibility]);
+  }, [isOpen, fetchMembers, fetchAllUsers, currentVisibility, canManageMembers, canEditBoard]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowUserDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Filter users that are not already members
+  const availableUsers = allUsers.filter(
+    (user) => !members.some((member) => member.userId === user._id)
+  );
+
+  // Filter by search query
+  const filteredUsers = availableUsers.filter(
+    (user) =>
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleVisibilityChange = async (newVisibility: BoardVisibility) => {
     if (!onVisibilityChange) return;
@@ -123,6 +191,11 @@ export function BoardMembersModal({
 
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!selectedUser) {
+      setAddError("Vui lòng chọn người dùng");
+      return;
+    }
+
     setAddLoading(true);
     setAddError("");
 
@@ -130,7 +203,7 @@ export function BoardMembersModal({
       const res = await fetch(`/api/boards/${boardId}/members`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: addEmail, role: addRole }),
+        body: JSON.stringify({ email: selectedUser.email, role: addRole }),
       });
 
       const data = await res.json();
@@ -140,7 +213,8 @@ export function BoardMembersModal({
         return;
       }
 
-      setAddEmail("");
+      setSelectedUser(null);
+      setSearchQuery("");
       setAddRole(BOARD_ROLES.VIEWER);
       setShowAddForm(false);
       fetchMembers();
@@ -149,6 +223,13 @@ export function BoardMembersModal({
     } finally {
       setAddLoading(false);
     }
+  };
+
+  const handleSelectUser = (user: SystemUser) => {
+    setSelectedUser(user);
+    setSearchQuery("");
+    setShowUserDropdown(false);
+    setAddError("");
   };
 
   const handleUpdateRole = async (memberId: string, newRole: BoardRole) => {
@@ -206,7 +287,7 @@ export function BoardMembersModal({
         </div>
 
         {/* Tabs */}
-        {canEditBoard && (
+        {canEditBoardState && (
           <div className="flex border-b">
             <button
               onClick={() => setActiveTab("members")}
@@ -234,7 +315,7 @@ export function BoardMembersModal({
         )}
 
         {/* Settings Tab */}
-        {activeTab === "settings" && canEditBoard && (
+        {activeTab === "settings" && canEditBoardState && (
           <div className="p-4 space-y-4">
             <div>
               <h3 className="text-sm font-medium mb-3">Chế độ hiển thị</h3>
@@ -276,7 +357,7 @@ export function BoardMembersModal({
         )}
 
         {/* Members Tab - Add member form */}
-        {activeTab === "members" && canManageMembers && (
+        {activeTab === "members" && canManageMembersState && (
           <div className="p-4 border-b">
             {showAddForm ? (
               <form onSubmit={handleAddMember} className="space-y-3">
@@ -285,16 +366,84 @@ export function BoardMembersModal({
                     {addError}
                   </div>
                 )}
-                <div>
-                  <input
-                    type="email"
-                    placeholder="Email người dùng"
-                    value={addEmail}
-                    onChange={(e) => setAddEmail(e.target.value)}
-                    required
-                    className="w-full px-3 py-2 border rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                  />
+
+                {/* User selector */}
+                <div className="relative" ref={dropdownRef}>
+                  {selectedUser ? (
+                    <div className="flex items-center justify-between px-3 py-2 border rounded-md bg-background">
+                      <div className="flex items-center gap-2">
+                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium">
+                          {selectedUser.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="text-sm font-medium">{selectedUser.name}</div>
+                          <div className="text-xs text-muted-foreground">{selectedUser.email}</div>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedUser(null)}
+                        className="p-1 hover:bg-muted rounded"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="relative">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                        <input
+                          type="text"
+                          placeholder="Tìm kiếm người dùng..."
+                          value={searchQuery}
+                          onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setShowUserDropdown(true);
+                          }}
+                          onFocus={() => setShowUserDropdown(true)}
+                          className="w-full pl-9 pr-3 py-2 border rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                        />
+                      </div>
+
+                      {/* User dropdown */}
+                      {showUserDropdown && (
+                        <div className="absolute z-10 w-full mt-1 bg-background border rounded-md shadow-lg max-h-60 overflow-y-auto">
+                          {usersLoading ? (
+                            <div className="flex items-center justify-center py-4">
+                              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                            </div>
+                          ) : filteredUsers.length === 0 ? (
+                            <div className="px-3 py-4 text-center text-sm text-muted-foreground">
+                              {searchQuery
+                                ? "Không tìm thấy người dùng"
+                                : availableUsers.length === 0
+                                  ? "Tất cả người dùng đã là thành viên"
+                                  : "Nhập để tìm kiếm..."}
+                            </div>
+                          ) : (
+                            filteredUsers.map((user) => (
+                              <button
+                                key={user._id}
+                                type="button"
+                                onClick={() => handleSelectUser(user)}
+                                className="w-full flex items-center gap-3 px-3 py-2 hover:bg-muted text-left transition-colors"
+                              >
+                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium shrink-0">
+                                  {user.name.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <div className="text-sm font-medium truncate">{user.name}</div>
+                                  <div className="text-xs text-muted-foreground truncate">{user.email}</div>
+                                </div>
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
+
                 <div className="flex items-center gap-2">
                   <select
                     value={addRole}
@@ -310,17 +459,27 @@ export function BoardMembersModal({
                     <option value={BOARD_ROLES.ADMIN}>
                       {BOARD_ROLE_LABELS.admin}
                     </option>
+                    <option value={BOARD_ROLES.RESTRICTED_EDITOR}>
+                      {BOARD_ROLE_LABELS.restricted_editor}
+                    </option>
+                    <option value={BOARD_ROLES.RESTRICTED_VIEWER}>
+                      {BOARD_ROLE_LABELS.restricted_viewer}
+                    </option>
                   </select>
                   <button
                     type="button"
-                    onClick={() => setShowAddForm(false)}
+                    onClick={() => {
+                      setShowAddForm(false);
+                      setSelectedUser(null);
+                      setSearchQuery("");
+                    }}
                     className="px-3 py-2 border rounded-md hover:bg-muted text-sm"
                   >
                     Hủy
                   </button>
                   <button
                     type="submit"
-                    disabled={addLoading}
+                    disabled={addLoading || !selectedUser}
                     className="px-3 py-2 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90 disabled:opacity-50"
                   >
                     {addLoading ? (
@@ -384,7 +543,7 @@ export function BoardMembersModal({
                       <span className="text-xs text-muted-foreground px-2 py-1 bg-muted rounded">
                         {BOARD_ROLE_LABELS.owner}
                       </span>
-                    ) : canManageMembers ? (
+                    ) : canManageMembersState ? (
                       <div className="flex items-center gap-1">
                         <div className="relative">
                           <select
@@ -402,6 +561,12 @@ export function BoardMembersModal({
                             </option>
                             <option value={BOARD_ROLES.ADMIN}>
                               {BOARD_ROLE_LABELS.admin}
+                            </option>
+                            <option value={BOARD_ROLES.RESTRICTED_EDITOR}>
+                              {BOARD_ROLE_LABELS.restricted_editor}
+                            </option>
+                            <option value={BOARD_ROLES.RESTRICTED_VIEWER}>
+                              {BOARD_ROLE_LABELS.restricted_viewer}
                             </option>
                           </select>
                           <ChevronDown className="absolute right-1 top-1/2 -translate-y-1/2 h-3 w-3 pointer-events-none" />

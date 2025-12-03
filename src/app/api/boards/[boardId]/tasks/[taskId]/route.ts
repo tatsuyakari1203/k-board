@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Task from "@/models/task.model";
+import Board from "@/models/board.model";
 import { checkBoardAccess } from "@/lib/board-permissions";
 import { updateTaskSchema } from "@/types/board";
 
@@ -25,7 +26,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     await dbConnect();
 
     // Check board access
-    const access = await checkBoardAccess(boardId, session.user.id);
+    const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess) {
       return NextResponse.json(
         { error: "Bạn không có quyền truy cập board này" },
@@ -87,7 +88,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     await dbConnect();
 
     // Check board access - need canEditTasks permission
-    const access = await checkBoardAccess(boardId, session.user.id);
+    const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess || !access.permissions?.canEditTasks) {
       return NextResponse.json(
         { error: "Bạn không có quyền chỉnh sửa task" },
@@ -102,6 +103,26 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
         { error: "Task not found" },
         { status: 404 }
       );
+    }
+
+    // Check edit scope
+    if (access.permissions?.editScope === "assigned") {
+      const board = await Board.findById(boardId).select("properties").lean();
+      const assigneeProp = board?.properties?.find((p: any) => p.type === "people");
+
+      const isCreator = existingTask.createdBy.toString() === session.user.id;
+      // Check if assigned (assuming value is array of user IDs)
+      const assigneeValue = existingTask.properties?.[assigneeProp?.id];
+      const isAssigned = Array.isArray(assigneeValue)
+        ? assigneeValue.includes(session.user.id)
+        : assigneeValue === session.user.id;
+
+      if (!isCreator && !isAssigned) {
+        return NextResponse.json(
+          { error: "Bạn chỉ có thể chỉnh sửa task được giao hoặc do bạn tạo" },
+          { status: 403 }
+        );
+      }
     }
 
     // Prepare update - merge properties if provided
@@ -158,7 +179,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     await dbConnect();
 
     // Check board access - need canDeleteTasks permission
-    const access = await checkBoardAccess(boardId, session.user.id);
+    const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess || !access.permissions?.canDeleteTasks) {
       return NextResponse.json(
         { error: "Bạn không có quyền xóa task" },

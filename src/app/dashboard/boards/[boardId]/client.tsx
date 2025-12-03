@@ -66,13 +66,21 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
 
   const activeView = board.views.find((v) => v.id === activeViewId);
 
-  // Fetch users for assignment
+  // Fetch board members for assignment (not all users)
   useEffect(() => {
-    fetch("/api/users")
+    fetch(`/api/boards/${board._id}/members`)
       .then((res) => res.json())
-      .then((data) => setUsers(data))
-      .catch((err) => console.error("Failed to fetch users:", err));
-  }, []);
+      .then((data) => {
+        // Map members to user options format
+        const memberUsers = (data.members || []).map((m: { userId: string; user: { name: string; email: string } }) => ({
+          id: m.userId,
+          name: m.user.name,
+          email: m.user.email,
+        }));
+        setUsers(memberUsers);
+      })
+      .catch((err) => console.error("Failed to fetch board members:", err));
+  }, [board._id]);
 
   // Update board
   const handleUpdateBoard = useCallback(
@@ -233,6 +241,47 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
         }
       } catch (error) {
         console.error("Failed to add property option:", error);
+        // Revert on error
+        setBoard((prev) => ({ ...prev, properties: board.properties }));
+      }
+    },
+    [board._id, board.properties]
+  );
+
+  // Update option in select/multi-select/status property (e.g., change color)
+  const handleUpdatePropertyOption = useCallback(
+    async (propertyId: string, updatedOption: { id: string; label: string; color?: string }) => {
+      const property = board.properties.find((p) => p.id === propertyId);
+      if (!property) return;
+
+      const updatedOptions = (property.options || []).map((opt) =>
+        opt.id === updatedOption.id ? { ...opt, ...updatedOption } : opt
+      );
+
+      const updatedProperty = {
+        ...property,
+        options: updatedOptions,
+      };
+
+      const updatedProperties = board.properties.map((p) =>
+        p.id === propertyId ? updatedProperty : p
+      );
+
+      // Optimistic update
+      setBoard((prev) => ({ ...prev, properties: updatedProperties }));
+
+      try {
+        const res = await fetch(`/api/boards/${board._id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ properties: updatedProperties }),
+        });
+        if (res.ok) {
+          const updated = await res.json();
+          setBoard((prev) => ({ ...prev, ...updated }));
+        }
+      } catch (error) {
+        console.error("Failed to update property option:", error);
         // Revert on error
         setBoard((prev) => ({ ...prev, properties: board.properties }));
       }
@@ -633,6 +682,7 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
             onDeleteTask={handleDeleteTask}
             onRemoveProperty={handleRemoveProperty}
             onAddPropertyOption={handleAddPropertyOption}
+            onUpdatePropertyOption={handleUpdatePropertyOption}
             onUpdatePropertyWidth={handleUpdatePropertyWidth}
             onReorderTasks={handleReorderTasks}
             onReorderProperties={handleReorderProperties}

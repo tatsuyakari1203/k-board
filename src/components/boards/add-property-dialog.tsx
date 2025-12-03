@@ -31,7 +31,7 @@ import {
   Plus,
   X,
   Paperclip,
-  UserCircle,
+  Users,
 } from "lucide-react";
 
 interface AddPropertyDialogProps {
@@ -47,7 +47,7 @@ const PROPERTY_TYPES = [
   { value: PropertyType.SELECT, label: "Chọn một", icon: List },
   { value: PropertyType.MULTI_SELECT, label: "Chọn nhiều", icon: List },
   { value: PropertyType.STATUS, label: "Trạng thái", icon: CheckCircle },
-  { value: PropertyType.USER, label: "Người dùng", icon: UserCircle },
+  { value: PropertyType.USER, label: "Người phụ trách", icon: Users },
   { value: PropertyType.PERSON, label: "Người (text)", icon: User },
   { value: PropertyType.CURRENCY, label: "Tiền tệ", icon: DollarSign },
   { value: PropertyType.CHECKBOX, label: "Checkbox", icon: CheckSquare },

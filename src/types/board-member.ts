@@ -1,13 +1,15 @@
 // Board Member Types (shared between client and server)
 
 // Board member roles with permission levels
-export type BoardRole = "owner" | "admin" | "editor" | "viewer";
+export type BoardRole = "owner" | "admin" | "editor" | "viewer" | "restricted_editor" | "restricted_viewer";
 
 export const BOARD_ROLES = {
-  OWNER: "owner" as BoardRole,   // Full control, can delete board, manage all members
-  ADMIN: "admin" as BoardRole,   // Can manage members, edit board settings
-  EDITOR: "editor" as BoardRole, // Can create/edit/delete tasks
-  VIEWER: "viewer" as BoardRole, // Read-only access
+  OWNER: "owner" as BoardRole,           // Full control
+  ADMIN: "admin" as BoardRole,           // Manage members, settings
+  EDITOR: "editor" as BoardRole,         // Edit all tasks
+  VIEWER: "viewer" as BoardRole,         // View all tasks
+  RESTRICTED_EDITOR: "restricted_editor" as BoardRole, // Edit assigned tasks only
+  RESTRICTED_VIEWER: "restricted_viewer" as BoardRole, // View assigned tasks only
 } as const;
 
 // Role display labels
@@ -16,13 +18,17 @@ export const BOARD_ROLE_LABELS: Record<BoardRole, string> = {
   admin: "Quản trị viên",
   editor: "Biên tập viên",
   viewer: "Người xem",
+  restricted_editor: "Cộng tác viên (Chỉ việc được giao)",
+  restricted_viewer: "Khách (Chỉ việc được giao)",
 };
 
 // Permission flags for each role
 export interface BoardPermissions {
   canView: boolean;
+  viewScope: "all" | "assigned";
   canCreateTasks: boolean;
   canEditTasks: boolean;
+  editScope: "all" | "assigned";
   canDeleteTasks: boolean;
   canEditBoard: boolean;
   canManageMembers: boolean;
@@ -33,8 +39,10 @@ export interface BoardPermissions {
 export const BOARD_ROLE_PERMISSIONS: Record<BoardRole, BoardPermissions> = {
   owner: {
     canView: true,
+    viewScope: "all",
     canCreateTasks: true,
     canEditTasks: true,
+    editScope: "all",
     canDeleteTasks: true,
     canEditBoard: true,
     canManageMembers: true,
@@ -42,8 +50,10 @@ export const BOARD_ROLE_PERMISSIONS: Record<BoardRole, BoardPermissions> = {
   },
   admin: {
     canView: true,
+    viewScope: "all",
     canCreateTasks: true,
     canEditTasks: true,
+    editScope: "all",
     canDeleteTasks: true,
     canEditBoard: true,
     canManageMembers: true,
@@ -51,8 +61,10 @@ export const BOARD_ROLE_PERMISSIONS: Record<BoardRole, BoardPermissions> = {
   },
   editor: {
     canView: true,
+    viewScope: "all",
     canCreateTasks: true,
     canEditTasks: true,
+    editScope: "all",
     canDeleteTasks: true,
     canEditBoard: false,
     canManageMembers: false,
@@ -60,8 +72,32 @@ export const BOARD_ROLE_PERMISSIONS: Record<BoardRole, BoardPermissions> = {
   },
   viewer: {
     canView: true,
+    viewScope: "all",
     canCreateTasks: false,
     canEditTasks: false,
+    editScope: "all", // Irrelevant but set to all
+    canDeleteTasks: false,
+    canEditBoard: false,
+    canManageMembers: false,
+    canDeleteBoard: false,
+  },
+  restricted_editor: {
+    canView: true,
+    viewScope: "assigned",
+    canCreateTasks: true,
+    canEditTasks: true,
+    editScope: "assigned",
+    canDeleteTasks: false,
+    canEditBoard: false,
+    canManageMembers: false,
+    canDeleteBoard: false,
+  },
+  restricted_viewer: {
+    canView: true,
+    viewScope: "assigned",
+    canCreateTasks: false,
+    canEditTasks: false,
+    editScope: "assigned",
     canDeleteTasks: false,
     canEditBoard: false,
     canManageMembers: false,

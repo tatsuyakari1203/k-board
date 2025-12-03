@@ -85,20 +85,17 @@ export function BoardToolbar({
           onClearFilters={onClearFilters}
         >
           <Button
-            asChild
             variant="ghost"
             size="sm"
             className={`h-6 text-xs gap-1 px-2 ${filters.length > 0 ? "text-foreground" : "text-muted-foreground"}`}
           >
-            <div role="button" tabIndex={0}>
-              <Filter className="h-3 w-3" />
-              <span className="hidden sm:inline">Filter</span>
-              {filters.length > 0 && (
-                <span className="bg-muted text-foreground px-1 rounded text-[10px]">
-                  {filters.length}
-                </span>
-              )}
-            </div>
+            <Filter className="h-3 w-3" />
+            <span className="hidden sm:inline">Filter</span>
+            {filters.length > 0 && (
+              <span className="bg-muted text-foreground px-1 rounded text-[10px]">
+                {filters.length}
+              </span>
+            )}
           </Button>
         </FilterPopover>
 
@@ -111,20 +108,17 @@ export function BoardToolbar({
           onClearSorts={onClearSorts}
         >
           <Button
-            asChild
             variant="ghost"
             size="sm"
             className={`h-6 text-xs gap-1 px-2 ${sorts.length > 0 ? "text-foreground" : "text-muted-foreground"}`}
           >
-            <div role="button" tabIndex={0}>
-              <ArrowUpDown className="h-3 w-3" />
-              <span className="hidden sm:inline">Sort</span>
-              {sorts.length > 0 && (
-                <span className="bg-muted text-foreground px-1 rounded text-[10px]">
-                  {sorts.length}
-                </span>
-              )}
-            </div>
+            <ArrowUpDown className="h-3 w-3" />
+            <span className="hidden sm:inline">Sort</span>
+            {sorts.length > 0 && (
+              <span className="bg-muted text-foreground px-1 rounded text-[10px]">
+                {sorts.length}
+              </span>
+            )}
           </Button>
         </SortPopover>
 
@@ -132,20 +126,17 @@ export function BoardToolbar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              asChild
               variant="ghost"
               size="sm"
               className={`h-6 text-xs gap-1 px-2 ${groupBy ? "text-foreground" : "text-muted-foreground"}`}
             >
-              <div role="button" tabIndex={0}>
-                <Layers className="h-3 w-3" />
-                <span className="hidden sm:inline">Group</span>
-                {groupBy && (
-                  <span className="bg-muted text-foreground px-1 rounded text-[10px]">
-                    1
-                  </span>
-                )}
-              </div>
+              <Layers className="h-3 w-3" />
+              <span className="hidden sm:inline">Group</span>
+              {groupBy && (
+                <span className="bg-muted text-foreground px-1 rounded text-[10px]">
+                  1
+                </span>
+              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-48">
@@ -175,15 +166,12 @@ export function BoardToolbar({
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              asChild
               variant="ghost"
               size="sm"
               className="h-6 text-xs gap-1 px-2 text-muted-foreground"
             >
-              <div role="button" tabIndex={0}>
-                <Eye className="h-3 w-3" />
-                <span className="hidden sm:inline">Properties</span>
-              </div>
+              <Eye className="h-3 w-3" />
+              <span className="hidden sm:inline">Properties</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-48 max-h-[280px] overflow-y-auto">
@@ -255,10 +243,8 @@ export function BoardToolbar({
         {/* More options */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button asChild variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground">
-              <div role="button" tabIndex={0}>
-                <MoreHorizontal className="h-3 w-3" />
-              </div>
+            <Button variant="ghost" size="sm" className="h-6 w-6 p-0 text-muted-foreground">
+              <MoreHorizontal className="h-3 w-3" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">

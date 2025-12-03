@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useMemo, useCallback, useEffect } from "react";
+import { useState, useRef, useMemo, useCallback, useEffect, useId } from "react";
 import { Plus, GripVertical, Trash2, MoreHorizontal, ChevronRight, ChevronDown, X } from "lucide-react";
 import { PropertyCell } from "./property-cell";
 import {
@@ -68,6 +68,7 @@ interface TableViewProps {
   onDeleteTask: (taskId: string) => void;
   onRemoveProperty?: (propertyId: string) => void;
   onAddPropertyOption?: (propertyId: string, option: { id: string; label: string; color?: string }) => void;
+  onUpdatePropertyOption?: (propertyId: string, option: { id: string; label: string; color?: string }) => void;
   onUpdatePropertyWidth?: (propertyId: string, width: number) => void;
   onReorderTasks?: (oldIndex: number, newIndex: number) => void;
   onReorderProperties?: (oldIndex: number, newIndex: number) => void;
@@ -361,6 +362,7 @@ function SortableRow({
   onDeleteTask,
   users,
   onAddPropertyOption,
+  onUpdatePropertyOption,
   isDragEnabled,
   isSelected,
   onToggleSelect,
@@ -377,6 +379,7 @@ function SortableRow({
   onDeleteTask: (id: string) => void;
   users?: UserOption[];
   onAddPropertyOption?: (id: string, option: { id: string; label: string; color?: string }) => void;
+  onUpdatePropertyOption?: (id: string, option: { id: string; label: string; color?: string }) => void;
   isDragEnabled: boolean;
   isSelected: boolean;
   onToggleSelect: (id: string) => void;
@@ -467,6 +470,7 @@ function SortableRow({
                 })
               }
               onAddOption={onAddPropertyOption}
+              onUpdateOption={onUpdatePropertyOption}
               users={users}
               className="min-h-8 w-full px-2 flex items-center py-1"
             />
@@ -539,6 +543,7 @@ export function TableView({
   onDeleteTask,
   onRemoveProperty,
   onAddPropertyOption,
+  onUpdatePropertyOption,
   onUpdatePropertyWidth,
   onReorderTasks,
   onReorderProperties,
@@ -548,6 +553,7 @@ export function TableView({
   groupBy,
   onBulkDeleteTasks,
 }: TableViewProps) {
+  const dndId = useId();
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
   const [resizing, setResizing] = useState<{ id: string; startX: number; startWidth: number } | null>(null);
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
@@ -946,6 +952,7 @@ export function TableView({
 
   return (
     <DndContext
+      id={dndId}
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
@@ -1039,6 +1046,7 @@ export function TableView({
                             onDeleteTask={onDeleteTask}
                             users={users}
                             onAddPropertyOption={onAddPropertyOption}
+                            onUpdatePropertyOption={onUpdatePropertyOption}
                             isDragEnabled={false}
                             isSelected={selectedTaskIds.has(task._id)}
                             onToggleSelect={handleToggleSelect}
@@ -1070,6 +1078,7 @@ export function TableView({
                       onDeleteTask={onDeleteTask}
                       users={users}
                       onAddPropertyOption={onAddPropertyOption}
+                      onUpdatePropertyOption={onUpdatePropertyOption}
                       isDragEnabled={isRowDragEnabled}
                       isSelected={selectedTaskIds.has(task._id)}
                       onToggleSelect={handleToggleSelect}
@@ -1253,6 +1262,7 @@ export function TableView({
                             })
                           }
                           onAddOption={onAddPropertyOption}
+                          onUpdateOption={onUpdatePropertyOption}
                           users={users}
                           compact
                         />

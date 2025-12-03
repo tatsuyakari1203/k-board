@@ -26,7 +26,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     await connectDB();
 
     // Check if user has access to view board
-    const access = await checkBoardAccess(boardId, session.user.id);
+    const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess) {
       return NextResponse.json(
         { error: "Bạn không có quyền truy cập board này" },
@@ -43,7 +43,6 @@ export async function GET(request: NextRequest, context: RouteContext) {
 
     // Get board owner info
     const board = await Board.findById(boardId)
-      .populate("ownerId", "name email")
       .select("ownerId")
       .lean();
 
@@ -51,6 +50,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
       members: members.map((m) => {
         const user = m.userId as unknown as { _id: { toString: () => string }; name: string; email: string };
         const addedByUser = m.addedBy as unknown as { _id: { toString: () => string }; name: string } | null;
+
+        // Handle ownerId whether it's populated or not
+        const boardOwnerId = board?.ownerId && (typeof board.ownerId === 'object' && '_id' in board.ownerId)
+          ? (board.ownerId as any)._id
+          : board?.ownerId;
+
         return {
           _id: m._id.toString(),
           userId: user._id.toString(),
@@ -66,11 +71,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
               }
             : null,
           addedAt: m.addedAt,
-          isOwner: user._id.toString() === board?.ownerId?.toString(),
+          isOwner: user._id.toString() === boardOwnerId?.toString(),
         };
       }),
       currentUserRole: access.role,
       canManageMembers: access.permissions?.canManageMembers,
+      canEditBoard: access.permissions?.canEditBoard,
     });
   } catch (error) {
     console.error("GET /api/boards/[boardId]/members error:", error);
@@ -93,7 +99,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     await connectDB();
 
     // Check if user can manage members
-    const access = await checkBoardAccess(boardId, session.user.id);
+    const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess || !access.permissions?.canManageMembers) {
       return NextResponse.json(
         { error: "Bạn không có quyền quản lý thành viên" },

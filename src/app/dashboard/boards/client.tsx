@@ -4,12 +4,15 @@ import { useState } from "react";
 import { Plus, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CreateBoardDialog, BoardCard } from "@/components/boards";
+import { BoardRole, BoardVisibility } from "@/types/board-member";
 
 interface BoardListItem {
   _id: string;
   name: string;
   description?: string;
   icon?: string;
+  visibility?: BoardVisibility;
+  role?: BoardRole;
   taskCount: number;
   createdAt: string;
   updatedAt: string;

@@ -26,7 +26,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     await dbConnect();
 
     // Check board access
-    const access = await checkBoardAccess(boardId, session.user.id);
+    const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess) {
       return NextResponse.json(
         { error: "Bạn không có quyền truy cập board này" },
@@ -34,7 +34,29 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const tasks = await Task.find({ boardId })
+    const query: any = { boardId };
+
+    // If viewScope is assigned, filter by assignee or creator
+    if (access.permissions?.viewScope === "assigned") {
+      // Find the assignee property (type 'people')
+      const board = await Board.findById(boardId).select("properties").lean();
+      // Find the first property of type 'people'
+      // In a real app, we might want to let the user configure which column is the "Assignee" column
+      // For now, we assume the first 'people' column is the assignee
+      const assigneeProp = board?.properties?.find((p: any) => p.type === "people");
+
+      if (assigneeProp) {
+        query.$or = [
+          { [`properties.${assigneeProp.id}`]: session.user.id },
+          { createdBy: session.user.id }
+        ];
+      } else {
+        // Fallback: only see tasks created by self
+        query.createdBy = session.user.id;
+      }
+    }
+
+    const tasks = await Task.find(query)
       .sort({ order: 1 })
       .lean();
 
@@ -73,7 +95,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     await dbConnect();
 
     // Check board access - need canCreateTasks permission
-    const access = await checkBoardAccess(boardId, session.user.id);
+    const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess || !access.permissions?.canCreateTasks) {
       return NextResponse.json(
         { error: "Bạn không có quyền tạo task trong board này" },

@@ -1,6 +1,8 @@
 import { connectDB } from "@/lib/db";
 import BoardMember from "@/models/board-member.model";
 import Board from "@/models/board.model";
+import User from "@/models/user.model";
+import { USER_ROLES } from "@/types/user";
 import {
   BOARD_ROLES,
   BOARD_ROLE_PERMISSIONS,
@@ -20,7 +22,8 @@ export interface BoardAccessResult {
  */
 export async function checkBoardAccess(
   boardId: string,
-  userId: string
+  userId: string,
+  userRole?: string
 ): Promise<BoardAccessResult> {
   await connectDB();
 
@@ -30,6 +33,24 @@ export async function checkBoardAccess(
     permissions: null,
     isOwner: false,
   };
+
+  // Check if user is system admin
+  let isAdmin = userRole === USER_ROLES.ADMIN;
+  if (!userRole) {
+    const user = await User.findById(userId).select("role").lean();
+    if (user && user.role === USER_ROLES.ADMIN) {
+      isAdmin = true;
+    }
+  }
+
+  if (isAdmin) {
+    return {
+      hasAccess: true,
+      role: BOARD_ROLES.OWNER, // Admin has owner privileges
+      permissions: BOARD_ROLE_PERMISSIONS[BOARD_ROLES.OWNER],
+      isOwner: false, // Not the creator, but has full access
+    };
+  }
 
   // First check if user is the board owner
   const board = await Board.findById(boardId).select("ownerId visibility").lean();
@@ -91,9 +112,10 @@ export async function checkBoardAccess(
 export async function checkBoardPermission(
   boardId: string,
   userId: string,
-  permission: keyof BoardPermissions
+  permission: keyof BoardPermissions,
+  userRole?: string
 ): Promise<boolean> {
-  const access = await checkBoardAccess(boardId, userId);
+  const access = await checkBoardAccess(boardId, userId, userRole);
   return access.hasAccess && access.permissions?.[permission] === true;
 }
 
@@ -103,9 +125,10 @@ export async function checkBoardPermission(
 export async function requireBoardPermission(
   boardId: string,
   userId: string,
-  permission: keyof BoardPermissions
+  permission: keyof BoardPermissions,
+  userRole?: string
 ): Promise<BoardAccessResult> {
-  const access = await checkBoardAccess(boardId, userId);
+  const access = await checkBoardAccess(boardId, userId, userRole);
 
   if (!access.hasAccess) {
     throw new Error("Bạn không có quyền truy cập board này");
@@ -123,6 +146,14 @@ export async function requireBoardPermission(
  */
 export async function getUserAccessibleBoardIds(userId: string): Promise<string[]> {
   await connectDB();
+
+  // Check if user is admin
+  const user = await User.findById(userId).select("role").lean();
+  if (user && user.role === USER_ROLES.ADMIN) {
+    // Admin can access all boards
+    const allBoards = await Board.find({}).select("_id").lean();
+    return allBoards.map((b) => b._id.toString());
+  }
 
   // Get boards owned by user
   const ownedBoards = await Board.find({ ownerId: userId })
