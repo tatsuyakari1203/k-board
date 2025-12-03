@@ -8,6 +8,7 @@ import { useEffect, useCallback } from "react";
 
 export interface Shortcut {
   key: string;
+  then?: string; // For sequence shortcuts like 'g' then 'h'
   ctrl?: boolean;
   shift?: boolean;
   alt?: boolean;
@@ -34,7 +35,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
       { key: "g", then: "b", description: "Đi tới Boards" },
       { key: "g", then: "t", description: "Đi tới Todo" },
       { key: "g", then: "a", description: "Đi tới Admin" },
-    ] as unknown as Omit<Shortcut, "action">[],
+    ] as Omit<Shortcut, "action">[],
   },
   {
     name: "Thao tác chung",
@@ -61,10 +62,7 @@ export const SHORTCUT_GROUPS: ShortcutGroup[] = [
 // HOOK
 // ============================================
 
-export function useKeyboardShortcuts(
-  shortcuts: Shortcut[],
-  enabled: boolean = true
-) {
+export function useKeyboardShortcuts(shortcuts: Shortcut[], enabled: boolean = true) {
   const handleKeyDown = useCallback(
     (event: KeyboardEvent) => {
       if (!enabled) return;
@@ -72,15 +70,12 @@ export function useKeyboardShortcuts(
       // Skip if typing in input/textarea (unless shortcut is global)
       const target = event.target as HTMLElement;
       const isInput =
-        target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable;
+        target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable;
 
       for (const shortcut of shortcuts) {
         if (isInput && !shortcut.global) continue;
 
-        const keyMatch =
-          event.key.toLowerCase() === shortcut.key.toLowerCase();
+        const keyMatch = event.key.toLowerCase() === shortcut.key.toLowerCase();
         const ctrlMatch = shortcut.ctrl ? event.ctrlKey || event.metaKey : !event.ctrlKey;
         const shiftMatch = shortcut.shift ? event.shiftKey : !event.shiftKey;
         const altMatch = shortcut.alt ? event.altKey : !event.altKey;
