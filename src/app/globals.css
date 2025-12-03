@@ -43,74 +43,104 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* Notion-style theme - Clean, Minimal, Flat with Better Typography */
+/* Modern Professional Theme - High Contrast & Readable */
 :root {
   --radius: 0.5rem;
-  --background: #ffffff;
-  --foreground: #1f1f1f;
+  /* Backgrounds */
+  --background: #fafbfc;
+  --foreground: #111827;
   --card: #ffffff;
-  --card-foreground: #1f1f1f;
+  --card-foreground: #111827;
   --popover: #ffffff;
-  --popover-foreground: #1f1f1f;
-  --primary: #2f2f2f;
+  --popover-foreground: #111827;
+
+  /* Primary - Vibrant Blue */
+  --primary: #2563eb;
   --primary-foreground: #ffffff;
-  --secondary: #f7f7f5;
-  --secondary-foreground: #1f1f1f;
-  --muted: #f7f7f5;
-  --muted-foreground: #6b6b6b;
-  --accent: #f7f7f5;
-  --accent-foreground: #1f1f1f;
-  --destructive: #e03e3e;
-  --border: #ebebea;
-  --input: #ebebea;
-  --ring: #2f2f2f;
-  --chart-1: #2eaadc;
-  --chart-2: #6940a5;
-  --chart-3: #ff7369;
-  --chart-4: #ffdc49;
-  --chart-5: #4dab9a;
-  --sidebar: #fbfbfa;
-  --sidebar-foreground: #1f1f1f;
-  --sidebar-primary: #1f1f1f;
+
+  /* Secondary - Soft Gray Blue */
+  --secondary: #e5e7eb;
+  --secondary-foreground: #111827;
+
+  /* Muted - Better contrast */
+  --muted: #f3f4f6;
+  --muted-foreground: #4b5563;
+
+  /* Accent - Light Blue tint */
+  --accent: #dbeafe;
+  --accent-foreground: #1e40af;
+
+  /* States */
+  --destructive: #dc2626;
+  --border: #d1d5db;
+  --input: #e5e7eb;
+  --ring: #2563eb;
+
+  /* Charts - Vivid colors */
+  --chart-1: #2563eb;
+  --chart-2: #7c3aed;
+  --chart-3: #db2777;
+  --chart-4: #ea580c;
+  --chart-5: #059669;
+
+  /* Sidebar */
+  --sidebar: #f8fafc;
+  --sidebar-foreground: #111827;
+  --sidebar-primary: #2563eb;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f1f1ef;
-  --sidebar-accent-foreground: #1f1f1f;
-  --sidebar-border: #ebebea;
-  --sidebar-ring: #2f2f2f;
+  --sidebar-accent: #e0e7ff;
+  --sidebar-accent-foreground: #1e40af;
+  --sidebar-border: #e5e7eb;
+  --sidebar-ring: #2563eb;
 }
 
 .dark {
-  --background: #191919;
-  --foreground: #ebebeb;
-  --card: #1e1e1e;
-  --card-foreground: #ebebeb;
-  --popover: #232323;
-  --popover-foreground: #ebebeb;
-  --primary: #ebebeb;
-  --primary-foreground: #191919;
-  --secondary: #2b2b2b;
-  --secondary-foreground: #ebebeb;
-  --muted: #2b2b2b;
-  --muted-foreground: #8a8a8a;
-  --accent: #2b2b2b;
-  --accent-foreground: #ebebeb;
-  --destructive: #ff6b6b;
-  --border: #363636;
-  --input: #363636;
-  --ring: #ebebeb;
-  --chart-1: #2eaadc;
-  --chart-2: #9065d9;
-  --chart-3: #ff7369;
-  --chart-4: #ffdc49;
-  --chart-5: #4dab9a;
-  --sidebar: #1e1e1e;
-  --sidebar-foreground: #ebebeb;
-  --sidebar-primary: #ebebeb;
-  --sidebar-primary-foreground: #191919;
-  --sidebar-accent: #2b2b2b;
-  --sidebar-accent-foreground: #ebebeb;
-  --sidebar-border: #363636;
-  --sidebar-ring: #ebebeb;
+  /* Backgrounds - Rich dark */
+  --background: #0a0a0b;
+  --foreground: #fafafa;
+  --card: #141416;
+  --card-foreground: #fafafa;
+  --popover: #1a1a1d;
+  --popover-foreground: #fafafa;
+
+  /* Primary - Bright Blue */
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+
+  /* Secondary */
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+
+  /* Muted - Better visibility */
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+
+  /* Accent - Blue glow */
+  --accent: #1e3a5f;
+  --accent-foreground: #93c5fd;
+
+  /* States */
+  --destructive: #ef4444;
+  --border: #3f3f46;
+  --input: #3f3f46;
+  --ring: #3b82f6;
+
+  /* Charts - Bright for dark mode */
+  --chart-1: #60a5fa;
+  --chart-2: #a78bfa;
+  --chart-3: #f472b6;
+  --chart-4: #fb923c;
+  --chart-5: #34d399;
+
+  /* Sidebar */
+  --sidebar: #141416;
+  --sidebar-foreground: #fafafa;
+  --sidebar-primary: #3b82f6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #1e3a5f;
+  --sidebar-accent-foreground: #93c5fd;
+  --sidebar-border: #3f3f46;
+  --sidebar-ring: #3b82f6;
 }
 
 @layer base {
