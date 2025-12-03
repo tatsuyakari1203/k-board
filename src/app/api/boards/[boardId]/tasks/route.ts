@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Board from "@/models/board.model";
 import Task from "@/models/task.model";
+import { checkBoardAccess } from "@/lib/board-permissions";
 import { createTaskSchema } from "@/types/board";
 
 interface RouteParams {
@@ -24,16 +25,12 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     await dbConnect();
 
-    // Verify board ownership
-    const board = await Board.findOne({
-      _id: boardId,
-      ownerId: session.user.id,
-    }).select("_id");
-
-    if (!board) {
+    // Check board access
+    const access = await checkBoardAccess(boardId, session.user.id);
+    if (!access.hasAccess) {
       return NextResponse.json(
-        { error: "Board not found" },
-        { status: 404 }
+        { error: "Bạn không có quyền truy cập board này" },
+        { status: 403 }
       );
     }
 
@@ -75,11 +72,17 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     await dbConnect();
 
-    // Verify board ownership
-    const board = await Board.findOne({
-      _id: boardId,
-      ownerId: session.user.id,
-    }).select("_id properties");
+    // Check board access - need canCreateTasks permission
+    const access = await checkBoardAccess(boardId, session.user.id);
+    if (!access.hasAccess || !access.permissions?.canCreateTasks) {
+      return NextResponse.json(
+        { error: "Bạn không có quyền tạo task trong board này" },
+        { status: 403 }
+      );
+    }
+
+    // Get board properties
+    const board = await Board.findById(boardId).select("properties");
 
     if (!board) {
       return NextResponse.json(

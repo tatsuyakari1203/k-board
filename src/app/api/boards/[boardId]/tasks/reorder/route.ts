@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
-import Board from "@/models/board.model";
 import Task from "@/models/task.model";
+import { checkBoardAccess } from "@/lib/board-permissions";
 
 interface RouteParams {
   params: Promise<{ boardId: string }>;
@@ -36,16 +36,12 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
 
     await dbConnect();
 
-    // Verify board ownership
-    const board = await Board.findOne({
-      _id: boardId,
-      ownerId: session.user.id,
-    }).select("_id");
-
-    if (!board) {
+    // Check board access - need canEditTasks permission
+    const access = await checkBoardAccess(boardId, session.user.id);
+    if (!access.hasAccess || !access.permissions?.canEditTasks) {
       return NextResponse.json(
-        { error: "Board not found" },
-        { status: 404 }
+        { error: "Bạn không có quyền sắp xếp lại tasks" },
+        { status: 403 }
       );
     }
 

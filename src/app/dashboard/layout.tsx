@@ -62,7 +62,9 @@ export default async function DashboardLayout({
 
       {/* Main content */}
       <main className="pl-60">
-        {children}
+        <div className="p-6">
+          {children}
+        </div>
       </main>
     </div>
   );

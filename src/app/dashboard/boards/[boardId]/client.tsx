@@ -15,6 +15,7 @@ import {
   ViewType,
   AggregationType,
 } from "@/types/board";
+import { type BoardRole, type BoardPermissions } from "@/types/board-member";
 
 interface BoardData extends Omit<Board, "createdAt" | "updatedAt"> {
   _id: string;
@@ -22,6 +23,8 @@ interface BoardData extends Omit<Board, "createdAt" | "updatedAt"> {
   createdAt: string;
   updatedAt: string;
   tasks: TaskData[];
+  userRole?: BoardRole;
+  userPermissions?: BoardPermissions;
 }
 
 interface TaskData extends Omit<Task, "createdAt" | "updatedAt"> {
@@ -591,6 +594,8 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
         views={board.views}
         onViewChange={setActiveViewId}
         onUpdateBoard={handleUpdateBoard}
+        userRole={board.userRole}
+        userPermissions={board.userPermissions}
       />
 
       <BoardToolbar

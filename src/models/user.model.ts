@@ -1,6 +1,6 @@
 import mongoose, { Schema, Model, Document } from "mongoose";
 import bcrypt from "bcryptjs";
-import { USER_ROLES, type UserRole } from "@/types/user";
+import { USER_ROLES, USER_STATUS, type UserRole, type UserStatus } from "@/types/user";
 
 export interface IUserDocument extends Document {
   _id: mongoose.Types.ObjectId;
@@ -9,7 +9,15 @@ export interface IUserDocument extends Document {
   password: string;
   role: UserRole;
   image?: string;
+  phone?: string;
+  department?: string;
+  position?: string;
   isActive: boolean;
+  status: UserStatus;
+  approvedBy?: mongoose.Types.ObjectId;
+  approvedAt?: Date;
+  rejectedReason?: string;
+  createdBy?: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -48,9 +56,41 @@ const userSchema = new Schema<IUserDocument>(
     image: {
       type: String,
     },
+    phone: {
+      type: String,
+      trim: true,
+    },
+    department: {
+      type: String,
+      trim: true,
+    },
+    position: {
+      type: String,
+      trim: true,
+    },
     isActive: {
       type: Boolean,
       default: true,
+    },
+    status: {
+      type: String,
+      enum: Object.values(USER_STATUS),
+      default: USER_STATUS.PENDING,
+    },
+    approvedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+    approvedAt: {
+      type: Date,
+    },
+    rejectedReason: {
+      type: String,
+      trim: true,
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
     },
   },
   {
@@ -58,8 +98,10 @@ const userSchema = new Schema<IUserDocument>(
   }
 );
 
-// Index for role queries
+// Indexes
 userSchema.index({ role: 1 });
+userSchema.index({ status: 1 });
+userSchema.index({ isActive: 1, status: 1 });
 
 // Hash password before saving
 userSchema.pre("save", async function () {

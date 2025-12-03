@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Lock, Building2, Globe } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,17 +14,41 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import {
+  BOARD_VISIBILITY,
+  BOARD_VISIBILITY_LABELS,
+  type BoardVisibility,
+} from "@/types/board-member";
 
 interface CreateBoardDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
+const VISIBILITY_OPTIONS = [
+  {
+    value: BOARD_VISIBILITY.PRIVATE,
+    icon: Lock,
+    description: "Chỉ thành viên được mời",
+  },
+  {
+    value: BOARD_VISIBILITY.WORKSPACE,
+    icon: Building2,
+    description: "Mọi người trong hệ thống",
+  },
+  {
+    value: BOARD_VISIBILITY.PUBLIC,
+    icon: Globe,
+    description: "Bất kỳ ai có link",
+  },
+] as const;
+
 export function CreateBoardDialog({ open, onOpenChange }: CreateBoardDialogProps) {
   const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [useTemplate, setUseTemplate] = useState(true);
+  const [visibility, setVisibility] = useState<BoardVisibility>(BOARD_VISIBILITY.PRIVATE);
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,6 +68,7 @@ export function CreateBoardDialog({ open, onOpenChange }: CreateBoardDialogProps
         body: JSON.stringify({
           name: name.trim(),
           description: description.trim() || undefined,
+          visibility,
           useTemplate: useTemplate ? "survey" : undefined,
         }),
       });
@@ -57,6 +83,7 @@ export function CreateBoardDialog({ open, onOpenChange }: CreateBoardDialogProps
       onOpenChange(false);
       setName("");
       setDescription("");
+      setVisibility(BOARD_VISIBILITY.PRIVATE);
       router.push(`/dashboard/boards/${board._id}`);
       router.refresh();
     } catch (error) {
@@ -106,6 +133,32 @@ export function CreateBoardDialog({ open, onOpenChange }: CreateBoardDialogProps
             <Label htmlFor="useTemplate" className="text-sm font-normal cursor-pointer">
               Sử dụng template đo đạc (các cột mặc định cho nghiệp vụ đo đạc)
             </Label>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Chế độ hiển thị</Label>
+            <div className="grid grid-cols-3 gap-2">
+              {VISIBILITY_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => setVisibility(option.value)}
+                  className={`flex flex-col items-center gap-1 p-3 rounded-lg border text-center transition-colors ${
+                    visibility === option.value
+                      ? "border-primary bg-primary/5"
+                      : "border-input hover:bg-muted/50"
+                  }`}
+                >
+                  <option.icon className="h-4 w-4" />
+                  <span className="text-xs font-medium">
+                    {BOARD_VISIBILITY_LABELS[option.value]}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground leading-tight">
+                    {option.description}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <DialogFooter>

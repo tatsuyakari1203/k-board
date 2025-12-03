@@ -3,6 +3,8 @@ import { v4 as uuidv4 } from "uuid";
 import { auth } from "@/lib/auth";
 import dbConnect from "@/lib/db";
 import Board from "@/models/board.model";
+import BoardMember from "@/models/board-member.model";
+import { BOARD_ROLES } from "@/types/board-member";
 import {
   createBoardSchema,
   ViewType,
@@ -10,7 +12,7 @@ import {
   DEFAULT_STATUS_OPTIONS,
 } from "@/types/board";
 
-// GET /api/boards - List all boards for current user
+// GET /api/boards - List all boards for current user (owned + member of)
 export async function GET() {
   try {
     const session = await auth();
@@ -23,14 +25,52 @@ export async function GET() {
 
     await dbConnect();
 
-    const boards = await Board.find({ ownerId: session.user.id })
-      .select("name description icon createdAt updatedAt")
-      .sort({ createdAt: -1 })
+    // Get boards where user is owner
+    const ownedBoards = await Board.find({ ownerId: session.user.id })
+      .select("name description icon visibility createdAt updatedAt")
       .lean();
+
+    // Get boards where user is a member (but not owner)
+    const memberships = await BoardMember.find({
+      userId: session.user.id,
+    }).select("boardId role").lean();
+
+    const memberBoardIds = memberships
+      .map((m) => m.boardId.toString())
+      .filter((id) => !ownedBoards.some((b) => b._id.toString() === id));
+
+    const memberBoards = await Board.find({
+      _id: { $in: memberBoardIds }
+    })
+      .select("name description icon visibility ownerId createdAt updatedAt")
+      .populate("ownerId", "name")
+      .lean();
+
+    // Get workspace/public boards that user is not a member of
+    const publicBoards = await Board.find({
+      visibility: { $in: ["workspace", "public"] },
+      ownerId: { $ne: session.user.id },
+      _id: { $nin: memberBoardIds },
+    })
+      .select("name description icon visibility ownerId createdAt updatedAt")
+      .populate("ownerId", "name")
+      .lean();
+
+    // Combine all boards
+    const allBoards = [
+      ...ownedBoards.map((b) => ({ ...b, role: BOARD_ROLES.OWNER })),
+      ...memberBoards.map((b) => {
+        const membership = memberships.find(
+          (m) => m.boardId.toString() === b._id.toString()
+        );
+        return { ...b, role: membership?.role || BOARD_ROLES.VIEWER };
+      }),
+      ...publicBoards.map((b) => ({ ...b, role: BOARD_ROLES.VIEWER })),
+    ];
 
     // Get task counts
     const Task = (await import("@/models/task.model")).default;
-    const boardIds = boards.map((b) => b._id);
+    const boardIds = allBoards.map((b) => b._id);
     const taskCounts = await Task.aggregate([
       { $match: { boardId: { $in: boardIds } } },
       { $group: { _id: "$boardId", count: { $sum: 1 } } },
@@ -40,11 +80,18 @@ export async function GET() {
       taskCounts.map((tc) => [tc._id.toString(), tc.count])
     );
 
-    const boardsWithCounts = boards.map((board) => ({
+    const boardsWithCounts = allBoards.map((board) => ({
       ...board,
       _id: board._id.toString(),
       taskCount: countMap.get(board._id.toString()) || 0,
     }));
+
+    // Sort: owned first, then by createdAt desc
+    boardsWithCounts.sort((a, b) => {
+      if (a.role === BOARD_ROLES.OWNER && b.role !== BOARD_ROLES.OWNER) return -1;
+      if (a.role !== BOARD_ROLES.OWNER && b.role === BOARD_ROLES.OWNER) return 1;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
 
     return NextResponse.json(boardsWithCounts);
   } catch (error) {
@@ -156,6 +203,15 @@ export async function POST(request: NextRequest) {
     const board = await Board.create({
       ...validation.data,
       ownerId: session.user.id,
+    });
+
+    // Add owner as a board member
+    await BoardMember.create({
+      boardId: board._id,
+      userId: session.user.id,
+      role: BOARD_ROLES.OWNER,
+      addedBy: session.user.id,
+      addedAt: new Date(),
     });
 
     return NextResponse.json(

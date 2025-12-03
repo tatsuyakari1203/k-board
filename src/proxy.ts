@@ -7,9 +7,15 @@ const publicRoutes = ["/", "/auth/login", "/auth/register", "/auth/error"];
 
 // Routes that require specific roles
 const roleRoutes: Record<string, string[]> = {
+  "/dashboard/admin": ["admin"],
   "/admin": ["admin"],
   "/management": ["admin", "manager"],
   "/dashboard": ["admin", "manager", "staff", "user"],
+};
+
+// API routes that require specific roles (checked in middleware)
+const apiRoleRoutes: Record<string, string[]> = {
+  "/api/admin": ["admin"],
 };
 
 export async function proxy(request: NextRequest) {
@@ -25,8 +31,8 @@ export async function proxy(request: NextRequest) {
     nextUrl.pathname.startsWith("/_next") ||
     nextUrl.pathname.includes(".");
 
-  // Allow static files and API routes
-  if (isStaticRoute || isApiRoute) {
+  // Allow static files
+  if (isStaticRoute) {
     return NextResponse.next();
   }
 
@@ -38,6 +44,21 @@ export async function proxy(request: NextRequest) {
 
   const isLoggedIn = !!token;
   const userRole = token?.role as string | undefined;
+
+  // Check API route role-based access
+  if (isApiRoute) {
+    for (const [path, allowedRoles] of Object.entries(apiRoleRoutes)) {
+      if (nextUrl.pathname.startsWith(path)) {
+        if (!isLoggedIn || !userRole || !allowedRoles.includes(userRole)) {
+          return NextResponse.json(
+            { error: "Forbidden" },
+            { status: 403 }
+          );
+        }
+      }
+    }
+    return NextResponse.next();
+  }
 
   // Redirect logged-in users away from auth pages
   if (isLoggedIn && isAuthRoute) {

@@ -2,8 +2,10 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { ChevronLeft, Table2, Kanban } from "lucide-react";
+import { ChevronLeft, Table2, Kanban, Users, Settings, Globe, Lock } from "lucide-react";
 import { type View, ViewType } from "@/types/board";
+import { type BoardRole, type BoardPermissions, BOARD_VISIBILITY_LABELS, type BoardVisibility } from "@/types/board-member";
+import { BoardMembersModal } from "@/components/board/BoardMembersModal";
 
 interface BoardHeaderProps {
   board: {
@@ -11,11 +13,14 @@ interface BoardHeaderProps {
     name: string;
     icon?: string;
     description?: string;
+    visibility?: BoardVisibility;
   };
   activeView?: View;
   views: View[];
   onViewChange: (viewId: string) => void;
-  onUpdateBoard: (updates: { name?: string; icon?: string; description?: string }) => void;
+  onUpdateBoard: (updates: { name?: string; icon?: string; description?: string; visibility?: BoardVisibility }) => void;
+  userRole?: BoardRole;
+  userPermissions?: BoardPermissions;
 }
 
 export function BoardHeader({
@@ -24,10 +29,16 @@ export function BoardHeader({
   views,
   onViewChange,
   onUpdateBoard,
+  userRole,
+  userPermissions,
 }: BoardHeaderProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(board.name);
+  const [showMembersModal, setShowMembersModal] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const canEditBoard = userPermissions?.canEditBoard ?? false;
+  const canManageMembers = userPermissions?.canManageMembers ?? false;
 
   // Sync title when board.name changes
   useEffect(() => {
@@ -73,29 +84,53 @@ export function BoardHeader({
         </Link>
       </div>
 
-      {/* Title */}
+      {/* Title and actions */}
       <div className="px-4 py-6">
-        <div className="flex items-center gap-2">
-          <span className="text-2xl">{board.icon || "📋"}</span>
-          {isEditingTitle ? (
-            <input
-              ref={inputRef}
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              onBlur={handleTitleSubmit}
-              onKeyDown={handleKeyDown}
-              className="text-xl font-medium bg-transparent border-none outline-none focus:ring-0 w-full"
-              placeholder="Untitled"
-            />
-          ) : (
-            <h1
-              onClick={() => setIsEditingTitle(true)}
-              className="text-xl font-medium cursor-text hover:bg-accent/40 px-1 -mx-1 rounded transition-colors"
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="text-2xl">{board.icon || "📋"}</span>
+            {isEditingTitle && canEditBoard ? (
+              <input
+                ref={inputRef}
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                onBlur={handleTitleSubmit}
+                onKeyDown={handleKeyDown}
+                className="text-xl font-medium bg-transparent border-none outline-none focus:ring-0 w-full"
+                placeholder="Untitled"
+              />
+            ) : (
+              <h1
+                onClick={() => canEditBoard && setIsEditingTitle(true)}
+                className={`text-xl font-medium ${canEditBoard ? "cursor-text hover:bg-accent/40" : ""} px-1 -mx-1 rounded transition-colors`}
+              >
+                {board.name}
+              </h1>
+            )}
+            {/* Visibility badge */}
+            {board.visibility && board.visibility !== "private" && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded">
+                {board.visibility === "public" ? (
+                  <Globe className="h-3 w-3" />
+                ) : (
+                  <Lock className="h-3 w-3" />
+                )}
+                {BOARD_VISIBILITY_LABELS[board.visibility]}
+              </span>
+            )}
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowMembersModal(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-sm border rounded-md hover:bg-muted transition-colors"
             >
-              {board.name}
-            </h1>
-          )}
+              <Users className="h-4 w-4" />
+              <span>Thành viên</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -120,6 +155,17 @@ export function BoardHeader({
           </button>
         ))}
       </div>
+
+      {/* Members Modal */}
+      <BoardMembersModal
+        boardId={board._id}
+        isOpen={showMembersModal}
+        onClose={() => setShowMembersModal(false)}
+        canManageMembers={canManageMembers}
+        canEditBoard={canEditBoard}
+        currentVisibility={board.visibility}
+        onVisibilityChange={(visibility) => onUpdateBoard({ visibility })}
+      />
     </header>
   );
 }

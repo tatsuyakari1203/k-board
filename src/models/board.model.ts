@@ -7,6 +7,7 @@ import {
   type PropertyOption,
   type ViewConfig,
 } from "@/types/board";
+import { BOARD_VISIBILITY, type BoardVisibility } from "@/types/board-member";
 
 // ============================================
 // INTERFACES
@@ -18,6 +19,7 @@ export interface IBoard extends Document {
   description?: string;
   icon?: string;
   ownerId: mongoose.Types.ObjectId;
+  visibility: BoardVisibility;
   properties: Property[];
   views: View[];
   createdAt: Date;
@@ -134,6 +136,11 @@ const BoardSchema = new Schema<IBoard>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    visibility: {
+      type: String,
+      enum: Object.values(BOARD_VISIBILITY),
+      default: BOARD_VISIBILITY.PRIVATE,
     },
     properties: {
       type: [PropertySchema],

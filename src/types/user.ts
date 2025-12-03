@@ -14,6 +14,15 @@ export const ROLE_HIERARCHY: Record<UserRole, number> = {
   user: 25,
 };
 
+// User approval status
+export const USER_STATUS = {
+  PENDING: "pending",
+  APPROVED: "approved",
+  REJECTED: "rejected",
+} as const;
+
+export type UserStatus = (typeof USER_STATUS)[keyof typeof USER_STATUS];
+
 export interface IUser {
   _id: string;
   email: string;
@@ -22,6 +31,11 @@ export interface IUser {
   role: UserRole;
   image?: string;
   isActive: boolean;
+  status: UserStatus;
+  approvedBy?: string;
+  approvedAt?: Date;
+  rejectedReason?: string;
+  createdBy?: string; // If created manually by admin
   createdAt: Date;
   updatedAt: Date;
 }

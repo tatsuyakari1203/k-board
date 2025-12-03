@@ -9,58 +9,50 @@ export default async function DashboardPage() {
   }
 
   return (
-    <>
+    <div className="space-y-6">
       {/* Header */}
-      <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b bg-background px-6">
+      <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-base font-medium">Tổng quan</h1>
-        </div>
-        <button className="flex items-center gap-1.5 rounded-sm bg-primary px-3 py-1.5 text-sm font-normal text-primary-foreground transition-colors hover:bg-primary/90">
-          <Plus className="h-4 w-4" />
-          Tạo mới
-        </button>
-      </header>
-
-      {/* Content */}
-      <div className="p-6">
-        {/* Welcome */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-semibold tracking-tight">
+          <h1 className="text-2xl font-semibold tracking-tight">
             Xin chào, {user.name?.split(" ")[0]} 👋
-          </h2>
+          </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Đây là tổng quan hoạt động kinh doanh của bạn.
           </p>
         </div>
+        <button className="flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-normal text-primary-foreground transition-colors hover:bg-primary/90">
+          <Plus className="h-4 w-4" />
+          Tạo mới
+        </button>
+      </div>
 
-        {/* Stats */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatCard label="Tổng doanh thu" value="--" />
-          <StatCard label="Đơn hàng" value="--" />
-          <StatCard label="Khách hàng" value="--" />
-          <StatCard label="Sản phẩm" value="--" />
-        </div>
+      {/* Stats */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatCard label="Tổng doanh thu" value="--" />
+        <StatCard label="Đơn hàng" value="--" />
+        <StatCard label="Khách hàng" value="--" />
+        <StatCard label="Sản phẩm" value="--" />
+      </div>
 
-        {/* Quick start */}
-        <div className="mt-12">
-          <h3 className="text-sm font-medium text-muted-foreground">Bắt đầu nhanh</h3>
-          <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <QuickAction
-              title="Thêm nhân viên"
-              description="Mời thành viên mới vào hệ thống"
-            />
-            <QuickAction
-              title="Tạo sản phẩm"
-              description="Thêm sản phẩm mới vào kho"
-            />
-            <QuickAction
-              title="Xem báo cáo"
-              description="Phân tích dữ liệu kinh doanh"
-            />
-          </div>
+      {/* Quick start */}
+      <div>
+        <h3 className="text-sm font-medium text-muted-foreground mb-4">Bắt đầu nhanh</h3>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <QuickAction
+            title="Thêm nhân viên"
+            description="Mời thành viên mới vào hệ thống"
+          />
+          <QuickAction
+            title="Tạo sản phẩm"
+            description="Thêm sản phẩm mới vào kho"
+          />
+          <QuickAction
+            title="Xem báo cáo"
+            description="Phân tích dữ liệu kinh doanh"
+          />
         </div>
       </div>
-    </>
+    </div>
   );
 }
 

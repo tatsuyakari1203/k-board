@@ -4,7 +4,18 @@ import { useState } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
-import { MoreHorizontal, Trash2, FileText } from "lucide-react";
+import {
+  MoreHorizontal,
+  Trash2,
+  FileText,
+  Lock,
+  Building2,
+  Globe,
+  Crown,
+  Shield,
+  Pencil,
+  Eye,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,12 +35,21 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import {
+  BOARD_ROLES,
+  BOARD_VISIBILITY,
+  BOARD_ROLE_LABELS,
+  type BoardRole,
+  type BoardVisibility,
+} from "@/types/board-member";
 
 interface BoardListItem {
   _id: string;
   name: string;
   description?: string;
   icon?: string;
+  visibility?: BoardVisibility;
+  role?: BoardRole;
   taskCount: number;
   createdAt: string;
   updatedAt: string;
@@ -39,10 +59,29 @@ interface BoardCardProps {
   board: BoardListItem;
 }
 
+const VISIBILITY_ICONS: Record<BoardVisibility, React.ReactNode> = {
+  private: <Lock className="h-3 w-3" />,
+  workspace: <Building2 className="h-3 w-3" />,
+  public: <Globe className="h-3 w-3" />,
+};
+
+const ROLE_ICONS: Record<BoardRole, React.ReactNode> = {
+  owner: <Crown className="h-3 w-3 text-yellow-500" />,
+  admin: <Shield className="h-3 w-3 text-blue-500" />,
+  editor: <Pencil className="h-3 w-3 text-green-500" />,
+  viewer: <Eye className="h-3 w-3 text-gray-500" />,
+};
+
+interface BoardCardProps {
+  board: BoardListItem;
+}
+
 export function BoardCard({ board }: BoardCardProps) {
   const router = useRouter();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  const canDelete = board.role === BOARD_ROLES.OWNER;
 
   const handleDelete = async () => {
     setDeleting(true);
@@ -97,16 +136,23 @@ export function BoardCard({ board }: BoardCardProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={(e) => {
-                  e.preventDefault();
-                  setShowDeleteDialog(true);
-                }}
-              >
-                <Trash2 className="mr-2 h-4 w-4" />
-                Xóa board
-              </DropdownMenuItem>
+              {canDelete && (
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowDeleteDialog(true);
+                  }}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Xóa board
+                </DropdownMenuItem>
+              )}
+              {!canDelete && (
+                <DropdownMenuItem disabled className="text-muted-foreground">
+                  Bạn không có quyền xóa
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
@@ -116,8 +162,18 @@ export function BoardCard({ board }: BoardCardProps) {
             <FileText className="h-3 w-3" />
             {board.taskCount} hồ sơ
           </span>
-          <span>
-            Cập nhật{" "}
+          {board.visibility && (
+            <span className="flex items-center gap-1" title={`Chế độ: ${board.visibility}`}>
+              {VISIBILITY_ICONS[board.visibility]}
+            </span>
+          )}
+          {board.role && (
+            <span className="flex items-center gap-1" title={BOARD_ROLE_LABELS[board.role]}>
+              {ROLE_ICONS[board.role]}
+              <span className="text-[10px]">{BOARD_ROLE_LABELS[board.role]}</span>
+            </span>
+          )}
+          <span className="ml-auto">
             {formatDistanceToNow(new Date(board.updatedAt), {
               addSuffix: true,
               locale: vi,
