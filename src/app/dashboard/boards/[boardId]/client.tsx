@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { BoardHeader } from "@/components/boards/board-header";
 import { BoardToolbar } from "@/components/boards/board-toolbar";
 import { TableView } from "@/components/boards/views/table-view";
+import { KanbanView } from "@/components/boards/views/kanban-view";
 import { AddPropertyDialog } from "@/components/boards/add-property-dialog";
 import {
   type Board,
@@ -205,8 +206,8 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
 
   // Wrapper for task operations to match expected interface
   const handleCreateTask = useCallback(
-    async (title: string) => {
-      return await createTask({ title, properties: {} });
+    async (title: string, properties?: Record<string, unknown>) => {
+      return await createTask({ title, properties: properties || {} });
     },
     [createTask]
   );
@@ -216,6 +217,14 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
       await updateTask(taskId, updates);
     },
     [updateTask]
+  );
+
+  // Handler for moving task to different column (Kanban)
+  const handleMoveTask = useCallback(
+    (taskId: string, targetGroupValue: string | null, targetIndex: number) => {
+      moveTaskToGroup({ taskId, targetGroupValue, targetIndex });
+    },
+    [moveTaskToGroup]
   );
 
   // Board data with synced properties for child components
@@ -283,9 +292,21 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
         )}
 
         {activeView?.type === ViewType.KANBAN && (
-          <div className="p-6 text-muted-foreground">
-            Kanban view - Coming soon...
-          </div>
+          <KanbanView
+            board={boardWithSyncedProps}
+            tasks={tasks}
+            view={activeView}
+            searchQuery={searchQuery}
+            filters={filters}
+            sorts={sorts}
+            users={users}
+            onCreateTask={handleCreateTask}
+            onUpdateTask={handleUpdateTask}
+            onDeleteTask={deleteTask}
+            onMoveTask={handleMoveTask}
+            onAddPropertyOption={addPropertyOption}
+            onUpdatePropertyOption={updatePropertyOption}
+          />
         )}
       </div>
 
