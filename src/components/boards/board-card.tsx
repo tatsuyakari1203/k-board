@@ -60,16 +60,18 @@ interface BoardCardProps {
 }
 
 const VISIBILITY_ICONS: Record<BoardVisibility, React.ReactNode> = {
-  private: <Lock className="h-3 w-3" />,
-  workspace: <Building2 className="h-3 w-3" />,
-  public: <Globe className="h-3 w-3" />,
+  private: <Lock className="h-4 w-4" />,
+  workspace: <Building2 className="h-4 w-4" />,
+  public: <Globe className="h-4 w-4" />,
 };
 
 const ROLE_ICONS: Record<BoardRole, React.ReactNode> = {
-  owner: <Crown className="h-3 w-3 text-yellow-500" />,
-  admin: <Shield className="h-3 w-3 text-blue-500" />,
-  editor: <Pencil className="h-3 w-3 text-green-500" />,
-  viewer: <Eye className="h-3 w-3 text-gray-500" />,
+  owner: <Crown className="h-4 w-4 text-yellow-500" />,
+  admin: <Shield className="h-4 w-4 text-blue-500" />,
+  editor: <Pencil className="h-4 w-4 text-green-500" />,
+  viewer: <Eye className="h-4 w-4 text-gray-500" />,
+  restricted_editor: <Pencil className="h-4 w-4 text-orange-500" />,
+  restricted_viewer: <Eye className="h-4 w-4 text-gray-400" />,
 };
 
 interface BoardCardProps {
@@ -108,17 +110,17 @@ export function BoardCard({ board }: BoardCardProps) {
     <>
       <Link
         href={`/dashboard/boards/${board._id}`}
-        className="group block p-4 rounded-lg border border-border bg-card hover:border-primary/50 hover:shadow-sm transition-all"
+        className="group block p-5 rounded-xl border border-border bg-card hover:border-primary/50 hover:shadow-sm transition-all"
       >
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="text-2xl flex-shrink-0">{board.icon || "📋"}</span>
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-4 min-w-0">
+            <span className="text-3xl flex-shrink-0">{board.icon || "📋"}</span>
             <div className="min-w-0">
-              <h3 className="font-medium truncate group-hover:text-primary transition-colors">
+              <h3 className="text-lg font-medium truncate group-hover:text-primary transition-colors">
                 {board.name}
               </h3>
               {board.description && (
-                <p className="text-sm text-muted-foreground truncate mt-0.5">
+                <p className="text-base text-muted-foreground truncate mt-1">
                   {board.description}
                 </p>
               )}
@@ -130,9 +132,9 @@ export function BoardCard({ board }: BoardCardProps) {
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="h-9 w-9 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
               >
-                <MoreHorizontal className="h-4 w-4" />
+                <MoreHorizontal className="h-5 w-5" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -157,20 +159,20 @@ export function BoardCard({ board }: BoardCardProps) {
           </DropdownMenu>
         </div>
 
-        <div className="flex items-center gap-4 mt-4 text-xs text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <FileText className="h-3 w-3" />
+        <div className="flex items-center gap-5 mt-5 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1.5">
+            <FileText className="h-4 w-4" />
             {board.taskCount} hồ sơ
           </span>
           {board.visibility && (
-            <span className="flex items-center gap-1" title={`Chế độ: ${board.visibility}`}>
+            <span className="flex items-center gap-1.5" title={`Chế độ: ${board.visibility}`}>
               {VISIBILITY_ICONS[board.visibility]}
             </span>
           )}
           {board.role && (
-            <span className="flex items-center gap-1" title={BOARD_ROLE_LABELS[board.role]}>
+            <span className="flex items-center gap-1.5" title={BOARD_ROLE_LABELS[board.role]}>
               {ROLE_ICONS[board.role]}
-              <span className="text-[10px]">{BOARD_ROLE_LABELS[board.role]}</span>
+              <span className="text-sm">{BOARD_ROLE_LABELS[board.role]}</span>
             </span>
           )}
           <span className="ml-auto">
@@ -185,8 +187,8 @@ export function BoardCard({ board }: BoardCardProps) {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xóa board?</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogTitle className="text-xl">Xóa board?</AlertDialogTitle>
+            <AlertDialogDescription className="text-base">
               Board &quot;{board.name}&quot; và tất cả {board.taskCount} hồ sơ trong đó sẽ bị xóa
               vĩnh viễn. Hành động này không thể hoàn tác.
             </AlertDialogDescription>

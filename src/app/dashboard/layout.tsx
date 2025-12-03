@@ -26,25 +26,25 @@ export default async function DashboardLayout({
   return (
     <div className="min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="fixed left-0 top-0 z-40 h-screen w-60 border-r bg-sidebar">
+      <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r bg-sidebar">
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-14 items-center px-4">
-            <Link href="/dashboard" className="text-base font-semibold tracking-tight">
+          <div className="flex h-16 items-center px-5">
+            <Link href="/dashboard" className="text-xl font-semibold tracking-tight">
               K-ERP
             </Link>
           </div>
 
           {/* Search */}
-          <div className="px-3 py-2">
-            <button className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent">
-              <Search className="h-4 w-4" />
+          <div className="px-4 py-2">
+            <button className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base text-muted-foreground transition-colors hover:bg-sidebar-accent">
+              <Search className="h-5 w-5" />
               <span>Tìm kiếm...</span>
             </button>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 space-y-1 px-3 py-2">
+          <nav className="flex-1 space-y-1 px-4 py-3">
             <NavItem href="/dashboard" icon={LayoutGrid} label="Tổng quan" />
             <NavItem href="/dashboard/boards" icon={ClipboardList} label="Quản lý công việc" />
             <NavItem href="/dashboard/users" icon={Users} label="Nhân sự" />
@@ -54,15 +54,15 @@ export default async function DashboardLayout({
           </nav>
 
           {/* User */}
-          <div className="border-t p-3">
+          <div className="border-t p-4">
             <UserButton />
           </div>
         </div>
       </aside>
 
       {/* Main content */}
-      <main className="pl-60">
-        <div className="p-6">
+      <main className="pl-64">
+        <div className="p-8">
           {children}
         </div>
       </main>
@@ -82,9 +82,9 @@ function NavItem({
   return (
     <Link
       href={href}
-      className="flex items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+      className="flex items-center gap-3 rounded-md px-3 py-2.5 text-base text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
     >
-      <Icon className="h-4 w-4" />
+      <Icon className="h-5 w-5" />
       <span>{label}</span>
     </Link>
   );

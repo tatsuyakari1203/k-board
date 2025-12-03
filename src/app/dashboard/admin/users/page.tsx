@@ -202,25 +202,25 @@ export default function UsersPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-1">
-        <h1 className="text-2xl font-semibold">Nhân sự</h1>
+      <div className="flex items-center justify-between mb-2">
+        <h1 className="page-title">Nhân sự</h1>
         <button
           onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted rounded transition-colors"
+          className="btn-ghost"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-5 w-5" />
           Thêm mới
         </button>
       </div>
 
       {/* Filters - inline style */}
-      <div className="flex items-center gap-4 py-3 text-sm border-b">
+      <div className="flex items-center gap-5 py-4 text-base border-b">
         <button
           onClick={() => setStatusFilterUrl(null)}
           className={`hover:text-foreground transition-colors ${!statusFilter ? "text-foreground font-medium" : "text-muted-foreground"}`}
         >
           Tất cả
-          <span className="ml-1 text-muted-foreground">({data?.counts.total || 0})</span>
+          <span className="ml-1.5 text-muted-foreground">({data?.counts.total || 0})</span>
         </button>
         <button
           onClick={() => setStatusFilterUrl("pending")}
@@ -228,7 +228,7 @@ export default function UsersPage() {
         >
           Chờ duyệt
           {(data?.counts.pending || 0) > 0 && (
-            <span className="ml-1 text-orange-500">({data?.counts.pending})</span>
+            <span className="ml-1.5 text-orange-500">({data?.counts.pending})</span>
           )}
         </button>
         <button
@@ -247,38 +247,38 @@ export default function UsersPage() {
         <div className="flex-1" />
 
         <div className="relative">
-          <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
             placeholder="Tìm kiếm..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-7 pr-3 py-1 text-sm bg-transparent border-0 border-b border-transparent focus:border-muted-foreground focus:outline-none w-40 placeholder:text-muted-foreground/60"
+            className="pl-9 pr-4 py-2 text-base bg-transparent border-0 border-b border-transparent focus:border-muted-foreground focus:outline-none w-48 placeholder:text-muted-foreground/60"
           />
         </div>
       </div>
 
       {/* Table */}
-      <table className="w-full mt-2">
+      <table className="w-full mt-3">
         <thead>
-          <tr className="text-xs text-muted-foreground uppercase tracking-wide border-b">
-            <th className="text-left py-2 font-medium">Tên</th>
-            <th className="text-left py-2 font-medium w-32">Vai trò</th>
-            <th className="text-left py-2 font-medium w-24">Trạng thái</th>
-            <th className="text-left py-2 font-medium w-24">Ngày tạo</th>
-            <th className="w-10"></th>
+          <tr className="text-sm text-muted-foreground uppercase tracking-wider border-b">
+            <th className="text-left py-3 font-medium">Tên</th>
+            <th className="text-left py-3 font-medium w-36">Vai trò</th>
+            <th className="text-left py-3 font-medium w-28">Trạng thái</th>
+            <th className="text-left py-3 font-medium w-28">Ngày tạo</th>
+            <th className="w-12"></th>
           </tr>
         </thead>
         <tbody>
           {loading ? (
             <tr>
-              <td colSpan={5} className="py-8 text-center text-muted-foreground">
-                <Loader2 className="h-5 w-5 animate-spin mx-auto" />
+              <td colSpan={5} className="py-12 text-center text-muted-foreground">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto" />
               </td>
             </tr>
           ) : data?.users.length === 0 ? (
             <tr>
-              <td colSpan={5} className="py-8 text-center text-muted-foreground text-sm">
+              <td colSpan={5} className="py-12 text-center text-muted-foreground text-base">
                 Không có dữ liệu
               </td>
             </tr>
@@ -289,18 +289,18 @@ export default function UsersPage() {
                 className="border-b border-border/50 hover:bg-muted/30 transition-colors group"
               >
                 {/* Name & Email */}
-                <td className="py-3">
-                  <div className="font-medium">{user.name}</div>
-                  <div className="text-sm text-muted-foreground">{user.email}</div>
+                <td className="py-4">
+                  <div className="text-base font-medium">{user.name}</div>
+                  <div className="text-base text-muted-foreground">{user.email}</div>
                 </td>
 
                 {/* Role */}
-                <td className="py-3">
+                <td className="py-4">
                   <select
                     value={user.role}
                     onChange={(e) => handleUpdateRole(user._id, e.target.value as UserRole)}
                     disabled={actionLoading === user._id}
-                    className="text-sm bg-transparent border-0 cursor-pointer hover:text-primary focus:outline-none disabled:opacity-50"
+                    className="text-base bg-transparent border-0 cursor-pointer hover:text-primary focus:outline-none disabled:opacity-50"
                   >
                     {Object.entries(ROLE_LABELS).map(([value, label]) => (
                       <option key={value} value={value}>{label}</option>
@@ -309,7 +309,7 @@ export default function UsersPage() {
                 </td>
 
                 {/* Status */}
-                <td className="py-3 text-sm">
+                <td className="py-4 text-base">
                   {user.status === "pending" && (
                     <span className="text-orange-500">Chờ duyệt</span>
                   )}
@@ -326,43 +326,43 @@ export default function UsersPage() {
                 </td>
 
                 {/* Date */}
-                <td className="py-3 text-sm text-muted-foreground">
+                <td className="py-4 text-base text-muted-foreground">
                   {new Date(user.createdAt).toLocaleDateString("vi-VN")}
                 </td>
 
                 {/* Actions */}
-                <td className="py-3">
+                <td className="py-4">
                   <div className="relative" ref={openMenuId === user._id ? menuRef : null}>
                     {actionLoading === user._id ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <Loader2 className="h-5 w-5 animate-spin" />
                     ) : (
                       <>
                         <button
                           onClick={() => setOpenMenuId(openMenuId === user._id ? null : user._id)}
-                          className="p-1 rounded hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="p-1.5 rounded-md hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
                         >
-                          <MoreHorizontal className="h-4 w-4" />
+                          <MoreHorizontal className="h-5 w-5" />
                         </button>
 
                         {openMenuId === user._id && (
-                          <div className="absolute right-0 top-full mt-1 w-40 bg-popover border rounded-md shadow-md py-1 z-10 text-sm">
+                          <div className="absolute right-0 top-full mt-1 w-44 bg-popover border rounded-lg shadow-lg py-1.5 z-10">
                             {user.status === "pending" && (
                               <>
                                 <button
                                   onClick={() => handleApprove(user._id)}
-                                  className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-muted text-left"
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted text-left text-base"
                                 >
-                                  <UserCheck className="h-3.5 w-3.5" />
+                                  <UserCheck className="h-4 w-4" />
                                   Phê duyệt
                                 </button>
                                 <button
                                   onClick={() => handleReject(user._id)}
-                                  className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-muted text-left"
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted text-left text-base"
                                 >
-                                  <UserX className="h-3.5 w-3.5" />
+                                  <UserX className="h-4 w-4" />
                                   Từ chối
                                 </button>
-                                <div className="border-t my-1" />
+                                <div className="border-t my-1.5" />
                               </>
                             )}
 
@@ -370,21 +370,21 @@ export default function UsersPage() {
                               <>
                                 <button
                                   onClick={() => handleToggleActive(user._id, user.isActive)}
-                                  className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-muted text-left"
+                                  className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted text-left text-base"
                                 >
                                   {user.isActive ? (
                                     <>
-                                      <X className="h-3.5 w-3.5" />
+                                      <X className="h-4 w-4" />
                                       Vô hiệu hóa
                                     </>
                                   ) : (
                                     <>
-                                      <Check className="h-3.5 w-3.5" />
+                                      <Check className="h-4 w-4" />
                                       Kích hoạt
                                     </>
                                   )}
                                 </button>
-                                <div className="border-t my-1" />
+                                <div className="border-t my-1.5" />
                               </>
                             )}
 
@@ -393,17 +393,17 @@ export default function UsersPage() {
                                 setEditingUser(user);
                                 setOpenMenuId(null);
                               }}
-                              className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-muted text-left"
+                              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted text-left text-base"
                             >
-                              <Pencil className="h-3.5 w-3.5" />
+                              <Pencil className="h-4 w-4" />
                               Chỉnh sửa
                             </button>
 
                             <button
                               onClick={() => handleDelete(user._id)}
-                              className="w-full flex items-center gap-2 px-3 py-1.5 hover:bg-muted text-left text-red-500"
+                              className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted text-left text-base text-red-500"
                             >
-                              <Trash2 className="h-3.5 w-3.5" />
+                              <Trash2 className="h-4 w-4" />
                               Xóa
                             </button>
                           </div>
@@ -420,9 +420,9 @@ export default function UsersPage() {
 
       {/* Pagination - minimal */}
       {data && data.pagination.totalPages > 1 && (
-        <div className="flex items-center justify-between py-4 text-sm text-muted-foreground">
+        <div className="flex items-center justify-between py-5 text-base text-muted-foreground">
           <span>{data.pagination.total} người dùng</span>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => {
                 const params = new URLSearchParams(searchParams);
@@ -430,11 +430,11 @@ export default function UsersPage() {
                 router.push(`/dashboard/admin/users?${params}`);
               }}
               disabled={currentPage <= 1}
-              className="px-2 py-1 hover:bg-muted rounded disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 hover:bg-muted rounded-md disabled:opacity-30 disabled:cursor-not-allowed"
             >
               ←
             </button>
-            <span className="px-2">{currentPage} / {data.pagination.totalPages}</span>
+            <span className="px-3">{currentPage} / {data.pagination.totalPages}</span>
             <button
               onClick={() => {
                 const params = new URLSearchParams(searchParams);
@@ -442,7 +442,7 @@ export default function UsersPage() {
                 router.push(`/dashboard/admin/users?${params}`);
               }}
               disabled={currentPage >= data.pagination.totalPages}
-              className="px-2 py-1 hover:bg-muted rounded disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-3 py-1.5 hover:bg-muted rounded-md disabled:opacity-30 disabled:cursor-not-allowed"
             >
               →
             </button>
@@ -529,44 +529,44 @@ function UserFormModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[15vh] bg-black/50">
-      <div className="bg-background w-full max-w-md mx-4 rounded-lg shadow-lg">
-        <div className="p-6">
-          <h2 className="text-lg font-semibold mb-6">
+    <div className="fixed inset-0 z-50 flex items-start justify-center pt-[12vh] bg-black/50">
+      <div className="bg-background w-full max-w-lg mx-4 rounded-xl shadow-xl">
+        <div className="p-8">
+          <h2 className="text-2xl font-semibold mb-8">
             {isEditing ? "Chỉnh sửa" : "Thêm nhân viên"}
           </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <div className="text-sm text-red-500 bg-red-50 dark:bg-red-900/20 px-3 py-2 rounded">
+              <div className="text-base text-red-500 bg-red-50 dark:bg-red-900/20 px-4 py-3 rounded-lg">
                 {error}
               </div>
             )}
 
             <div>
-              <label className="block text-sm text-muted-foreground mb-1">Họ và tên</label>
+              <label className="form-label">Họ và tên</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 required
-                className="w-full px-3 py-2 bg-transparent border-b focus:border-foreground focus:outline-none transition-colors"
+                className="w-full px-4 py-3 text-base bg-transparent border-b-2 focus:border-foreground focus:outline-none transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-muted-foreground mb-1">Email</label>
+              <label className="form-label">Email</label>
               <input
                 type="email"
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
-                className="w-full px-3 py-2 bg-transparent border-b focus:border-foreground focus:outline-none transition-colors"
+                className="w-full px-4 py-3 text-base bg-transparent border-b-2 focus:border-foreground focus:outline-none transition-colors"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-muted-foreground mb-1">
+              <label className="form-label">
                 {isEditing ? "Mật khẩu mới" : "Mật khẩu"}
               </label>
               <input
@@ -576,16 +576,16 @@ function UserFormModal({
                 required={!isEditing}
                 minLength={6}
                 placeholder={isEditing ? "Để trống nếu không đổi" : ""}
-                className="w-full px-3 py-2 bg-transparent border-b focus:border-foreground focus:outline-none transition-colors"
+                className="w-full px-4 py-3 text-base bg-transparent border-b-2 focus:border-foreground focus:outline-none transition-colors placeholder:text-muted-foreground/60"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-muted-foreground mb-1">Vai trò</label>
+              <label className="form-label">Vai trò</label>
               <select
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
-                className="w-full px-3 py-2 bg-transparent border-b focus:border-foreground focus:outline-none cursor-pointer"
+                className="w-full px-4 py-3 text-base bg-transparent border-b-2 focus:border-foreground focus:outline-none cursor-pointer"
               >
                 {Object.entries(ROLE_LABELS).map(([value, label]) => (
                   <option key={value} value={value}>{label}</option>
@@ -593,20 +593,20 @@ function UserFormModal({
               </select>
             </div>
 
-            <div className="flex gap-3 pt-4">
+            <div className="flex gap-4 pt-6">
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 py-2 text-sm hover:bg-muted rounded transition-colors"
+                className="flex-1 py-3 text-base hover:bg-muted rounded-lg transition-colors"
               >
                 Hủy
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="flex-1 py-2 text-sm bg-foreground text-background rounded hover:opacity-90 disabled:opacity-50 transition-opacity"
+                className="flex-1 py-3 text-base bg-foreground text-background rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity font-medium"
               >
-                {loading ? <Loader2 className="h-4 w-4 animate-spin mx-auto" /> : isEditing ? "Lưu" : "Tạo"}
+                {loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : isEditing ? "Lưu" : "Tạo"}
               </button>
             </div>
           </form>

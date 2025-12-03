@@ -49,22 +49,22 @@ export function LoginForm() {
   }
 
   return (
-    <div className="w-full max-w-sm">
-      <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight">Đăng nhập</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
+    <div className="w-full max-w-md">
+      <div className="mb-10">
+        <h1 className="text-3xl font-semibold tracking-tight">Đăng nhập</h1>
+        <p className="mt-3 text-base text-muted-foreground">
           Chào mừng trở lại. Nhập thông tin để tiếp tục.
         </p>
       </div>
 
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
           <FormField
             control={form.control}
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-normal text-muted-foreground">
+                <FormLabel className="text-base font-normal text-muted-foreground">
                   Email
                 </FormLabel>
                 <FormControl>
@@ -72,7 +72,7 @@ export function LoginForm() {
                     type="email"
                     placeholder="email@example.com"
                     disabled={isLoading}
-                    className="h-11 border-0 bg-secondary px-3 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-1"
+                    className="h-12 border-0 bg-secondary px-4 text-base shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring/30"
                     {...field}
                   />
                 </FormControl>
@@ -85,7 +85,7 @@ export function LoginForm() {
             name="password"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-sm font-normal text-muted-foreground">
+                <FormLabel className="text-base font-normal text-muted-foreground">
                   Mật khẩu
                 </FormLabel>
                 <FormControl>
@@ -93,7 +93,7 @@ export function LoginForm() {
                     type="password"
                     placeholder="••••••••"
                     disabled={isLoading}
-                    className="h-11 border-0 bg-secondary px-3 shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-1"
+                    className="h-12 border-0 bg-secondary px-4 text-base shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring/30"
                     {...field}
                   />
                 </FormControl>
@@ -103,16 +103,16 @@ export function LoginForm() {
           />
           <Button
             type="submit"
-            className="mt-6 h-11 w-full font-normal"
+            className="mt-8 h-12 w-full text-base font-medium"
             disabled={isLoading}
           >
-            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            {isLoading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
             Tiếp tục
           </Button>
         </form>
       </Form>
 
-      <p className="mt-8 text-center text-sm text-muted-foreground">
+      <p className="mt-10 text-center text-base text-muted-foreground">
         Chưa có tài khoản?{" "}
         <Link
           href="/auth/register"

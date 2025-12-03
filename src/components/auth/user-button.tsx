@@ -18,29 +18,29 @@ export function UserButton() {
     .slice(0, 2);
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       {/* User info */}
-      <div className="flex items-center gap-2 rounded-sm px-2 py-1.5">
-        <div className="flex h-6 w-6 items-center justify-center rounded-sm bg-primary text-[10px] font-medium text-primary-foreground">
+      <div className="flex items-center gap-3 rounded-md px-3 py-2">
+        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-sm font-medium text-primary-foreground">
           {initials}
         </div>
         <div className="flex-1 truncate">
-          <p className="truncate text-sm font-medium">{user.name}</p>
-          <p className="truncate text-xs text-muted-foreground">{user.email}</p>
+          <p className="truncate text-base font-medium">{user.name}</p>
+          <p className="truncate text-sm text-muted-foreground">{user.email}</p>
         </div>
       </div>
 
       {/* Action buttons */}
       <div className="space-y-0.5">
-        <button className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-          <Settings className="h-4 w-4" />
+        <button className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
+          <Settings className="h-5 w-5" />
           <span>Cài đặt</span>
         </button>
         <button
           onClick={logout}
-          className="flex w-full items-center gap-2 rounded-sm px-2 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-destructive"
+          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-destructive"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-5 w-5" />
           <span>Đăng xuất</span>
         </button>
       </div>
