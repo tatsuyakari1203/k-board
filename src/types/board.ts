@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { BOARD_VISIBILITY, type BoardVisibility } from "./board-member";
 
 // ============================================
 // ENUMS
@@ -148,6 +149,7 @@ export const boardSchema = z.object({
   description: z.string().max(1000).optional(),
   icon: z.string().optional(), // Emoji or icon name
   ownerId: z.string(),
+  visibility: z.enum(["private", "workspace"]).optional().default("private"),
   properties: z.array(propertySchema),
   views: z.array(viewSchema),
   createdAt: z.date().optional(),

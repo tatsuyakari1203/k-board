@@ -106,18 +106,16 @@ export const BOARD_ROLE_PERMISSIONS: Record<BoardRole, BoardPermissions> = {
 };
 
 // Board visibility
-export type BoardVisibility = "private" | "workspace" | "public";
+export type BoardVisibility = "private" | "workspace";
 
 export const BOARD_VISIBILITY = {
-  PRIVATE: "private" as BoardVisibility,   // Only members can access
+  PRIVATE: "private" as BoardVisibility,   // Only owner and members can access
   WORKSPACE: "workspace" as BoardVisibility, // All workspace users can view
-  PUBLIC: "public" as BoardVisibility,     // Anyone with link can view
 } as const;
 
 export const BOARD_VISIBILITY_LABELS: Record<BoardVisibility, string> = {
   private: "Riêng tư",
   workspace: "Workspace",
-  public: "Công khai",
 };
 
 // Invitation status

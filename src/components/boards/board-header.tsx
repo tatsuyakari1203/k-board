@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { ChevronLeft, Table2, Kanban, Users, Settings, Globe, Lock } from "lucide-react";
+import { ChevronLeft, Table2, Kanban, Users, Settings, Building2 } from "lucide-react";
 import { type View, ViewType } from "@/types/board";
 import { type BoardRole, type BoardPermissions, BOARD_VISIBILITY_LABELS, type BoardVisibility } from "@/types/board-member";
 import { BoardMembersModal } from "@/components/board/BoardMembersModal";
@@ -18,7 +18,7 @@ interface BoardHeaderProps {
   activeView?: View;
   views: View[];
   onViewChange: (viewId: string) => void;
-  onUpdateBoard: (updates: { name?: string; icon?: string; description?: string; visibility?: BoardVisibility }) => void;
+  onUpdateBoard: (updates: { name?: string; icon?: string; description?: string; visibility?: BoardVisibility }) => void | Promise<void>;
   userRole?: BoardRole;
   userPermissions?: BoardPermissions;
 }
@@ -109,13 +109,9 @@ export function BoardHeader({
               </h1>
             )}
             {/* Visibility badge */}
-            {board.visibility && board.visibility !== "private" && (
+            {board.visibility === "workspace" && (
               <span className="flex items-center gap-1 text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded">
-                {board.visibility === "public" ? (
-                  <Globe className="h-3 w-3" />
-                ) : (
-                  <Lock className="h-3 w-3" />
-                )}
+                <Building2 className="h-3 w-3" />
                 {BOARD_VISIBILITY_LABELS[board.visibility]}
               </span>
             )}
@@ -164,7 +160,9 @@ export function BoardHeader({
         canManageMembers={canManageMembers}
         canEditBoard={canEditBoard}
         currentVisibility={board.visibility}
-        onVisibilityChange={(visibility) => onUpdateBoard({ visibility })}
+        onVisibilityChange={async (visibility) => {
+          await onUpdateBoard({ visibility });
+        }}
       />
     </header>
   );

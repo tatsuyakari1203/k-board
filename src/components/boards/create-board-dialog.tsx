@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Lock, Building2, Globe } from "lucide-react";
+import { Lock, Building2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -29,17 +29,12 @@ const VISIBILITY_OPTIONS = [
   {
     value: BOARD_VISIBILITY.PRIVATE,
     icon: Lock,
-    description: "Chỉ thành viên được mời",
+    description: "Chỉ chủ sở hữu và thành viên được mời",
   },
   {
     value: BOARD_VISIBILITY.WORKSPACE,
     icon: Building2,
-    description: "Mọi người trong hệ thống",
-  },
-  {
-    value: BOARD_VISIBILITY.PUBLIC,
-    icon: Globe,
-    description: "Bất kỳ ai có link",
+    description: "Mọi người trong workspace có thể xem",
   },
 ] as const;
 

@@ -12,7 +12,6 @@ import {
   Loader2,
   Trash2,
   ChevronDown,
-  Globe,
   Lock,
   Building2,
   Settings,
@@ -77,7 +76,7 @@ interface BoardMembersModalProps {
   canManageMembers?: boolean;
   canEditBoard?: boolean;
   currentVisibility?: BoardVisibility;
-  onVisibilityChange?: (visibility: BoardVisibility) => void;
+  onVisibilityChange?: (visibility: BoardVisibility) => void | Promise<void>;
   isOwner?: boolean;
 }
 
@@ -93,13 +92,11 @@ const ROLE_ICONS: Record<BoardRole, React.ReactNode> = {
 const VISIBILITY_ICONS: Record<BoardVisibility, React.ReactNode> = {
   private: <Lock className="h-4 w-4" />,
   workspace: <Building2 className="h-4 w-4" />,
-  public: <Globe className="h-4 w-4" />,
 };
 
 const VISIBILITY_DESCRIPTIONS: Record<BoardVisibility, string> = {
-  private: "Chỉ thành viên được mời mới có thể truy cập",
-  workspace: "Tất cả người dùng trong hệ thống có thể xem",
-  public: "Bất kỳ ai có liên kết đều có thể xem",
+  private: "Chỉ chủ sở hữu và thành viên được mời mới có thể truy cập",
+  workspace: "Tất cả người dùng trong workspace có thể xem",
 };
 
 export function BoardMembersModal({
@@ -228,11 +225,13 @@ export function BoardMembersModal({
   );
 
   const handleVisibilityChange = async (newVisibility: BoardVisibility) => {
-    if (!onVisibilityChange) return;
+    if (!onVisibilityChange || newVisibility === visibility) return;
     setVisibilityLoading(true);
     try {
-      onVisibilityChange(newVisibility);
+      await onVisibilityChange(newVisibility);
       setVisibility(newVisibility);
+    } catch (error) {
+      console.error("Failed to change visibility:", error);
     } finally {
       setVisibilityLoading(false);
     }
@@ -435,7 +434,7 @@ export function BoardMembersModal({
 
         {/* Settings Tab */}
         {activeTab === "settings" && canEditBoardState && (
-          <div className="p-5 space-y-5">
+          <div className="p-5 space-y-5 overflow-y-auto flex-1">
             <div>
               <h3 className="text-base font-medium mb-4">Chế độ hiển thị</h3>
               <div className="space-y-3">
@@ -446,7 +445,7 @@ export function BoardMembersModal({
                       visibility === value
                         ? "border-primary bg-primary/5"
                         : "border-border hover:bg-muted/50"
-                    }`}
+                    } ${visibilityLoading ? "opacity-50 pointer-events-none" : ""}`}
                   >
                     <input
                       type="radio"
@@ -483,7 +482,7 @@ export function BoardMembersModal({
                 <p className="text-sm text-muted-foreground mb-4">
                   Chuyển quyền sở hữu board cho một thành viên khác. Bạn sẽ trở thành Admin sau khi chuyển.
                 </p>
-                <div className="space-y-2">
+                <div className="space-y-2 max-h-48 overflow-y-auto">
                   {members.filter(m => !m.isOwner).map((member) => (
                     <button
                       key={member._id}

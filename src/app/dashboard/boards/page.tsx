@@ -39,9 +39,9 @@ async function getBoards(userId: string, userRole: string) {
       .select("name description icon visibility ownerId createdAt updatedAt")
       .lean();
 
-    // Get workspace/public boards that user is not a member of
-    const publicBoards = await Board.find({
-      visibility: { $in: ["workspace", "public"] },
+    // Get workspace boards that user is not a member of
+    const workspaceBoards = await Board.find({
+      visibility: "workspace",
       ownerId: { $ne: userId },
       _id: { $nin: memberBoardIds },
     })
@@ -56,7 +56,7 @@ async function getBoards(userId: string, userRole: string) {
         );
         return { ...b, role: membership?.role || BOARD_ROLES.VIEWER };
       }),
-      ...publicBoards.map((b) => ({ ...b, role: BOARD_ROLES.VIEWER })),
+      ...workspaceBoards.map((b) => ({ ...b, role: BOARD_ROLES.VIEWER })),
     ];
 
     // Sort

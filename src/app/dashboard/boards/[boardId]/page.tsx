@@ -4,7 +4,7 @@ import dbConnect from "@/lib/db";
 import Board from "@/models/board.model";
 import Task from "@/models/task.model";
 import { checkBoardAccess } from "@/lib/board-permissions";
-import { BoardDetailClient } from "./client";
+import { BoardDetailWrapper } from "./wrapper";
 
 interface PageProps {
   params: Promise<{ boardId: string }>;
@@ -61,5 +61,5 @@ export default async function BoardDetailPage({ params }: PageProps) {
     notFound();
   }
 
-  return <BoardDetailClient initialBoard={board} />;
+  return <BoardDetailWrapper initialBoard={board} />;
 }

@@ -93,16 +93,6 @@ export async function checkBoardAccess(
     };
   }
 
-  if (board.visibility === "public") {
-    // Anyone can view public boards
-    return {
-      hasAccess: true,
-      role: BOARD_ROLES.VIEWER,
-      permissions: BOARD_ROLE_PERMISSIONS[BOARD_ROLES.VIEWER],
-      isOwner: false,
-    };
-  }
-
   return noAccess;
 }
 
@@ -165,9 +155,9 @@ export async function getUserAccessibleBoardIds(userId: string): Promise<string[
     .select("boardId")
     .lean();
 
-  // Get workspace/public boards
-  const publicBoards = await Board.find({
-    visibility: { $in: ["workspace", "public"] },
+  // Get workspace boards (visible to all users)
+  const workspaceBoards = await Board.find({
+    visibility: "workspace",
     ownerId: { $ne: userId },
   })
     .select("_id")
@@ -177,7 +167,7 @@ export async function getUserAccessibleBoardIds(userId: string): Promise<string[
 
   ownedBoards.forEach((b) => boardIds.add(b._id.toString()));
   memberBoards.forEach((m) => boardIds.add(m.boardId.toString()));
-  publicBoards.forEach((b) => boardIds.add(b._id.toString()));
+  workspaceBoards.forEach((b) => boardIds.add(b._id.toString()));
 
   return Array.from(boardIds);
 }

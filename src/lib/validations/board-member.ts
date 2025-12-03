@@ -30,7 +30,6 @@ export const updateBoardVisibilitySchema = z.object({
   visibility: z.enum([
     BOARD_VISIBILITY.PRIVATE,
     BOARD_VISIBILITY.WORKSPACE,
-    BOARD_VISIBILITY.PUBLIC,
   ], {
     message: "Chế độ hiển thị không hợp lệ",
   }),

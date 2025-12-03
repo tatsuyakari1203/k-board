@@ -10,7 +10,6 @@ import {
   FileText,
   Lock,
   Building2,
-  Globe,
   Crown,
   Shield,
   Pencil,
@@ -62,7 +61,6 @@ interface BoardCardProps {
 const VISIBILITY_ICONS: Record<BoardVisibility, React.ReactNode> = {
   private: <Lock className="h-4 w-4" />,
   workspace: <Building2 className="h-4 w-4" />,
-  public: <Globe className="h-4 w-4" />,
 };
 
 const ROLE_ICONS: Record<BoardRole, React.ReactNode> = {
