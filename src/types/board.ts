@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { BOARD_VISIBILITY, type BoardVisibility } from "./board-member";
 
 // ============================================
 // ENUMS

@@ -5,7 +5,32 @@ import Board from "@/models/board.model";
 import Task from "@/models/task.model";
 import BoardMember from "@/models/board-member.model";
 import { PropertyType } from "@/types/board";
-import { USER_ROLES } from "@/types/user";
+
+// Types for lean documents
+interface TaskDoc {
+  _id: { toString: () => string };
+  boardId: { toString: () => string };
+  title?: string;
+  properties?: Record<string, unknown>;
+  updatedAt: Date;
+}
+
+interface BoardDoc {
+  _id: { toString: () => string };
+  name: string;
+  icon?: string;
+  ownerId: { toString: () => string };
+  properties?: Array<{ type: string; id: string }>;
+  updatedAt: Date;
+}
+
+interface RecentTask {
+  _id: string;
+  title: string;
+  boardId: string;
+  boardName: string;
+  updatedAt: Date;
+}
 
 // GET /api/dashboard/stats - Get dashboard statistics
 export async function GET() {
@@ -18,19 +43,22 @@ export async function GET() {
     await dbConnect();
 
     const userId = session.user.id;
-    const isAdmin = session.user.role === USER_ROLES.ADMIN;
 
     // Get boards user has access to
     const memberShips = await BoardMember.find({
       userId,
       status: "active",
-    }).select("boardId").lean();
+    })
+      .select("boardId")
+      .lean();
 
     const memberBoardIds = memberShips.map((m) => m.boardId.toString());
 
     const ownedBoards = await Board.find({
       ownerId: userId,
-    }).select("_id").lean();
+    })
+      .select("_id")
+      .lean();
 
     const ownedBoardIds = ownedBoards.map((b) => b._id.toString());
     const allBoardIds = [...new Set([...memberBoardIds, ...ownedBoardIds])];
@@ -41,7 +69,9 @@ export async function GET() {
     // Get boards with properties for date calculation
     const boards = await Board.find({
       _id: { $in: allBoardIds },
-    }).select("_id name properties ownerId updatedAt icon").lean();
+    })
+      .select("_id name properties ownerId updatedAt icon")
+      .lean();
 
     // Get tasks assigned to user
     const boardAssigneeProps: Record<string, string[]> = {};
@@ -49,13 +79,15 @@ export async function GET() {
 
     boards.forEach((board) => {
       const assigneeProps = (board.properties || [])
-        .filter((p: { type: string }) =>
-          p.type === PropertyType.PERSON || p.type === PropertyType.USER
+        .filter(
+          (p: { type: string }) => p.type === PropertyType.PERSON || p.type === PropertyType.USER
         )
         .map((p: { id: string }) => p.id);
       boardAssigneeProps[board._id.toString()] = assigneeProps;
 
-      const dateProp = (board.properties || []).find((p: { type: string }) => p.type === PropertyType.DATE);
+      const dateProp = (board.properties || []).find(
+        (p: { type: string }) => p.type === PropertyType.DATE
+      );
       if (dateProp) {
         boardDateProps[board._id.toString()] = (dateProp as { id: string }).id;
       }
@@ -77,12 +109,12 @@ export async function GET() {
       });
     });
 
-    let myTasks: any[] = [];
+    let myTasks: TaskDoc[] = [];
     if (orConditions.length > 0) {
-      myTasks = await Task.find({
+      myTasks = (await Task.find({
         boardId: { $in: allBoardIds },
         $or: orConditions,
-      }).lean();
+      }).lean()) as TaskDoc[];
     }
 
     // Calculate task stats
@@ -98,15 +130,15 @@ export async function GET() {
     let overdueTasks = 0;
     let todayTasks = 0;
     let weekTasks = 0;
-    const recentTasks: any[] = [];
+    const recentTasks: RecentTask[] = [];
 
     myTasks.forEach((task) => {
-      const boardId = task.boardId.toString();
-      const datePropId = boardDateProps[boardId];
-      const board = boards.find((b: any) => b._id.toString() === boardId);
+      const taskBoardId = task.boardId.toString();
+      const datePropId = boardDateProps[taskBoardId];
+      const board = (boards as BoardDoc[]).find((b) => b._id.toString() === taskBoardId);
 
       if (datePropId && task.properties?.[datePropId]) {
-        const dueDate = new Date(task.properties[datePropId]);
+        const dueDate = new Date(task.properties[datePropId] as string);
 
         if (dueDate < startOfToday) {
           overdueTasks++;
@@ -125,7 +157,7 @@ export async function GET() {
           _id: task._id.toString(),
           title: task.title || "Untitled",
           boardId: task.boardId.toString(),
-          boardName: (board as any)?.name || "Unknown",
+          boardName: board?.name || "Unknown",
           updatedAt: task.updatedAt,
         });
       }
@@ -135,10 +167,10 @@ export async function GET() {
     recentTasks.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 
     // Get recent boards (latest 5)
-    const recentBoards = boards
-      .sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    const recentBoards = (boards as BoardDoc[])
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
       .slice(0, 5)
-      .map((b: any) => ({
+      .map((b) => ({
         _id: b._id.toString(),
         name: b.name,
         icon: b.icon,
@@ -165,9 +197,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error("GET /api/dashboard/stats error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -8,7 +8,6 @@ import { KanbanView } from "@/components/boards/views/kanban-view";
 import { AddPropertyDialog } from "@/components/boards/add-property-dialog";
 import {
   type Board,
-  type Task,
   type Property,
   type SortConfig,
   type FilterConfig,
@@ -16,7 +15,11 @@ import {
 } from "@/types/board";
 import { type BoardRole, type BoardPermissions } from "@/types/board-member";
 import { useBoardTasks, type TaskData } from "@/hooks/use-board-tasks";
-import { useBoardProperties, useBoardViews, type BoardData as HookBoardData } from "@/hooks/use-board-properties";
+import {
+  useBoardProperties,
+  useBoardViews,
+  type BoardData as HookBoardData,
+} from "@/hooks/use-board-properties";
 
 interface BoardData extends Omit<Board, "createdAt" | "updatedAt"> {
   _id: string;
@@ -75,17 +78,11 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
   // ============================================
 
   // Views hook
-  const {
-    activeViewId,
-    activeView,
-    setActiveViewId,
-    updateGroupBy,
-    updateAggregation,
-    toggleColumnVisibility,
-  } = useBoardViews({
-    board: hookBoardData,
-    onBoardUpdate: handleBoardUpdate,
-  });
+  const { activeView, setActiveViewId, updateGroupBy, updateAggregation, toggleColumnVisibility } =
+    useBoardViews({
+      board: hookBoardData,
+      onBoardUpdate: handleBoardUpdate,
+    });
 
   // Tasks hook
   const {
@@ -96,7 +93,6 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
     bulkDeleteTasks,
     reorderTasks,
     moveTaskToGroup,
-    getTasksByGroup,
   } = useBoardTasks({
     boardId: board._id,
     initialTasks: initialBoard.tasks,
@@ -124,11 +120,13 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
       .then((res) => res.json())
       .then((data) => {
         // Map members to user options format
-        const memberUsers = (data.members || []).map((m: { userId: string; user: { name: string; email: string } }) => ({
-          id: m.userId,
-          name: m.user.name,
-          email: m.user.email,
-        }));
+        const memberUsers = (data.members || []).map(
+          (m: { userId: string; user: { name: string; email: string } }) => ({
+            id: m.userId,
+            name: m.user.name,
+            email: m.user.email,
+          })
+        );
         setUsers(memberUsers);
       })
       .catch((err) => console.error("Failed to fetch board members:", err));

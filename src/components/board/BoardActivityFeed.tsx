@@ -52,40 +52,48 @@ const ACTIVITY_ICONS: Record<string, React.ReactNode> = {
   "board.updated": <Edit className="h-3.5 w-3.5 text-blue-500" />,
 };
 
-export function BoardActivityFeed({ boardId, isOpen = true, onClose, inline = false }: BoardActivityFeedProps) {
+export function BoardActivityFeed({
+  boardId,
+  isOpen = true,
+  onClose,
+  inline = false,
+}: BoardActivityFeedProps) {
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(true);
 
-  const fetchActivities = useCallback(async (before?: string) => {
-    if (before) {
-      setLoadingMore(true);
-    } else {
-      setLoading(true);
-    }
-
-    try {
-      const params = new URLSearchParams({ limit: "30" });
-      if (before) params.set("before", before);
-
-      const res = await fetch(`/api/boards/${boardId}/activities?${params}`);
-      if (res.ok) {
-        const data = await res.json();
-        if (before) {
-          setActivities((prev) => [...prev, ...data.activities]);
-        } else {
-          setActivities(data.activities);
-        }
-        setHasMore(data.activities.length === 30);
+  const fetchActivities = useCallback(
+    async (before?: string) => {
+      if (before) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
       }
-    } catch (error) {
-      console.error("Failed to fetch activities:", error);
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, [boardId]);
+
+      try {
+        const params = new URLSearchParams({ limit: "30" });
+        if (before) params.set("before", before);
+
+        const res = await fetch(`/api/boards/${boardId}/activities?${params}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (before) {
+            setActivities((prev) => [...prev, ...data.activities]);
+          } else {
+            setActivities(data.activities);
+          }
+          setHasMore(data.activities.length === 30);
+        }
+      } catch (error) {
+        console.error("Failed to fetch activities:", error);
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
+      }
+    },
+    [boardId]
+  );
 
   useEffect(() => {
     if (isOpen) {
@@ -132,9 +140,7 @@ export function BoardActivityFeed({ boardId, isOpen = true, onClose, inline = fa
             <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
           </div>
         ) : activities.length === 0 ? (
-          <div className="text-center py-12 text-muted-foreground">
-            Chưa có hoạt động nào
-          </div>
+          <div className="text-center py-12 text-muted-foreground">Chưa có hoạt động nào</div>
         ) : (
           <div className="space-y-4">
             {activities.map((activity) => (
@@ -143,6 +149,7 @@ export function BoardActivityFeed({ boardId, isOpen = true, onClose, inline = fa
                 <div className="flex-shrink-0">
                   <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                     {activity.user?.image ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
                       <img
                         src={activity.user.image}
                         alt={activity.user.name}
@@ -163,12 +170,8 @@ export function BoardActivityFeed({ boardId, isOpen = true, onClose, inline = fa
                       <Activity className="h-3.5 w-3.5 text-gray-500" />
                     )}
                     <span className="text-sm">
-                      <span className="font-medium">
-                        {activity.user?.name || "Unknown"}
-                      </span>{" "}
-                      <span className="text-muted-foreground">
-                        {activity.description}
-                      </span>
+                      <span className="font-medium">{activity.user?.name || "Unknown"}</span>{" "}
+                      <span className="text-muted-foreground">{activity.description}</span>
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
@@ -186,11 +189,7 @@ export function BoardActivityFeed({ boardId, isOpen = true, onClose, inline = fa
                   disabled={loadingMore}
                   className="text-sm text-primary hover:underline disabled:opacity-50"
                 >
-                  {loadingMore ? (
-                    <Loader2 className="h-4 w-4 animate-spin inline" />
-                  ) : (
-                    "Xem thêm"
-                  )}
+                  {loadingMore ? <Loader2 className="h-4 w-4 animate-spin inline" /> : "Xem thêm"}
                 </button>
               </div>
             )}
@@ -225,9 +224,7 @@ export function BoardActivityFeed({ boardId, isOpen = true, onClose, inline = fa
               <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
             </div>
           ) : activities.length === 0 ? (
-            <div className="text-center py-12 text-muted-foreground">
-              Chưa có hoạt động nào
-            </div>
+            <div className="text-center py-12 text-muted-foreground">Chưa có hoạt động nào</div>
           ) : (
             <div className="space-y-4">
               {activities.map((activity) => (
@@ -236,6 +233,7 @@ export function BoardActivityFeed({ boardId, isOpen = true, onClose, inline = fa
                   <div className="flex-shrink-0">
                     <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                       {activity.user?.image ? (
+                        /* eslint-disable-next-line @next/next/no-img-element */
                         <img
                           src={activity.user.image}
                           alt={activity.user.name}
@@ -256,12 +254,8 @@ export function BoardActivityFeed({ boardId, isOpen = true, onClose, inline = fa
                         <Activity className="h-3.5 w-3.5 text-gray-500" />
                       )}
                       <span className="text-sm">
-                        <span className="font-medium">
-                          {activity.user?.name || "Unknown"}
-                        </span>{" "}
-                        <span className="text-muted-foreground">
-                          {activity.description}
-                        </span>
+                        <span className="font-medium">{activity.user?.name || "Unknown"}</span>{" "}
+                        <span className="text-muted-foreground">{activity.description}</span>
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -279,11 +273,7 @@ export function BoardActivityFeed({ boardId, isOpen = true, onClose, inline = fa
                     disabled={loadingMore}
                     className="text-sm text-primary hover:underline disabled:opacity-50"
                   >
-                    {loadingMore ? (
-                      <Loader2 className="h-4 w-4 animate-spin inline" />
-                    ) : (
-                      "Xem thêm"
-                    )}
+                    {loadingMore ? <Loader2 className="h-4 w-4 animate-spin inline" /> : "Xem thêm"}
                   </button>
                 </div>
               )}

@@ -3,15 +3,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import {
-  MoreHorizontal,
-  Trash2,
-  Copy,
-  ExternalLink,
-  Calendar,
-  MessageSquare,
-  Paperclip,
-} from "lucide-react";
+import { MoreHorizontal, Trash2, Copy, ExternalLink, Calendar, Paperclip } from "lucide-react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 
@@ -58,8 +50,14 @@ interface KanbanCardProps {
   isDragging?: boolean;
   onUpdate: (updates: Partial<TaskData>) => void;
   onDelete: () => void;
-  onAddPropertyOption?: (propertyId: string, option: { id: string; label: string; color?: string }) => void;
-  onUpdatePropertyOption?: (propertyId: string, option: { id: string; label: string; color?: string }) => void;
+  onAddPropertyOption?: (
+    propertyId: string,
+    option: { id: string; label: string; color?: string }
+  ) => void;
+  onUpdatePropertyOption?: (
+    propertyId: string,
+    option: { id: string; label: string; color?: string }
+  ) => void;
 }
 
 // ============================================
@@ -121,18 +119,6 @@ export function KanbanCard({
     [handleTitleBlur, task.title]
   );
 
-  // Handle property update
-  const handlePropertyUpdate = useCallback(
-    (propertyId: string, value: unknown) => {
-      onUpdate({
-        properties: {
-          [propertyId]: value,
-        },
-      });
-    },
-    [onUpdate]
-  );
-
   // Get important properties to display
   const displayInfo = useMemo(() => {
     const allProps = allProperties || properties;
@@ -185,20 +171,8 @@ export function KanbanCard({
     return info;
   }, [allProperties, properties, task.properties]);
 
-  // Count total filled properties
-  const filledPropertiesCount = useMemo(() => {
-    const allProps = allProperties || properties;
-    return allProps.filter((prop) => {
-      const value = task.properties?.[prop.id];
-      return value !== null && value !== undefined && value !== "";
-    }).length;
-  }, [allProperties, properties, task.properties]);
-
   // Find user by ID
-  const findUser = useCallback(
-    (userId: string) => users.find((u) => u.id === userId),
-    [users]
-  );
+  const findUser = useCallback((userId: string) => users.find((u) => u.id === userId), [users]);
 
   // Format date
   const formatDate = useCallback((dateStr: string) => {
@@ -223,11 +197,7 @@ export function KanbanCard({
   // Dragging placeholder
   if (isDragging || isSortableDragging) {
     return (
-      <div
-        ref={setNodeRef}
-        style={style}
-        className="opacity-40"
-      >
+      <div ref={setNodeRef} style={style} className="opacity-40">
         <div className="bg-primary/10 border-2 border-dashed border-primary rounded-lg p-3">
           <p className="text-sm font-medium text-primary">{task.title}</p>
         </div>
@@ -236,9 +206,10 @@ export function KanbanCard({
   }
 
   // Count info items for footer
-  const hasFooterInfo = displayInfo.dates.length > 0 ||
-                        displayInfo.attachments.length > 0 ||
-                        displayInfo.people.length > 0;
+  const hasFooterInfo =
+    displayInfo.dates.length > 0 ||
+    displayInfo.attachments.length > 0 ||
+    displayInfo.people.length > 0;
 
   return (
     <>
@@ -247,10 +218,7 @@ export function KanbanCard({
         style={style}
         {...attributes}
         {...listeners}
-        className={cn(
-          "group cursor-pointer mb-2",
-          isSortableDragging && "opacity-40"
-        )}
+        className={cn("group cursor-pointer mb-2", isSortableDragging && "opacity-40")}
       >
         {/* Notion-style card: subtle shadow, clean white bg */}
         <div
@@ -306,7 +274,11 @@ export function KanbanCard({
                     <MoreHorizontal className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-48"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <DropdownMenuItem onClick={() => setIsModalOpen(true)}>
                     <ExternalLink className="h-4 w-4 mr-2" />
                     Mở chi tiết
@@ -397,7 +369,8 @@ export function KanbanCard({
                       return acc + count;
                     }, 0) > 2 && (
                       <span className="text-[10px] text-muted-foreground ml-1">
-                        +{displayInfo.people.reduce((acc, { value }) => {
+                        +
+                        {displayInfo.people.reduce((acc, { value }) => {
                           const count = Array.isArray(value) ? value.length : 1;
                           return acc + count;
                         }, 0) - 2}

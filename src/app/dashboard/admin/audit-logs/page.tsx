@@ -3,7 +3,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import {
-  Search,
   Loader2,
   ChevronLeft,
   ChevronRight,
@@ -207,9 +206,7 @@ export default function AuditLogsPage() {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : !data || data.logs.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">
-          Không có dữ liệu
-        </div>
+        <div className="text-center py-12 text-muted-foreground">Không có dữ liệu</div>
       ) : (
         <div className="space-y-2">
           {data.logs.map((log) => (
@@ -223,23 +220,17 @@ export default function AuditLogsPage() {
 
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
-                  <span className="font-medium">
-                    {log.performedBy?.name || "System"}
-                  </span>
+                  <span className="font-medium">{log.performedBy?.name || "System"}</span>
                   <span className="text-muted-foreground">
                     {ACTION_LABELS[log.action] || log.action}
                   </span>
                   {log.entityName && (
-                    <span className="font-medium text-primary">
-                      {log.entityName}
-                    </span>
+                    <span className="font-medium text-primary">{log.entityName}</span>
                   )}
                 </div>
 
                 {formatDetails(log) && (
-                  <p className="text-sm text-muted-foreground truncate">
-                    {formatDetails(log)}
-                  </p>
+                  <p className="text-sm text-muted-foreground truncate">{formatDetails(log)}</p>
                 )}
 
                 <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
@@ -247,9 +238,7 @@ export default function AuditLogsPage() {
                     <Clock className="h-3 w-3" />
                     {formatDate(log.performedAt)}
                   </span>
-                  {log.performedBy?.email && (
-                    <span>{log.performedBy.email}</span>
-                  )}
+                  {log.performedBy?.email && <span>{log.performedBy.email}</span>}
                 </div>
               </div>
             </div>

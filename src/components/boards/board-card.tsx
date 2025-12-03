@@ -36,7 +36,6 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import {
   BOARD_ROLES,
-  BOARD_VISIBILITY,
   BOARD_ROLE_LABELS,
   type BoardRole,
   type BoardVisibility,
@@ -118,9 +117,7 @@ export function BoardCard({ board }: BoardCardProps) {
                 {board.name}
               </h3>
               {board.description && (
-                <p className="text-base text-muted-foreground truncate mt-1">
-                  {board.description}
-                </p>
+                <p className="text-base text-muted-foreground truncate mt-1">{board.description}</p>
               )}
             </div>
           </div>

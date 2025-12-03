@@ -2,9 +2,14 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { ChevronLeft, Table2, Kanban, Users, Settings, Building2 } from "lucide-react";
+import { ChevronLeft, Table2, Kanban, Users, Building2 } from "lucide-react";
 import { type View, ViewType } from "@/types/board";
-import { type BoardRole, type BoardPermissions, BOARD_VISIBILITY_LABELS, type BoardVisibility } from "@/types/board-member";
+import {
+  type BoardRole,
+  type BoardPermissions,
+  BOARD_VISIBILITY_LABELS,
+  type BoardVisibility,
+} from "@/types/board-member";
 import { BoardMembersModal } from "@/components/board/BoardMembersModal";
 
 interface BoardHeaderProps {
@@ -18,7 +23,12 @@ interface BoardHeaderProps {
   activeView?: View;
   views: View[];
   onViewChange: (viewId: string) => void;
-  onUpdateBoard: (updates: { name?: string; icon?: string; description?: string; visibility?: BoardVisibility }) => void | Promise<void>;
+  onUpdateBoard: (updates: {
+    name?: string;
+    icon?: string;
+    description?: string;
+    visibility?: BoardVisibility;
+  }) => void | Promise<void>;
   userRole?: BoardRole;
   userPermissions?: BoardPermissions;
 }
@@ -29,7 +39,6 @@ export function BoardHeader({
   views,
   onViewChange,
   onUpdateBoard,
-  userRole,
   userPermissions,
 }: BoardHeaderProps) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);

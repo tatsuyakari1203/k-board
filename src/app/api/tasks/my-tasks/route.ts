@@ -8,15 +8,30 @@ import TodoPreference from "@/models/todo-preference.model";
 import { PropertyType } from "@/types/board";
 import { USER_ROLES } from "@/types/user";
 
+// Types for lean documents
+interface TaskDoc {
+  _id: { toString: () => string };
+  boardId: { toString: () => string };
+  createdBy: { toString: () => string };
+  title?: string;
+  properties?: Record<string, unknown>;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface BoardDoc {
+  _id: { toString: () => string };
+  name: string;
+  ownerId: { toString: () => string };
+  properties?: Array<{ type: string; id: string }>;
+}
+
 // GET /api/tasks/my-tasks - Get all tasks assigned to current user across all boards
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     await dbConnect();
@@ -47,7 +62,9 @@ export async function GET(request: NextRequest) {
     const memberShips = await BoardMember.find({
       userId,
       status: "active",
-    }).select("boardId role").lean();
+    })
+      .select("boardId role")
+      .lean();
 
     const memberBoardIds = memberShips.map((m) => m.boardId.toString());
     const memberRoles: Record<string, string> = {};
@@ -58,7 +75,9 @@ export async function GET(request: NextRequest) {
     // Also include boards owned by user
     const ownedBoards = await Board.find({
       ownerId: userId,
-    }).select("_id").lean();
+    })
+      .select("_id")
+      .lean();
 
     const ownedBoardIds = ownedBoards.map((b) => b._id.toString());
 
@@ -85,8 +104,8 @@ export async function GET(request: NextRequest) {
     const boardAssigneeProps: Record<string, string[]> = {};
     boards.forEach((board) => {
       const assigneeProps = (board.properties || [])
-        .filter((p: { type: string }) =>
-          p.type === PropertyType.PERSON || p.type === PropertyType.USER
+        .filter(
+          (p: { type: string }) => p.type === PropertyType.PERSON || p.type === PropertyType.USER
         )
         .map((p: { id: string }) => p.id);
       boardAssigneeProps[board._id.toString()] = assigneeProps;
@@ -110,13 +129,13 @@ export async function GET(request: NextRequest) {
     });
 
     // 4. Build query for tasks
-    let tasks: any[] = [];
+    let tasks: TaskDoc[] = [];
 
     // Get all tasks from full access boards
     if (fullAccessBoardIds.length > 0) {
-      const fullAccessTasks = await Task.find({
+      const fullAccessTasks = (await Task.find({
         boardId: { $in: fullAccessBoardIds },
-      }).lean();
+      }).lean()) as TaskDoc[];
       tasks = [...tasks, ...fullAccessTasks];
     }
 
@@ -143,16 +162,16 @@ export async function GET(request: NextRequest) {
       });
 
       if (orConditions.length > 0) {
-        const assignedTasks = await Task.find({
+        const assignedTasks = (await Task.find({
           boardId: { $in: assignedOnlyBoardIds },
           $or: orConditions,
-        }).lean();
+        }).lean()) as TaskDoc[];
         tasks = [...tasks, ...assignedTasks];
       }
     }
 
     // Dedupe tasks
-    const taskMap = new Map();
+    const taskMap = new Map<string, Record<string, unknown>>();
     tasks.forEach((t) => {
       const id = t._id.toString();
       if (!taskMap.has(id)) {
@@ -167,14 +186,14 @@ export async function GET(request: NextRequest) {
     });
 
     // Sort by custom order if available, otherwise by updatedAt
-    let sortedTasks = Array.from(taskMap.values());
+    const sortedTasks = Array.from(taskMap.values());
     const customOrder = prefs.customOrder || [];
 
     if (customOrder.length > 0 && !prefs.sortField) {
       // Sort by custom order
       sortedTasks.sort((a, b) => {
-        const aIndex = customOrder.indexOf(a._id);
-        const bIndex = customOrder.indexOf(b._id);
+        const aIndex = customOrder.indexOf(a._id as string);
+        const bIndex = customOrder.indexOf(b._id as string);
         // Tasks not in customOrder go to the end
         if (aIndex === -1 && bIndex === -1) return 0;
         if (aIndex === -1) return 1;
@@ -184,33 +203,36 @@ export async function GET(request: NextRequest) {
     } else if (prefs.sortField) {
       // Sort by specified field
       sortedTasks.sort((a, b) => {
-        let aVal: any, bVal: any;
+        let aVal: string | number, bVal: string | number;
 
         switch (prefs.sortField) {
           case "title":
-            aVal = a.title?.toLowerCase() || "";
-            bVal = b.title?.toLowerCase() || "";
+            aVal = ((a.title as string) || "").toLowerCase();
+            bVal = ((b.title as string) || "").toLowerCase();
             break;
           case "createdAt":
-            aVal = new Date(a.createdAt).getTime();
-            bVal = new Date(b.createdAt).getTime();
+            aVal = new Date(a.createdAt as string).getTime();
+            bVal = new Date(b.createdAt as string).getTime();
             break;
           case "updatedAt":
-            aVal = new Date(a.updatedAt).getTime();
-            bVal = new Date(b.updatedAt).getTime();
+            aVal = new Date(a.updatedAt as string).getTime();
+            bVal = new Date(b.updatedAt as string).getTime();
             break;
-          case "dueDate":
+          case "dueDate": {
             // Find date property for each task's board
-            const boardA = boards.find((b: any) => b._id.toString() === a.boardId);
-            const boardB = boards.find((b: any) => b._id.toString() === b.boardId);
-            const datePropA = (boardA?.properties || []).find((p: any) => p.type === PropertyType.DATE);
-            const datePropB = (boardB?.properties || []).find((p: any) => p.type === PropertyType.DATE);
-            aVal = datePropA ? new Date(a.properties?.[datePropA.id] || 0).getTime() : 0;
-            bVal = datePropB ? new Date(b.properties?.[datePropB.id] || 0).getTime() : 0;
+            const boardA = (boards as BoardDoc[]).find((bd) => bd._id.toString() === a.boardId);
+            const boardB = (boards as BoardDoc[]).find((bd) => bd._id.toString() === b.boardId);
+            const datePropA = (boardA?.properties || []).find((p) => p.type === PropertyType.DATE);
+            const datePropB = (boardB?.properties || []).find((p) => p.type === PropertyType.DATE);
+            const propsA = a.properties as Record<string, unknown> | undefined;
+            const propsB = b.properties as Record<string, unknown> | undefined;
+            aVal = datePropA ? new Date((propsA?.[datePropA.id] as string) || 0).getTime() : 0;
+            bVal = datePropB ? new Date((propsB?.[datePropB.id] as string) || 0).getTime() : 0;
             break;
+          }
           default:
-            aVal = new Date(a.updatedAt).getTime();
-            bVal = new Date(b.updatedAt).getTime();
+            aVal = new Date(a.updatedAt as string).getTime();
+            bVal = new Date(b.updatedAt as string).getTime();
         }
 
         const comparison = aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
@@ -218,29 +240,29 @@ export async function GET(request: NextRequest) {
       });
     } else {
       // Default: sort by updatedAt desc
-      sortedTasks.sort((a, b) =>
-        new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+      sortedTasks.sort(
+        (a, b) =>
+          new Date(b.updatedAt as string).getTime() - new Date(a.updatedAt as string).getTime()
       );
     }
 
     return NextResponse.json({
       tasks: sortedTasks,
-      boards: boards.map((b: any) => ({
+      boards: (boards as BoardDoc[]).map((b) => ({
         _id: b._id.toString(),
         name: b.name,
         properties: b.properties,
         isOwner: b.ownerId.toString() === userId,
       })),
       preferences: prefs,
-      canShowAllTasks: isAdmin || ownedBoardIds.length > 0 ||
-        Object.values(memberRoles).some(r => r === "admin"),
+      canShowAllTasks:
+        isAdmin ||
+        ownedBoardIds.length > 0 ||
+        Object.values(memberRoles).some((r) => r === "admin"),
     });
   } catch (error) {
     console.error("GET /api/tasks/my-tasks error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -249,10 +271,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -260,7 +279,7 @@ export async function PATCH(request: NextRequest) {
 
     await dbConnect();
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
 
     if (body.customOrder !== undefined) {
       updateData.customOrder = body.customOrder;
@@ -290,10 +309,6 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ preferences });
   } catch (error) {
     console.error("PATCH /api/tasks/my-tasks error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
-

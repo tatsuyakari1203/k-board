@@ -43,10 +43,16 @@ import {
   TrendingUp,
   Target,
   Zap,
-  User,
-  MessageSquare,
 } from "lucide-react";
-import { format, isToday, isPast, isThisWeek, startOfDay, formatDistanceToNow, differenceInDays } from "date-fns";
+import {
+  format,
+  isToday,
+  isPast,
+  isThisWeek,
+  startOfDay,
+  formatDistanceToNow,
+  differenceInDays,
+} from "date-fns";
 import { vi } from "date-fns/locale";
 
 import { Button } from "@/components/ui/button";
@@ -60,11 +66,7 @@ import {
   DropdownMenuCheckboxItem,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
@@ -132,7 +134,9 @@ export default function TodoPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterBoards, setFilterBoards] = useState<string[]>([]);
   const [filterStatuses, setFilterStatuses] = useState<string[]>([]);
-  const [dueDateFilter, setDueDateFilter] = useState<"all" | "overdue" | "today" | "week" | "no-date">("all");
+  const [dueDateFilter, setDueDateFilter] = useState<
+    "all" | "overdue" | "today" | "week" | "no-date"
+  >("all");
 
   // UI state
   const [expandedBoards, setExpandedBoards] = useState<Set<string>>(new Set());
@@ -207,35 +211,32 @@ export default function TodoPage() {
   // TASK UPDATE
   // ============================================
 
-  const updateTask = useCallback(async (
-    taskId: string,
-    boardId: string,
-    updates: { properties?: Record<string, unknown> }
-  ) => {
-    setUpdatingTask(taskId);
-    try {
-      const res = await fetch(`/api/boards/${boardId}/tasks/${taskId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updates),
-      });
+  const updateTask = useCallback(
+    async (taskId: string, boardId: string, updates: { properties?: Record<string, unknown> }) => {
+      setUpdatingTask(taskId);
+      try {
+        const res = await fetch(`/api/boards/${boardId}/tasks/${taskId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updates),
+        });
 
-      if (res.ok) {
-        const updatedTask = await res.json();
-        setTasks(prev => prev.map(t =>
-          t._id === taskId ? { ...t, ...updatedTask } : t
-        ));
-        toast.success("Đã cập nhật");
-      } else {
+        if (res.ok) {
+          const updatedTask = await res.json();
+          setTasks((prev) => prev.map((t) => (t._id === taskId ? { ...t, ...updatedTask } : t)));
+          toast.success("Đã cập nhật");
+        } else {
+          toast.error("Không thể cập nhật");
+        }
+      } catch (error) {
+        console.error("Failed to update task:", error);
         toast.error("Không thể cập nhật");
+      } finally {
+        setUpdatingTask(null);
       }
-    } catch (error) {
-      console.error("Failed to update task:", error);
-      toast.error("Không thể cập nhật");
-    } finally {
-      setUpdatingTask(null);
-    }
-  }, []);
+    },
+    []
+  );
 
   // ============================================
   // HANDLERS
@@ -274,7 +275,9 @@ export default function TodoPage() {
 
   const handleDueDateFilterChange = (filter: typeof dueDateFilter) => {
     setDueDateFilter(filter);
-    savePreferences({ filters: { boards: filterBoards, statuses: filterStatuses, dueDateFilter: filter } });
+    savePreferences({
+      filters: { boards: filterBoards, statuses: filterStatuses, dueDateFilter: filter },
+    });
   };
 
   const toggleBoard = (boardId: string) => {
@@ -295,36 +298,45 @@ export default function TodoPage() {
 
   // Get status property and options for a board
   const getBoardStatusProperty = useCallback((board: BoardData) => {
-    return board.properties.find(p => p.type === PropertyType.STATUS);
+    return board.properties.find((p) => p.type === PropertyType.STATUS);
   }, []);
 
   // Get date property for a board
   const getBoardDateProperty = useCallback((board: BoardData) => {
-    return board.properties.find(p => p.type === PropertyType.DATE);
+    return board.properties.find((p) => p.type === PropertyType.DATE);
   }, []);
 
   // Get task status
-  const getTaskStatus = useCallback((task: TaskData, board: BoardData | undefined) => {
-    if (!board) return null;
-    const statusProp = getBoardStatusProperty(board);
-    if (!statusProp) return null;
-    const value = task.properties[statusProp.id] as string | undefined;
-    if (!value) return null;
-    return statusProp.options?.find(o => o.id === value);
-  }, [getBoardStatusProperty]);
+  const getTaskStatus = useCallback(
+    (task: TaskData, board: BoardData | undefined) => {
+      if (!board) return null;
+      const statusProp = getBoardStatusProperty(board);
+      if (!statusProp) return null;
+      const value = task.properties[statusProp.id] as string | undefined;
+      if (!value) return null;
+      return statusProp.options?.find((o) => o.id === value);
+    },
+    [getBoardStatusProperty]
+  );
 
   // Get task due date
-  const getTaskDueDate = useCallback((task: TaskData, board: BoardData | undefined) => {
-    if (!board) return null;
-    const dateProp = getBoardDateProperty(board);
-    if (!dateProp) return null;
-    return task.properties[dateProp.id] as string | undefined;
-  }, [getBoardDateProperty]);
+  const getTaskDueDate = useCallback(
+    (task: TaskData, board: BoardData | undefined) => {
+      if (!board) return null;
+      const dateProp = getBoardDateProperty(board);
+      if (!dateProp) return null;
+      return task.properties[dateProp.id] as string | undefined;
+    },
+    [getBoardDateProperty]
+  );
 
   // Get board by id
-  const getBoard = useCallback((boardId: string) => {
-    return boards.find(b => b._id === boardId);
-  }, [boards]);
+  const getBoard = useCallback(
+    (boardId: string) => {
+      return boards.find((b) => b._id === boardId);
+    },
+    [boards]
+  );
 
   // Filter and sort tasks
   const sortedTasks = useMemo(() => {
@@ -333,17 +345,17 @@ export default function TodoPage() {
     // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
-      result = result.filter(t => t.title.toLowerCase().includes(query));
+      result = result.filter((t) => t.title.toLowerCase().includes(query));
     }
 
     // Apply board filter
     if (filterBoards.length > 0) {
-      result = result.filter(t => filterBoards.includes(t.boardId));
+      result = result.filter((t) => filterBoards.includes(t.boardId));
     }
 
     // Apply status filter
     if (filterStatuses.length > 0) {
-      result = result.filter(t => {
+      result = result.filter((t) => {
         const board = getBoard(t.boardId);
         const status = getTaskStatus(t, board);
         return status && filterStatuses.includes(status.id);
@@ -352,7 +364,7 @@ export default function TodoPage() {
 
     // Apply due date filter
     if (dueDateFilter !== "all") {
-      result = result.filter(t => {
+      result = result.filter((t) => {
         const board = getBoard(t.boardId);
         const dueDate = getTaskDueDate(t, board);
 
@@ -362,7 +374,6 @@ export default function TodoPage() {
 
         if (!dueDate) return false;
         const date = startOfDay(new Date(dueDate));
-        const today = startOfDay(new Date());
 
         switch (dueDateFilter) {
           case "overdue":
@@ -423,15 +434,27 @@ export default function TodoPage() {
     }
 
     return result;
-  }, [tasks, searchQuery, filterBoards, filterStatuses, dueDateFilter, sortField, sortDirection, customOrder, getBoard, getTaskStatus, getTaskDueDate]);
+  }, [
+    tasks,
+    searchQuery,
+    filterBoards,
+    filterStatuses,
+    dueDateFilter,
+    sortField,
+    sortDirection,
+    customOrder,
+    getBoard,
+    getTaskStatus,
+    getTaskDueDate,
+  ]);
 
   // Group tasks by board
   const tasksByBoard = useMemo(() => {
     const grouped: Record<string, TaskData[]> = {};
-    boards.forEach(b => {
+    boards.forEach((b) => {
       grouped[b._id] = [];
     });
-    sortedTasks.forEach(t => {
+    sortedTasks.forEach((t) => {
       if (grouped[t.boardId]) {
         grouped[t.boardId].push(t);
       }
@@ -449,7 +472,7 @@ export default function TodoPage() {
     const statusCounts: Record<string, { label: string; color?: string; count: number }> = {};
     const boardCounts: Record<string, number> = {};
 
-    tasks.forEach(t => {
+    tasks.forEach((t) => {
       const board = getBoard(t.boardId);
 
       // Count by board
@@ -464,7 +487,8 @@ export default function TodoPage() {
         statusCounts[status.id].count++;
 
         // Check if completed (green status or contains "done", "hoàn thành", etc.)
-        const isCompleted = status.color?.includes("green") ||
+        const isCompleted =
+          status.color?.includes("green") ||
           status.label.toLowerCase().includes("done") ||
           status.label.toLowerCase().includes("hoàn thành") ||
           status.label.toLowerCase().includes("xong");
@@ -512,7 +536,7 @@ export default function TodoPage() {
   // ============================================
 
   const handleDragStart = (event: DragStartEvent) => {
-    const task = tasks.find(t => t._id === event.active.id);
+    const task = tasks.find((t) => t._id === event.active.id);
     if (task) setActiveTask(task);
   };
 
@@ -522,12 +546,12 @@ export default function TodoPage() {
 
     if (!over || active.id === over.id) return;
 
-    const oldIndex = sortedTasks.findIndex(t => t._id === active.id);
-    const newIndex = sortedTasks.findIndex(t => t._id === over.id);
+    const oldIndex = sortedTasks.findIndex((t) => t._id === active.id);
+    const newIndex = sortedTasks.findIndex((t) => t._id === over.id);
 
     if (oldIndex !== -1 && newIndex !== -1) {
       const newOrder = arrayMove(
-        sortedTasks.map(t => t._id),
+        sortedTasks.map((t) => t._id),
         oldIndex,
         newIndex
       );
@@ -609,31 +633,45 @@ export default function TodoPage() {
           <div
             className={cn(
               "relative overflow-hidden rounded-lg border p-4 cursor-pointer transition-colors hover:bg-muted/50",
-              stats.overdue > 0 ? "bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/30" : "bg-card"
+              stats.overdue > 0
+                ? "bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/30"
+                : "bg-card"
             )}
-            onClick={() => handleDueDateFilterChange(dueDateFilter === "overdue" ? "all" : "overdue")}
+            onClick={() =>
+              handleDueDateFilterChange(dueDateFilter === "overdue" ? "all" : "overdue")
+            }
           >
             <div className="flex items-center gap-3">
-              <div className={cn(
-                "p-2 rounded-lg",
-                stats.overdue > 0 ? "bg-red-100 dark:bg-red-500/20" : "bg-muted"
-              )}>
-                <AlertCircle className={cn(
-                  "h-5 w-5",
-                  stats.overdue > 0 ? "text-red-600 dark:text-red-400" : "text-muted-foreground"
-                )} />
+              <div
+                className={cn(
+                  "p-2 rounded-lg",
+                  stats.overdue > 0 ? "bg-red-100 dark:bg-red-500/20" : "bg-muted"
+                )}
+              >
+                <AlertCircle
+                  className={cn(
+                    "h-5 w-5",
+                    stats.overdue > 0 ? "text-red-600 dark:text-red-400" : "text-muted-foreground"
+                  )}
+                />
               </div>
               <div>
-                <p className={cn(
-                  "text-2xl font-bold",
-                  stats.overdue > 0 && "text-red-600 dark:text-red-400"
-                )}>{stats.overdue}</p>
+                <p
+                  className={cn(
+                    "text-2xl font-bold",
+                    stats.overdue > 0 && "text-red-600 dark:text-red-400"
+                  )}
+                >
+                  {stats.overdue}
+                </p>
                 <p className="text-xs text-muted-foreground">Quá hạn</p>
               </div>
             </div>
             {dueDateFilter === "overdue" && (
               <div className="absolute top-2 right-2">
-                <Badge variant="secondary" className="text-[10px]">Đang lọc</Badge>
+                <Badge variant="secondary" className="text-[10px]">
+                  Đang lọc
+                </Badge>
               </div>
             )}
           </div>
@@ -642,31 +680,45 @@ export default function TodoPage() {
           <div
             className={cn(
               "relative overflow-hidden rounded-lg border p-4 cursor-pointer transition-colors hover:bg-muted/50",
-              stats.today > 0 ? "bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-500/30" : "bg-card"
+              stats.today > 0
+                ? "bg-orange-50 dark:bg-orange-500/10 border-orange-200 dark:border-orange-500/30"
+                : "bg-card"
             )}
             onClick={() => handleDueDateFilterChange(dueDateFilter === "today" ? "all" : "today")}
           >
             <div className="flex items-center gap-3">
-              <div className={cn(
-                "p-2 rounded-lg",
-                stats.today > 0 ? "bg-orange-100 dark:bg-orange-500/20" : "bg-muted"
-              )}>
-                <Clock className={cn(
-                  "h-5 w-5",
-                  stats.today > 0 ? "text-orange-600 dark:text-orange-400" : "text-muted-foreground"
-                )} />
+              <div
+                className={cn(
+                  "p-2 rounded-lg",
+                  stats.today > 0 ? "bg-orange-100 dark:bg-orange-500/20" : "bg-muted"
+                )}
+              >
+                <Clock
+                  className={cn(
+                    "h-5 w-5",
+                    stats.today > 0
+                      ? "text-orange-600 dark:text-orange-400"
+                      : "text-muted-foreground"
+                  )}
+                />
               </div>
               <div>
-                <p className={cn(
-                  "text-2xl font-bold",
-                  stats.today > 0 && "text-orange-600 dark:text-orange-400"
-                )}>{stats.today}</p>
+                <p
+                  className={cn(
+                    "text-2xl font-bold",
+                    stats.today > 0 && "text-orange-600 dark:text-orange-400"
+                  )}
+                >
+                  {stats.today}
+                </p>
                 <p className="text-xs text-muted-foreground">Hôm nay</p>
               </div>
             </div>
             {dueDateFilter === "today" && (
               <div className="absolute top-2 right-2">
-                <Badge variant="secondary" className="text-[10px]">Đang lọc</Badge>
+                <Badge variant="secondary" className="text-[10px]">
+                  Đang lọc
+                </Badge>
               </div>
             )}
           </div>
@@ -689,7 +741,9 @@ export default function TodoPage() {
             </div>
             {dueDateFilter === "week" && (
               <div className="absolute top-2 right-2">
-                <Badge variant="secondary" className="text-[10px]">Đang lọc</Badge>
+                <Badge variant="secondary" className="text-[10px]">
+                  Đang lọc
+                </Badge>
               </div>
             )}
           </div>
@@ -752,7 +806,7 @@ export default function TodoPage() {
                 Theo board
               </h3>
               <div className="space-y-2">
-                {boards.map(board => {
+                {boards.map((board) => {
                   const count = stats.boardCounts[board._id] || 0;
                   if (count === 0) return null;
                   return (
@@ -849,16 +903,18 @@ export default function TodoPage() {
               <>
                 <DropdownMenuSeparator />
                 <DropdownMenuLabel>Board</DropdownMenuLabel>
-                {boards.map(board => (
+                {boards.map((board) => (
                   <DropdownMenuCheckboxItem
                     key={board._id}
                     checked={filterBoards.includes(board._id)}
                     onCheckedChange={(checked) => {
                       const newFilters = checked
                         ? [...filterBoards, board._id]
-                        : filterBoards.filter(id => id !== board._id);
+                        : filterBoards.filter((id) => id !== board._id);
                       setFilterBoards(newFilters);
-                      savePreferences({ filters: { boards: newFilters, statuses: filterStatuses, dueDateFilter } });
+                      savePreferences({
+                        filters: { boards: newFilters, statuses: filterStatuses, dueDateFilter },
+                      });
                     }}
                   >
                     {board.name}
@@ -876,7 +932,9 @@ export default function TodoPage() {
                     setFilterBoards([]);
                     setFilterStatuses([]);
                     setDueDateFilter("all");
-                    savePreferences({ filters: { boards: [], statuses: [], dueDateFilter: "all" } });
+                    savePreferences({
+                      filters: { boards: [], statuses: [], dueDateFilter: "all" },
+                    });
                   }}
                 >
                   Xóa bộ lọc
@@ -927,7 +985,11 @@ export default function TodoPage() {
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm" className="gap-1">
-              {viewMode === "all" ? <List className="h-4 w-4" /> : <LayoutGrid className="h-4 w-4" />}
+              {viewMode === "all" ? (
+                <List className="h-4 w-4" />
+              ) : (
+                <LayoutGrid className="h-4 w-4" />
+              )}
               {viewMode === "all" ? "Gộp" : "Theo board"}
             </Button>
           </DropdownMenuTrigger>
@@ -946,9 +1008,7 @@ export default function TodoPage() {
 
       {/* Drag hint */}
       {viewMode === "all" && !sortField && sortedTasks.length > 1 && (
-        <p className="text-xs text-muted-foreground">
-          💡 Kéo thả để sắp xếp theo ý muốn
-        </p>
+        <p className="text-xs text-muted-foreground">💡 Kéo thả để sắp xếp theo ý muốn</p>
       )}
 
       {/* Empty state */}
@@ -982,7 +1042,7 @@ export default function TodoPage() {
           onDragEnd={handleDragEnd}
         >
           <SortableContext
-            items={sortedTasks.map(t => t._id)}
+            items={sortedTasks.map((t) => t._id)}
             strategy={verticalListSortingStrategy}
             disabled={!!sortField}
           >
@@ -1090,25 +1150,25 @@ interface TaskRowProps {
   task: TaskData;
   board: BoardData | undefined;
   boards: BoardData[];
-  getTaskStatus: (task: TaskData, board: BoardData | undefined) => { id: string; label: string; color?: string } | null | undefined;
+  getTaskStatus: (
+    task: TaskData,
+    board: BoardData | undefined
+  ) => { id: string; label: string; color?: string } | null | undefined;
   getTaskDueDate: (task: TaskData, board: BoardData | undefined) => string | null | undefined;
   getBoardStatusProperty: (board: BoardData) => Property | undefined;
   getBoardDateProperty: (board: BoardData) => Property | undefined;
-  onUpdateTask: (taskId: string, boardId: string, updates: { properties?: Record<string, unknown> }) => void;
+  onUpdateTask: (
+    taskId: string,
+    boardId: string,
+    updates: { properties?: Record<string, unknown> }
+  ) => void;
   isUpdating: boolean;
   showBoard?: boolean;
   isDragDisabled?: boolean;
 }
 
 function SortableTaskRow(props: TaskRowProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: props.task._id,
     disabled: props.isDragDisabled,
   });
@@ -1119,11 +1179,7 @@ function SortableTaskRow(props: TaskRowProps) {
   };
 
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      className={cn(isDragging && "opacity-50")}
-    >
+    <div ref={setNodeRef} style={style} className={cn(isDragging && "opacity-50")}>
       <TaskRow {...props} dragHandleProps={{ ...attributes, ...listeners }} />
     </div>
   );
@@ -1174,26 +1230,11 @@ function TaskRow({
     return null;
   }, [dueDate]);
 
-  // Get assignee info from task properties
-  const assigneeInfo = useMemo(() => {
-    if (!board) return null;
-    const personProps = board.properties.filter(p =>
-      p.type === PropertyType.PERSON || p.type === PropertyType.USER
-    );
-    for (const prop of personProps) {
-      const value = task.properties[prop.id];
-      if (value) {
-        return { propName: prop.name, value };
-      }
-    }
-    return null;
-  }, [board, task.properties]);
-
   // Handle status change
   const handleStatusChange = (newStatusId: string) => {
     if (!statusProp) return;
     onUpdateTask(task._id, task.boardId, {
-      properties: { [statusProp.id]: newStatusId }
+      properties: { [statusProp.id]: newStatusId },
     });
   };
 
@@ -1201,7 +1242,7 @@ function TaskRow({
   const handleDueDateChange = (newDate: Date | undefined) => {
     if (!dateProp) return;
     onUpdateTask(task._id, task.boardId, {
-      properties: { [dateProp.id]: newDate?.toISOString() || null }
+      properties: { [dateProp.id]: newDate?.toISOString() || null },
     });
   };
 
@@ -1247,10 +1288,7 @@ function TaskRow({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           {statusProp?.options?.map((opt) => (
-            <DropdownMenuItem
-              key={opt.id}
-              onClick={() => handleStatusChange(opt.id)}
-            >
+            <DropdownMenuItem key={opt.id} onClick={() => handleStatusChange(opt.id)}>
               <span
                 className={cn(
                   "inline-block w-3 h-3 rounded-full mr-2",
@@ -1273,10 +1311,7 @@ function TaskRow({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           {/* Title - link to board */}
-          <Link
-            href={`/dashboard/boards/${task.boardId}`}
-            className="min-w-0 flex-1"
-          >
+          <Link href={`/dashboard/boards/${task.boardId}`} className="min-w-0 flex-1">
             <p className="text-sm font-medium truncate hover:text-primary transition-colors">
               {task.title || "Untitled"}
             </p>
@@ -1299,12 +1334,14 @@ function TaskRow({
 
           {/* Due date urgent info */}
           {dueDateInfo && (
-            <span className={cn(
-              "text-xs px-1.5 py-0.5 rounded",
-              dueDateInfo.urgent
-                ? "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400"
-                : "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400"
-            )}>
+            <span
+              className={cn(
+                "text-xs px-1.5 py-0.5 rounded",
+                dueDateInfo.urgent
+                  ? "bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-400"
+                  : "bg-orange-100 text-orange-700 dark:bg-orange-500/20 dark:text-orange-400"
+              )}
+            >
               {dueDateInfo.text}
             </span>
           )}
@@ -1329,10 +1366,7 @@ function TaskRow({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               {statusProp?.options?.map((opt) => (
-                <DropdownMenuItem
-                  key={opt.id}
-                  onClick={() => handleStatusChange(opt.id)}
-                >
+                <DropdownMenuItem key={opt.id} onClick={() => handleStatusChange(opt.id)}>
                   <span
                     className={cn(
                       "inline-flex items-center px-2 py-0.5 rounded text-xs mr-2",
@@ -1353,11 +1387,13 @@ function TaskRow({
             <button
               className={cn(
                 "flex items-center gap-1 text-xs px-2 py-1 rounded transition-colors",
-                dueDate ? (
-                  isOverdue ? "text-red-600 bg-red-100 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-400" :
-                  isDueToday ? "text-orange-600 bg-orange-100 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400" :
-                  "text-muted-foreground bg-muted hover:bg-muted/80"
-                ) : "text-muted-foreground hover:bg-muted opacity-0 group-hover:opacity-100"
+                dueDate
+                  ? isOverdue
+                    ? "text-red-600 bg-red-100 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-400"
+                    : isDueToday
+                      ? "text-orange-600 bg-orange-100 hover:bg-orange-200 dark:bg-orange-500/20 dark:text-orange-400"
+                      : "text-muted-foreground bg-muted hover:bg-muted/80"
+                  : "text-muted-foreground hover:bg-muted opacity-0 group-hover:opacity-100"
               )}
               disabled={isUpdating}
             >

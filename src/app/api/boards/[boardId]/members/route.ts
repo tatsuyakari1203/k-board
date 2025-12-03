@@ -5,10 +5,8 @@ import BoardMember from "@/models/board-member.model";
 import Board from "@/models/board.model";
 import User from "@/models/user.model";
 import { checkBoardAccess } from "@/lib/board-permissions";
-import {
-  addBoardMemberSchema,
-} from "@/lib/validations/board-member";
-import { BOARD_ROLES, BOARD_ROLE_LABELS, type BoardRole } from "@/types/board-member";
+import { addBoardMemberSchema } from "@/lib/validations/board-member";
+import { BOARD_ROLE_LABELS, type BoardRole } from "@/types/board-member";
 import { logBoardMemberAdded } from "@/lib/audit";
 
 interface RouteContext {
@@ -29,10 +27,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     // Check if user has access to view board
     const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "Bạn không có quyền truy cập board này" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Bạn không có quyền truy cập board này" }, { status: 403 });
     }
 
     // Get all members
@@ -43,20 +38,26 @@ export async function GET(request: NextRequest, context: RouteContext) {
       .lean();
 
     // Get board owner info
-    const board = await Board.findById(boardId)
-      .select("ownerId")
-      .lean();
+    const board = await Board.findById(boardId).select("ownerId").lean();
 
     // Check if current user is the owner
-    const boardOwnerId = board?.ownerId && (typeof board.ownerId === 'object' && '_id' in board.ownerId)
-      ? (board.ownerId as any)._id
-      : board?.ownerId;
+    const boardOwnerId =
+      board?.ownerId && typeof board.ownerId === "object" && "_id" in board.ownerId
+        ? (board.ownerId as { _id: { toString: () => string } })._id
+        : board?.ownerId;
     const isOwner = session.user.id === boardOwnerId?.toString();
 
     return NextResponse.json({
       members: members.map((m) => {
-        const user = m.userId as unknown as { _id: { toString: () => string }; name: string; email: string };
-        const addedByUser = m.addedBy as unknown as { _id: { toString: () => string }; name: string } | null;
+        const user = m.userId as unknown as {
+          _id: { toString: () => string };
+          name: string;
+          email: string;
+        };
+        const addedByUser = m.addedBy as unknown as {
+          _id: { toString: () => string };
+          name: string;
+        } | null;
 
         return {
           _id: m._id.toString(),
@@ -83,10 +84,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     });
   } catch (error) {
     console.error("GET /api/boards/[boardId]/members error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -104,10 +102,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     // Check if user can manage members
     const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess || !access.permissions?.canManageMembers) {
-      return NextResponse.json(
-        { error: "Bạn không có quyền quản lý thành viên" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Bạn không có quyền quản lý thành viên" }, { status: 403 });
     }
 
     const body = await request.json();
@@ -138,10 +133,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }).lean();
 
     if (existingMember) {
-      return NextResponse.json(
-        { error: "Người dùng đã là thành viên của board" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Người dùng đã là thành viên của board" }, { status: 400 });
     }
 
     // Check if trying to add board owner (owner is auto-added)
@@ -186,9 +178,6 @@ export async function POST(request: NextRequest, context: RouteContext) {
     });
   } catch (error) {
     console.error("POST /api/boards/[boardId]/members error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

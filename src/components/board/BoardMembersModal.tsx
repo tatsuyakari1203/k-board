@@ -18,7 +18,6 @@ import {
   UserCheck,
   User,
   Search,
-  Check,
   Send,
   Mail,
   Clock,
@@ -144,13 +143,13 @@ export function BoardMembersModal({
       if (res.ok) {
         const data = await res.json();
         setMembers(data.members);
-        if (typeof data.canManageMembers === 'boolean') {
+        if (typeof data.canManageMembers === "boolean") {
           setCanManageMembersState(data.canManageMembers);
         }
-        if (typeof data.canEditBoard === 'boolean') {
+        if (typeof data.canEditBoard === "boolean") {
           setCanEditBoardState(data.canEditBoard);
         }
-        if (typeof data.isOwner === 'boolean') {
+        if (typeof data.isOwner === "boolean") {
           setIsOwnerState(data.isOwner);
         }
       }
@@ -199,7 +198,16 @@ export function BoardMembersModal({
       setCanEditBoardState(canEditBoard);
       setIsOwnerState(isOwner);
     }
-  }, [isOpen, fetchMembers, fetchAllUsers, fetchInvitations, currentVisibility, canManageMembers, canEditBoard, isOwner]);
+  }, [
+    isOpen,
+    fetchMembers,
+    fetchAllUsers,
+    fetchInvitations,
+    currentVisibility,
+    canManageMembers,
+    canEditBoard,
+    isOwner,
+  ]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -248,9 +256,10 @@ export function BoardMembersModal({
     setAddError("");
 
     try {
-      const endpoint = addMode === "invite"
-        ? `/api/boards/${boardId}/invitations`
-        : `/api/boards/${boardId}/members`;
+      const endpoint =
+        addMode === "invite"
+          ? `/api/boards/${boardId}/invitations`
+          : `/api/boards/${boardId}/members`;
 
       const res = await fetch(endpoint, {
         method: "POST",
@@ -258,7 +267,7 @@ export function BoardMembersModal({
         body: JSON.stringify({
           email: selectedUser.email,
           role: addRole,
-          userId: selectedUser._id
+          userId: selectedUser._id,
         }),
       });
 
@@ -480,30 +489,33 @@ export function BoardMembersModal({
                   Chuyển quyền sở hữu
                 </h3>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Chuyển quyền sở hữu board cho một thành viên khác. Bạn sẽ trở thành Admin sau khi chuyển.
+                  Chuyển quyền sở hữu board cho một thành viên khác. Bạn sẽ trở thành Admin sau khi
+                  chuyển.
                 </p>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
-                  {members.filter(m => !m.isOwner).map((member) => (
-                    <button
-                      key={member._id}
-                      onClick={() => {
-                        setTransferTarget(member);
-                        setShowTransferDialog(true);
-                      }}
-                      className="w-full flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
-                          {member.user.name.charAt(0).toUpperCase()}
+                  {members
+                    .filter((m) => !m.isOwner)
+                    .map((member) => (
+                      <button
+                        key={member._id}
+                        onClick={() => {
+                          setTransferTarget(member);
+                          setShowTransferDialog(true);
+                        }}
+                        className="w-full flex items-center justify-between p-3 rounded-lg border hover:bg-muted/50 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium">
+                            {member.user.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="text-left">
+                            <div className="text-sm font-medium">{member.user.name}</div>
+                            <div className="text-xs text-muted-foreground">{member.user.email}</div>
+                          </div>
                         </div>
-                        <div className="text-left">
-                          <div className="text-sm font-medium">{member.user.name}</div>
-                          <div className="text-xs text-muted-foreground">{member.user.email}</div>
-                        </div>
-                      </div>
-                      <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                  ))}
+                        <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+                      </button>
+                    ))}
                 </div>
               </div>
             )}
@@ -622,7 +634,9 @@ export function BoardMembersModal({
                                 </div>
                                 <div className="min-w-0 flex-1">
                                   <div className="text-base font-medium truncate">{user.name}</div>
-                                  <div className="text-sm text-muted-foreground truncate">{user.email}</div>
+                                  <div className="text-sm text-muted-foreground truncate">
+                                    {user.email}
+                                  </div>
                                 </div>
                               </button>
                             ))
@@ -639,15 +653,9 @@ export function BoardMembersModal({
                     onChange={(e) => setAddRole(e.target.value as BoardRole)}
                     className="flex-1 px-4 py-3 border rounded-lg bg-background text-base focus:outline-none focus:ring-2 focus:ring-ring/30"
                   >
-                    <option value={BOARD_ROLES.VIEWER}>
-                      {BOARD_ROLE_LABELS.viewer}
-                    </option>
-                    <option value={BOARD_ROLES.EDITOR}>
-                      {BOARD_ROLE_LABELS.editor}
-                    </option>
-                    <option value={BOARD_ROLES.ADMIN}>
-                      {BOARD_ROLE_LABELS.admin}
-                    </option>
+                    <option value={BOARD_ROLES.VIEWER}>{BOARD_ROLE_LABELS.viewer}</option>
+                    <option value={BOARD_ROLES.EDITOR}>{BOARD_ROLE_LABELS.editor}</option>
+                    <option value={BOARD_ROLES.ADMIN}>{BOARD_ROLE_LABELS.admin}</option>
                     <option value={BOARD_ROLES.RESTRICTED_EDITOR}>
                       {BOARD_ROLE_LABELS.restricted_editor}
                     </option>
@@ -758,14 +766,10 @@ export function BoardMembersModal({
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-base">
-                            {member.user.name}
-                          </span>
+                          <span className="font-medium text-base">{member.user.name}</span>
                           {ROLE_ICONS[member.role]}
                         </div>
-                        <span className="text-sm text-muted-foreground">
-                          {member.user.email}
-                        </span>
+                        <span className="text-sm text-muted-foreground">{member.user.email}</span>
                       </div>
                     </div>
 
@@ -785,15 +789,9 @@ export function BoardMembersModal({
                             }
                             className="appearance-none pr-7 pl-3 py-2 text-sm border rounded-lg bg-background cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring/30"
                           >
-                            <option value={BOARD_ROLES.VIEWER}>
-                              {BOARD_ROLE_LABELS.viewer}
-                            </option>
-                            <option value={BOARD_ROLES.EDITOR}>
-                              {BOARD_ROLE_LABELS.editor}
-                            </option>
-                            <option value={BOARD_ROLES.ADMIN}>
-                              {BOARD_ROLE_LABELS.admin}
-                            </option>
+                            <option value={BOARD_ROLES.VIEWER}>{BOARD_ROLE_LABELS.viewer}</option>
+                            <option value={BOARD_ROLES.EDITOR}>{BOARD_ROLE_LABELS.editor}</option>
+                            <option value={BOARD_ROLES.ADMIN}>{BOARD_ROLE_LABELS.admin}</option>
                             <option value={BOARD_ROLES.RESTRICTED_EDITOR}>
                               {BOARD_ROLE_LABELS.restricted_editor}
                             </option>

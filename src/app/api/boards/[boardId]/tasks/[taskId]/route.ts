@@ -16,10 +16,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { boardId, taskId } = await params;
@@ -29,10 +26,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     // Check board access
     const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "Bạn không có quyền truy cập board này" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Bạn không có quyền truy cập board này" }, { status: 403 });
     }
 
     const task = await Task.findOne({
@@ -41,10 +35,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     }).lean();
 
     if (!task) {
-      return NextResponse.json(
-        { error: "Task not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -56,10 +47,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
   } catch (error) {
     console.error("GET /api/boards/[boardId]/tasks/[taskId] error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -68,10 +56,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { boardId, taskId } = await params;
@@ -91,29 +76,25 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     // Check board access - need canEditTasks permission
     const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess || !access.permissions?.canEditTasks) {
-      return NextResponse.json(
-        { error: "Bạn không có quyền chỉnh sửa task" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Bạn không có quyền chỉnh sửa task" }, { status: 403 });
     }
 
     // Get existing task to merge properties
     const existingTask = await Task.findOne({ _id: taskId, boardId }).lean();
     if (!existingTask) {
-      return NextResponse.json(
-        { error: "Task not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
     // Check edit scope
     if (access.permissions?.editScope === "assigned") {
       const board = await Board.findById(boardId).select("properties").lean();
-      const assigneeProp = board?.properties?.find((p: any) => p.type === "people");
+      const assigneeProp = board?.properties?.find((p: { type: string }) => p.type === "people");
 
       const isCreator = existingTask.createdBy.toString() === session.user.id;
       // Check if assigned (assuming value is array of user IDs)
-      const assigneeValue = assigneeProp?.id ? existingTask.properties?.[assigneeProp.id] : undefined;
+      const assigneeValue = assigneeProp?.id
+        ? existingTask.properties?.[assigneeProp.id]
+        : undefined;
       const isAssigned = Array.isArray(assigneeValue)
         ? assigneeValue.includes(session.user.id)
         : assigneeValue === session.user.id;
@@ -142,10 +123,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     ).lean();
 
     if (!task) {
-      return NextResponse.json(
-        { error: "Task not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -157,10 +135,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     });
   } catch (error) {
     console.error("PATCH /api/boards/[boardId]/tasks/[taskId] error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -169,10 +144,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { boardId, taskId } = await params;
@@ -182,10 +154,7 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     // Check board access - need canDeleteTasks permission
     const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess || !access.permissions?.canDeleteTasks) {
-      return NextResponse.json(
-        { error: "Bạn không có quyền xóa task" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Bạn không có quyền xóa task" }, { status: 403 });
     }
 
     const task = await Task.findOneAndDelete({
@@ -194,26 +163,15 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
     });
 
     if (!task) {
-      return NextResponse.json(
-        { error: "Task not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Task not found" }, { status: 404 });
     }
 
     // Log activity
-    await logTaskDeleted(
-      boardId,
-      taskId,
-      session.user.id,
-      task.title
-    );
+    await logTaskDeleted(boardId, taskId, session.user.id, task.title);
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("DELETE /api/boards/[boardId]/tasks/[taskId] error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
