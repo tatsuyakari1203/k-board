@@ -44,6 +44,7 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/lib/utils";
 
 interface TaskData {
@@ -627,7 +628,7 @@ export function TableView({
     board.properties.forEach((p) => {
       widths[p.id] = p.width || 150;
     });
-    setColumnWidths(widths); // eslint-disable-line react-hooks/set-state-in-effect
+    setColumnWidths(widths);
   }, [board.properties]);
 
   // Column resize handlers
@@ -814,19 +815,43 @@ export function TableView({
   }, [processedTasks, groupBy, board.properties, users]);
 
   // Flatten tasks for visual index calculation
-  const visualTasks = useMemo(() => {
+  // Flatten tasks for virtualization (handling both grouped and flat views)
+  const flatItems = useMemo(() => {
+    const items: Array<
+      | {
+          type: "header";
+          id: string;
+          group: { id: string; title: string; color?: string; tasks: TaskData[] };
+        }
+      | { type: "task"; id: string; task: TaskData }
+    > = [];
+
     if (groupedTasks) {
-      const tasks: TaskData[] = [];
-      groupedTasks.forEach((g) => {
-        if (expandedGroups[g.id] !== false) {
-          // Default true
-          tasks.push(...g.tasks);
+      groupedTasks.forEach((group) => {
+        items.push({ type: "header", id: `group-${group.id}`, group });
+        if (expandedGroups[group.id] !== false) {
+          group.tasks.forEach((task) => {
+            items.push({ type: "task", id: task._id, task });
+          });
         }
       });
-      return tasks;
+    } else {
+      processedTasks.forEach((task) => {
+        items.push({ type: "task", id: task._id, task });
+      });
     }
-    return processedTasks;
+    return items;
   }, [groupedTasks, processedTasks, expandedGroups]);
+
+  // Virtualizer
+  const parentRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line react-hooks/incompatible-library
+  const rowVirtualizer = useVirtualizer({
+    count: flatItems.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 33, // 32px row + 1px border
+    overscan: 20,
+  });
 
   // Fill Handle Logic
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -857,11 +882,11 @@ export function TableView({
   // We need to apply the changes when fillRange becomes null (on mouse up)
   // But we can't do it inside the setState callback easily because we need side effects (API calls).
   // So let's use an effect that watches for the transition from non-null to null?
-  // Or just handle it in the mouseup handler with a ref to visualTasks.
-  const visualTasksRef = useRef(visualTasks);
+  // Or just handle it in the mouseup handler with a ref to flatItems.
+  const flatItemsRef = useRef(flatItems);
   useEffect(() => {
-    visualTasksRef.current = visualTasks;
-  }, [visualTasks]);
+    flatItemsRef.current = flatItems;
+  }, [flatItems]);
 
   useEffect(() => {
     if (!fillRange) return;
@@ -870,9 +895,12 @@ export function TableView({
       if (fillRange.start !== fillRange.end) {
         const start = Math.min(fillRange.start, fillRange.end);
         const end = Math.max(fillRange.start, fillRange.end);
-        const tasksToUpdate = visualTasksRef.current.slice(start, end + 1);
+        const itemsToUpdate = flatItemsRef.current.slice(start, end + 1);
 
-        tasksToUpdate.forEach((task) => {
+        itemsToUpdate.forEach((item) => {
+          if (item.type !== "task") return;
+          const task = item.task;
+
           // Skip the source task if it's included (it is)
           // Actually we want to copy TO the range.
           // If dragging down: start is source.
@@ -932,9 +960,12 @@ export function TableView({
       if (fillRange && fillRange.start !== fillRange.end) {
         const start = Math.min(fillRange.start, fillRange.end);
         const end = Math.max(fillRange.start, fillRange.end);
-        const tasksToUpdate = visualTasksRef.current.slice(start, end + 1);
+        const itemsToUpdate = flatItemsRef.current.slice(start, end + 1);
 
-        tasksToUpdate.forEach((task) => {
+        itemsToUpdate.forEach((item) => {
+          if (item.type !== "task") return;
+          const task = item.task;
+
           // Don't update if value is same (optimization)
           // Also skip the source task ideally, but updating it with same value is harmless
           onUpdateTask(task._id, {
@@ -1033,7 +1064,10 @@ export function TableView({
     >
       <div className="flex flex-col h-full">
         {/* Desktop Table View */}
-        <div className="hidden md:block overflow-x-auto flex-1">
+        <div
+          ref={parentRef}
+          className="hidden md:block overflow-x-auto flex-1 h-full overflow-y-auto"
+        >
           <table className="w-full border-collapse text-sm min-w-max">
             <thead className="sticky top-0 bg-background z-30">
               <tr>
@@ -1076,100 +1110,96 @@ export function TableView({
               </tr>
             </thead>
 
-            <tbody>
-              {groupedTasks ? (
-                // Grouped View
-                groupedTasks.map((group) => {
-                  // Calculate starting index for this group
-                  // We need to know how many tasks were in previous groups
-                  // This is expensive to calculate in render loop if we don't have it pre-calculated.
-                  // But we can use the task ID to find index in visualTasks?
-                  // Or just map visualTasks and render?
-                  // But we need the headers.
+            <SortableContext
+              items={flatItems.filter((i) => i.type === "task").map((i) => i.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              <tbody
+                style={{
+                  height: `${rowVirtualizer.getTotalSize()}px`,
+                  width: "100%",
+                  position: "relative",
+                }}
+              >
+                {(() => {
+                  const virtualItems = rowVirtualizer.getVirtualItems();
+                  const paddingTop = virtualItems.length > 0 ? virtualItems[0].start : 0;
+                  const paddingBottom =
+                    virtualItems.length > 0
+                      ? rowVirtualizer.getTotalSize() - virtualItems[virtualItems.length - 1].end
+                      : 0;
 
-                  // Let's use a running index counter? No, React render must be pure.
-                  // We can pre-calculate group start indices.
                   return (
                     <>
-                      <GroupHeader
-                        key={group.id}
-                        title={group.title}
-                        count={group.tasks.length}
-                        color={group.color}
-                        isExpanded={!!expandedGroups[group.id]}
-                        onToggle={() => toggleGroup(group.id)}
-                        colSpan={visibleProperties.length + (isTitleVisible ? 4 : 3)}
-                      />
-                      {expandedGroups[group.id] && (
-                        <SortableContext
-                          items={group.tasks.map((t) => t._id)}
-                          strategy={verticalListSortingStrategy}
-                          disabled={true} // Disable drag in grouped view for now
-                        >
-                          {group.tasks.map((task) => {
-                            // Find index in visualTasks
-                            // This is O(N*M) where N is total tasks and M is group tasks.
-                            // Optimization: Create a map of taskId -> index
-                            const vIndex = visualTasks.findIndex((t) => t._id === task._id);
+                      {paddingTop > 0 && (
+                        <tr>
+                          <td
+                            colSpan={visibleProperties.length + (isTitleVisible ? 4 : 3)}
+                            style={{ height: paddingTop, padding: 0 }}
+                          />
+                        </tr>
+                      )}
+                      {virtualItems.map((virtualRow) => {
+                        const item = flatItems[virtualRow.index];
 
-                            return (
-                              <SortableRow
-                                key={task._id}
-                                task={task}
-                                visibleProperties={visibleProperties}
-                                columnWidths={columnWidths}
-                                onUpdateTask={onUpdateTask}
-                                onDeleteTask={onDeleteTask}
-                                users={users}
-                                onAddPropertyOption={onAddPropertyOption}
-                                onUpdatePropertyOption={onUpdatePropertyOption}
-                                isDragEnabled={false}
-                                isSelected={selectedTaskIds.has(task._id)}
-                                onToggleSelect={handleToggleSelect}
-                                visualIndex={vIndex}
-                                onFillStart={onFillStartAction}
-                                onFillMove={onFillMoveAction}
-                                fillRange={fillRange}
-                                isTitleVisible={isTitleVisible}
-                              />
-                            );
-                          })}
-                        </SortableContext>
+                        if (item.type === "header") {
+                          const group = item.group;
+                          return (
+                            <GroupHeader
+                              key={item.id}
+                              title={group.title}
+                              count={group.tasks.length}
+                              color={group.color}
+                              isExpanded={!!expandedGroups[group.id]}
+                              onToggle={() => toggleGroup(group.id)}
+                              colSpan={visibleProperties.length + (isTitleVisible ? 4 : 3)}
+                            />
+                          );
+                        } else {
+                          const task = item.task;
+                          // Find index in flatItems for filling logic?
+                          // Or use virtualRow.index?
+                          // Visual index logic in SortableRow was used for "fill handle".
+                          // We can use virtualRow.index as visualIndex.
+
+                          return (
+                            <SortableRow
+                              key={task._id}
+                              task={task}
+                              visibleProperties={visibleProperties}
+                              columnWidths={columnWidths}
+                              onUpdateTask={onUpdateTask}
+                              onDeleteTask={onDeleteTask}
+                              users={users}
+                              onAddPropertyOption={onAddPropertyOption}
+                              onUpdatePropertyOption={onUpdatePropertyOption}
+                              isDragEnabled={isRowDragEnabled && !groupedTasks} // Only enable if not grouped
+                              isSelected={selectedTaskIds.has(task._id)}
+                              onToggleSelect={handleToggleSelect}
+                              visualIndex={virtualRow.index}
+                              onFillStart={onFillStartAction}
+                              onFillMove={onFillMoveAction}
+                              fillRange={fillRange}
+                              isTitleVisible={isTitleVisible}
+                            />
+                          );
+                        }
+                      })}
+                      {paddingBottom > 0 && (
+                        <tr>
+                          <td
+                            colSpan={visibleProperties.length + (isTitleVisible ? 4 : 3)}
+                            style={{ height: paddingBottom, padding: 0 }}
+                          />
+                        </tr>
                       )}
                     </>
                   );
-                })
-              ) : (
-                // Flat View
-                <SortableContext
-                  items={processedTasks.map((t) => t._id)}
-                  strategy={verticalListSortingStrategy}
-                  disabled={!isRowDragEnabled}
-                >
-                  {processedTasks.map((task, index) => (
-                    <SortableRow
-                      key={task._id}
-                      task={task}
-                      visibleProperties={visibleProperties}
-                      columnWidths={columnWidths}
-                      onUpdateTask={onUpdateTask}
-                      onDeleteTask={onDeleteTask}
-                      users={users}
-                      onAddPropertyOption={onAddPropertyOption}
-                      onUpdatePropertyOption={onUpdatePropertyOption}
-                      isDragEnabled={isRowDragEnabled}
-                      isSelected={selectedTaskIds.has(task._id)}
-                      onToggleSelect={handleToggleSelect}
-                      visualIndex={index}
-                      onFillStart={onFillStartAction}
-                      onFillMove={onFillMoveAction}
-                      fillRange={fillRange}
-                      isTitleVisible={isTitleVisible}
-                    />
-                  ))}
-                </SortableContext>
-              )}
+                })()}
+              </tbody>
+            </SortableContext>
 
+            <tbody>
               <tr>
                 <td className="w-8 border-b border-border/40 bg-background sticky left-0 z-20 h-8" />
                 <td className="w-6 border-b border-border/40 bg-background sticky left-8 z-20 h-8" />
