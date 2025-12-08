@@ -952,16 +952,20 @@ export function TableView({
   // Initialize expanded state for new groups
   useEffect(() => {
     if (groupedTasks) {
-      setExpandedGroups((prev) => {
-        // eslint-disable-line react-hooks/set-state-in-effect
-        const next = { ...prev };
-        groupedTasks.forEach((g) => {
-          if (next[g.id] === undefined) {
-            next[g.id] = true;
-          }
+      const timer = setTimeout(() => {
+        setExpandedGroups((prev) => {
+          const next = { ...prev };
+          let hasChanges = false;
+          groupedTasks.forEach((g) => {
+            if (next[g.id] === undefined) {
+              next[g.id] = true;
+              hasChanges = true;
+            }
+          });
+          return hasChanges ? next : prev;
         });
-        return next;
-      });
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [groupedTasks]);
 

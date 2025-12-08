@@ -4,11 +4,7 @@ import { USER_ROLES } from "@/types/user";
 import Link from "next/link";
 import { Users, Settings, Shield, ChevronLeft, ClipboardList } from "lucide-react";
 
-export default async function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -16,7 +12,7 @@ export default async function AdminLayout({
   }
 
   if (user.role !== USER_ROLES.ADMIN) {
-    redirect("/unauthorized");
+    redirect("/dashboard");
   }
 
   return (
@@ -46,14 +42,16 @@ export default async function AdminLayout({
             <NavItem href="/dashboard/admin" icon={Shield} label="Tổng quan" />
             <NavItem href="/dashboard/admin/users" icon={Users} label="Quản lý người dùng" />
             <NavItem href="/dashboard/admin/settings" icon={Settings} label="Cài đặt hệ thống" />
-            <NavItem href="/dashboard/admin/audit-logs" icon={ClipboardList} label="Nhật ký hoạt động" />
+            <NavItem
+              href="/dashboard/admin/audit-logs"
+              icon={ClipboardList}
+              label="Nhật ký hoạt động"
+            />
           </nav>
         </aside>
 
         {/* Content */}
-        <main className="flex-1 p-6">
-          {children}
-        </main>
+        <main className="flex-1 p-6">{children}</main>
       </div>
     </div>
   );

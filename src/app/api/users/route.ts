@@ -1,29 +1,16 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import dbConnect from "@/lib/db";
-import User from "@/models/user.model";
-import { USER_STATUS } from "@/types/user";
+import { UserService } from "@/services/user.service";
 
 // GET /api/users - List all active users (for assignment and staff directory)
 export async function GET() {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    await dbConnect();
-
-    const users = await User.find({
-      isActive: true,
-      status: USER_STATUS.APPROVED,
-    })
-      .select("_id name email image role phone department position createdAt")
-      .sort({ name: 1 })
-      .lean();
+    const users = await UserService.getActiveUsers();
 
     // Return both formats for backward compatibility
     const formattedUsers = users.map((u) => ({
@@ -44,9 +31,6 @@ export async function GET() {
     });
   } catch (error) {
     console.error("GET /api/users error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

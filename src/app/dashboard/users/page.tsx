@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useState } from "react";
 import { useSession } from "next-auth/react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Users,
   Search,
@@ -53,8 +54,6 @@ const ROLE_COLORS: Record<UserRole, string> = {
 
 export default function UsersPage() {
   const { data: session } = useSession();
-  const [users, setUsers] = useState<UserInfo[]>([]);
-  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
   const [selectedUser, setSelectedUser] = useState<UserInfo | null>(null);
@@ -63,24 +62,17 @@ export default function UsersPage() {
   const isManager = session?.user?.role === USER_ROLES.MANAGER;
   const canViewDetails = isAdmin || isManager;
 
-  const fetchUsers = useCallback(async () => {
-    setLoading(true);
-    try {
+  const { data: users = [], isLoading: loading } = useQuery<UserInfo[]>({
+    queryKey: ["users"],
+    queryFn: async () => {
       const res = await fetch("/api/users");
       if (res.ok) {
         const data = await res.json();
-        setUsers(data.users || []);
+        return (data.users || []) as UserInfo[];
       }
-    } catch (error) {
-      console.error("Failed to fetch users:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchUsers();
-  }, [fetchUsers]);
+      return [];
+    },
+  });
 
   // Filter users
   const filteredUsers = users.filter((user) => {
@@ -223,10 +215,7 @@ export default function UsersPage() {
 
       {/* User Detail Modal */}
       {selectedUser && (
-        <UserDetailModal
-          user={selectedUser}
-          onClose={() => setSelectedUser(null)}
-        />
+        <UserDetailModal user={selectedUser} onClose={() => setSelectedUser(null)} />
       )}
     </div>
   );
@@ -291,13 +280,7 @@ function UserCard({
   );
 }
 
-function UserDetailModal({
-  user,
-  onClose,
-}: {
-  user: UserInfo;
-  onClose: () => void;
-}) {
+function UserDetailModal({ user, onClose }: { user: UserInfo; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-background rounded-lg shadow-lg w-full max-w-md mx-4">
@@ -333,10 +316,18 @@ function UserDetailModal({
               <InfoRow icon={<Phone className="h-4 w-4" />} label="Điện thoại" value={user.phone} />
             )}
             {user.department && (
-              <InfoRow icon={<Building2 className="h-4 w-4" />} label="Phòng ban" value={user.department} />
+              <InfoRow
+                icon={<Building2 className="h-4 w-4" />}
+                label="Phòng ban"
+                value={user.department}
+              />
             )}
             {user.position && (
-              <InfoRow icon={<Briefcase className="h-4 w-4" />} label="Chức vụ" value={user.position} />
+              <InfoRow
+                icon={<Briefcase className="h-4 w-4" />}
+                label="Chức vụ"
+                value={user.position}
+              />
             )}
             <InfoRow
               icon={<Users className="h-4 w-4" />}
@@ -360,15 +351,7 @@ function UserDetailModal({
   );
 }
 
-function InfoRow({
-  icon,
-  label,
-  value,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-}) {
+function InfoRow({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="flex items-center gap-3">
       <div className="text-muted-foreground">{icon}</div>

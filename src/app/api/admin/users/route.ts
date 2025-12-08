@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
-import User from "@/models/user.model";
-import { USER_ROLES, USER_STATUS } from "@/types/user";
+import { UserService } from "@/services/user.service";
+import { USER_ROLES } from "@/types/user";
 import { createUserSchema, userFilterSchema } from "@/lib/validations/admin";
-import { logUserCreated } from "@/lib/audit";
 
 // Helper to check admin access
 async function checkAdminAccess() {
@@ -23,13 +21,8 @@ export async function GET(request: NextRequest) {
   try {
     const authResult = await checkAdminAccess();
     if ("error" in authResult) {
-      return NextResponse.json(
-        { error: authResult.error },
-        { status: authResult.status }
-      );
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
-
-    await connectDB();
 
     // Parse query params
     const searchParams = request.nextUrl.searchParams;
@@ -42,57 +35,13 @@ export async function GET(request: NextRequest) {
       limit: searchParams.get("limit") || 20,
     });
 
-    // Build query
-    const query: Record<string, unknown> = {};
-
-    if (filters.status) {
-      query.status = filters.status;
-    }
-
-    if (filters.role) {
-      query.role = filters.role;
-    }
-
-    if (filters.isActive !== undefined) {
-      query.isActive = filters.isActive === "true";
-    }
-
-    if (filters.search) {
-      query.$or = [
-        { name: { $regex: filters.search, $options: "i" } },
-        { email: { $regex: filters.search, $options: "i" } },
-      ];
-    }
-
     // Count total
-    const total = await User.countDocuments(query);
-
-    // Get paginated results
-    const skip = (filters.page - 1) * filters.limit;
-    const users = await User.find(query)
-      .select("-password")
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(filters.limit)
-      .lean();
-
-    // Get counts by status
-    const statusCounts = await User.aggregate([
-      { $group: { _id: "$status", count: { $sum: 1 } } },
-    ]);
-
-    const counts = {
-      total,
-      pending: 0,
-      approved: 0,
-      rejected: 0,
-    };
-
-    statusCounts.forEach((s) => {
-      if (s._id === USER_STATUS.PENDING) counts.pending = s.count;
-      if (s._id === USER_STATUS.APPROVED) counts.approved = s.count;
-      if (s._id === USER_STATUS.REJECTED) counts.rejected = s.count;
+    const { users, total } = await UserService.getUsers({
+      ...filters,
+      isActive:
+        filters.isActive === "true" ? true : filters.isActive === "false" ? false : undefined,
     });
+    const counts = await UserService.getUserCounts();
 
     return NextResponse.json({
       users: users.map((u) => ({
@@ -111,10 +60,7 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     console.error("GET /api/admin/users error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -123,10 +69,7 @@ export async function POST(request: NextRequest) {
   try {
     const authResult = await checkAdminAccess();
     if ("error" in authResult) {
-      return NextResponse.json(
-        { error: authResult.error },
-        { status: authResult.status }
-      );
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
 
     const body = await request.json();
@@ -139,57 +82,31 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await connectDB();
+    try {
+      const user = await UserService.createUser(validated.data, authResult.session.user.id);
 
-    // Check if email exists
-    const existingUser = await User.findOne({
-      email: validated.data.email.toLowerCase(),
-    });
-
-    if (existingUser) {
       return NextResponse.json(
-        { error: "Email đã được sử dụng" },
-        { status: 409 }
-      );
-    }
-
-    // Create user - auto approved since created by admin
-    const user = await User.create({
-      ...validated.data,
-      status: USER_STATUS.APPROVED,
-      isActive: validated.data.isActive ?? true,
-      approvedBy: authResult.session.user.id,
-      approvedAt: new Date(),
-      createdBy: authResult.session.user.id,
-    });
-
-    // Log audit
-    await logUserCreated(
-      authResult.session.user.id,
-      user._id.toString(),
-      user.name,
-      { email: user.email, role: user.role }
-    );
-
-    return NextResponse.json(
-      {
-        message: "Tạo người dùng thành công",
-        user: {
-          _id: user._id.toString(),
-          email: user.email,
-          name: user.name,
-          role: user.role,
-          status: user.status,
-          isActive: user.isActive,
+        {
+          message: "Tạo người dùng thành công",
+          user: {
+            _id: user._id.toString(),
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            status: user.status,
+            isActive: user.isActive,
+          },
         },
-      },
-      { status: 201 }
-    );
+        { status: 201 }
+      );
+    } catch (error) {
+      if (error instanceof Error && error.message === "Email_Exists") {
+        return NextResponse.json({ error: "Email đã được sử dụng" }, { status: 409 });
+      }
+      throw error;
+    }
   } catch (error) {
     console.error("POST /api/admin/users error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Users, UserCheck, UserX, Clock } from "lucide-react";
 import Link from "next/link";
 
@@ -12,38 +12,22 @@ interface UserCounts {
 }
 
 export default function AdminDashboardPage() {
-  const [counts, setCounts] = useState<UserCounts>({
-    total: 0,
-    pending: 0,
-    approved: 0,
-    rejected: 0,
-  });
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function fetchCounts() {
-      try {
+  const { data: counts = { total: 0, pending: 0, approved: 0, rejected: 0 }, isLoading: loading } =
+    useQuery({
+      queryKey: ["admin-stats"],
+      queryFn: async () => {
         const res = await fetch("/api/admin/users?limit=1");
-        if (res.ok) {
-          const data = await res.json();
-          setCounts(data.counts);
-        }
-      } catch (error) {
-        console.error("Failed to fetch counts:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchCounts();
-  }, []);
+        if (!res.ok) throw new Error("Failed to fetch counts");
+        const data = await res.json();
+        return data.counts as UserCounts;
+      },
+    });
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Tổng quan quản trị</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Quản lý người dùng và cài đặt hệ thống
-        </p>
+        <p className="text-muted-foreground text-sm mt-1">Quản lý người dùng và cài đặt hệ thống</p>
       </div>
 
       {/* Stats Cards */}
@@ -130,7 +114,9 @@ function StatCard({
       }`}
     >
       <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-md ${highlight ? "bg-orange-100 dark:bg-orange-900/40" : "bg-muted"}`}>
+        <div
+          className={`p-2 rounded-md ${highlight ? "bg-orange-100 dark:bg-orange-900/40" : "bg-muted"}`}
+        >
           <Icon className={`h-5 w-5 ${highlight ? "text-orange-600" : "text-muted-foreground"}`} />
         </div>
         <div>
