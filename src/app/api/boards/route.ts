@@ -6,22 +6,14 @@ import Board from "@/models/board.model";
 import BoardMember from "@/models/board-member.model";
 import { BOARD_ROLES } from "@/types/board-member";
 import { USER_ROLES } from "@/types/user";
-import {
-  createBoardSchema,
-  ViewType,
-  DEFAULT_SURVEY_PROPERTIES,
-  DEFAULT_STATUS_OPTIONS,
-} from "@/types/board";
+import { createBoardSchema, ViewType, DEFAULT_STATUS_OPTIONS } from "@/types/board";
 
 // GET /api/boards - List all boards for current user (owned + member of)
 export async function GET() {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     await dbConnect();
@@ -46,7 +38,9 @@ export async function GET() {
       // Get boards where user is a member (but not owner)
       const memberships = await BoardMember.find({
         userId: session.user.id,
-      }).select("boardId role").lean();
+      })
+        .select("boardId role")
+        .lean();
 
       const memberBoardIds = memberships
         .map((m) => m.boardId.toString())
@@ -73,9 +67,7 @@ export async function GET() {
       allBoards = [
         ...ownedBoards.map((b) => ({ ...b, role: BOARD_ROLES.OWNER })),
         ...memberBoards.map((b) => {
-          const membership = memberships.find(
-            (m) => m.boardId.toString() === b._id.toString()
-          );
+          const membership = memberships.find((m) => m.boardId.toString() === b._id.toString());
           return { ...b, role: membership?.role || BOARD_ROLES.VIEWER };
         }),
         ...workspaceBoards.map((b) => ({ ...b, role: BOARD_ROLES.VIEWER })),
@@ -90,9 +82,7 @@ export async function GET() {
       { $group: { _id: "$boardId", count: { $sum: 1 } } },
     ]);
 
-    const countMap = new Map(
-      taskCounts.map((tc) => [tc._id.toString(), tc.count])
-    );
+    const countMap = new Map(taskCounts.map((tc) => [tc._id.toString(), tc.count]));
 
     const boardsWithCounts = allBoards.map((board) => ({
       ...board,
@@ -110,10 +100,7 @@ export async function GET() {
     return NextResponse.json(boardsWithCounts);
   } catch (error) {
     console.error("GET /api/boards error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -122,10 +109,7 @@ export async function POST(request: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
@@ -135,9 +119,16 @@ export async function POST(request: NextRequest) {
     let properties = body.properties || [];
     let views = body.views || [];
 
-    if (useTemplate === "survey") {
-      // Use survey business template
-      properties = DEFAULT_SURVEY_PROPERTIES.map((prop) => ({
+    // Generate default properties if using template
+    const templateId =
+      typeof useTemplate === "string" ? useTemplate : useTemplate ? "survey" : null;
+
+    if (templateId) {
+      const { BOARD_TEMPLATES } = await import("@/lib/templates");
+      const template = BOARD_TEMPLATES.find((t) => t.id === templateId) || BOARD_TEMPLATES[0]; // Fallback to survey if not found
+
+      // Map properties
+      properties = template.properties.map((prop) => ({
         ...prop,
         id: uuidv4(),
         options: prop.options?.map((opt) => ({
@@ -146,31 +137,43 @@ export async function POST(request: NextRequest) {
         })),
       }));
 
-      // Find status property for Kanban groupBy
-      const statusProp = properties.find((p: { name: string }) => p.name === "Trạng thái");
+      // Map views
+      views = template.views.map((view, index) => {
+        const viewConfig: Record<string, unknown> = {};
 
-      views = [
-        {
+        // Map groupBy
+        if (view.config.groupBy) {
+          const groupProp = properties.find(
+            (p: { name: string; id: string }) => p.name === view.config.groupBy
+          );
+          if (groupProp) {
+            viewConfig.groupBy = groupProp.id;
+          }
+        }
+
+        // Map visibleProperties
+        if (view.config.visibleProperties) {
+          viewConfig.visibleProperties = view.config.visibleProperties
+            .map(
+              (name: string) =>
+                properties.find((p: { name: string; id: string }) => p.name === name)?.id
+            )
+            .filter(Boolean);
+        } else {
+          // Default to all if not specified
+          viewConfig.visibleProperties = properties.map((p: { id: string }) => p.id);
+        }
+
+        return {
           id: uuidv4(),
-          name: "Bảng",
-          type: ViewType.TABLE,
-          config: {
-            visibleProperties: properties.map((p: { id: string }) => p.id),
-          },
-          isDefault: true,
-        },
-        {
-          id: uuidv4(),
-          name: "Kanban",
-          type: ViewType.KANBAN,
-          config: {
-            groupBy: statusProp?.id,
-          },
-          isDefault: false,
-        },
-      ];
+          name: view.name,
+          type: view.type,
+          config: viewConfig,
+          isDefault: index === 0,
+        };
+      });
     } else if (properties.length === 0) {
-      // Create minimal default properties
+      // Create minimal default properties for blank board
       const statusId = uuidv4();
       properties = [
         {
@@ -228,15 +231,9 @@ export async function POST(request: NextRequest) {
       addedAt: new Date(),
     });
 
-    return NextResponse.json(
-      { ...board.toObject(), _id: board._id.toString() },
-      { status: 201 }
-    );
+    return NextResponse.json({ ...board.toObject(), _id: board._id.toString() }, { status: 201 });
   } catch (error) {
     console.error("POST /api/boards error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

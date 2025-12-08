@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { BOARD_TEMPLATES } from "@/lib/templates";
 import {
   BOARD_VISIBILITY,
   BOARD_VISIBILITY_LABELS,
@@ -42,7 +43,7 @@ export function CreateBoardDialog({ open, onOpenChange }: CreateBoardDialogProps
   const router = useRouter();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [useTemplate, setUseTemplate] = useState(true);
+  const [useTemplate, setUseTemplate] = useState<string>("survey"); // Default to survey
   const [visibility, setVisibility] = useState<BoardVisibility>(BOARD_VISIBILITY.PRIVATE);
   const [loading, setLoading] = useState(false);
 
@@ -117,17 +118,48 @@ export function CreateBoardDialog({ open, onOpenChange }: CreateBoardDialogProps
             />
           </div>
 
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="useTemplate"
-              checked={useTemplate}
-              onChange={(e) => setUseTemplate(e.target.checked)}
-              className="h-4 w-4 rounded border-input"
-            />
-            <Label htmlFor="useTemplate" className="text-sm font-normal cursor-pointer">
-              Sử dụng template đo đạc (các cột mặc định cho nghiệp vụ đo đạc)
-            </Label>
+          <div className="space-y-3">
+            <Label>Chọn Template</Label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setUseTemplate("")}
+                className={`flex flex-col items-start p-3 rounded-lg border text-left transition-colors h-full ${
+                  !useTemplate
+                    ? "border-primary bg-primary/5 ring-1 ring-primary"
+                    : "border-input hover:bg-muted/50"
+                }`}
+              >
+                <div className="mb-2 w-8 h-8 rounded-full bg-background border flex items-center justify-center text-lg">
+                  ⚪
+                </div>
+                <span className="text-sm font-medium">Bảng trắng</span>
+                <span className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                  Tự thiết kế quy trình làm việc từ đầu
+                </span>
+              </button>
+
+              {BOARD_TEMPLATES.map((template) => (
+                <button
+                  key={template.id}
+                  type="button"
+                  onClick={() => setUseTemplate(template.id)}
+                  className={`flex flex-col items-start p-3 rounded-lg border text-left transition-colors h-full ${
+                    useTemplate === template.id
+                      ? "border-primary bg-primary/5 ring-1 ring-primary"
+                      : "border-input hover:bg-muted/50"
+                  }`}
+                >
+                  <div className="mb-2 w-8 h-8 rounded-full bg-background border flex items-center justify-center text-lg">
+                    {template.icon}
+                  </div>
+                  <span className="text-sm font-medium">{template.name}</span>
+                  <span className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                    {template.description}
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-2">
