@@ -61,7 +61,6 @@ export async function GET(_request: NextRequest) {
     // 1. Find all boards the user has access to
     const memberShips = await BoardMember.find({
       userId,
-      status: "active",
     })
       .select("boardId role")
       .lean();

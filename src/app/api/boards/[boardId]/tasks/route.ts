@@ -33,18 +33,26 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
 
     // If viewScope is assigned, filter by assignee or creator
     if (access.permissions?.viewScope === "assigned") {
-      // Find the assignee property (type 'people')
+      const { PropertyType } = await import("@/types/board");
       const board = await Board.findById(boardId).select("properties").lean();
-      // Find the first property of type 'people'
-      // In a real app, we might want to let the user configure which column is the "Assignee" column
-      // For now, we assume the first 'people' column is the assignee
-      const assigneeProp = board?.properties?.find((p: { type: string }) => p.type === "people");
 
-      if (assigneeProp) {
-        query.$or = [
-          { [`properties.${assigneeProp.id}`]: session.user.id },
-          { createdBy: session.user.id },
-        ];
+      // Find all properties that can hold assignee (person or user)
+      const assigneeProps =
+        board?.properties?.filter(
+          (p: { type: string }) => p.type === PropertyType.PERSON || p.type === PropertyType.USER
+        ) || [];
+
+      if (assigneeProps.length > 0) {
+        const orConditions: Array<Record<string, unknown>> = [{ createdBy: session.user.id }];
+
+        assigneeProps.forEach((prop: { id: string }) => {
+          orConditions.push({ [`properties.${prop.id}`]: session.user.id });
+          orConditions.push({
+            [`properties.${prop.id}`]: { $elemMatch: { $eq: session.user.id } },
+          });
+        });
+
+        query.$or = orConditions;
       } else {
         // Fallback: only see tasks created by self
         query.createdBy = session.user.id;

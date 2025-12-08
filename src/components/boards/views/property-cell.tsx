@@ -543,10 +543,11 @@ function DateCell({
 
   const toggleRange = (checked: boolean) => {
     setIsRange(checked);
-    if (!selectedRange?.from) return;
+
+    // Allow toggling range even if no date is selected yet
     const newRange: DateRange = {
-      from: selectedRange.from,
-      to: checked ? selectedRange.to : undefined,
+      from: selectedRange?.from,
+      to: checked ? selectedRange?.to : undefined,
     };
     setSelectedRange(newRange);
     handleSave(newRange, includeTime, startTime, endTime);
