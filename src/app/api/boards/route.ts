@@ -128,9 +128,10 @@ export async function POST(request: NextRequest) {
       const template = BOARD_TEMPLATES.find((t) => t.id === templateId) || BOARD_TEMPLATES[0]; // Fallback to survey if not found
 
       // Map properties
-      properties = template.properties.map((prop) => ({
+      properties = template.properties.map((prop, index) => ({
         ...prop,
         id: uuidv4(),
+        order: index,
         options: prop.options?.map((opt) => ({
           ...opt,
           id: uuidv4(),
