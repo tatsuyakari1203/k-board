@@ -484,7 +484,6 @@ function DateCell({
   );
 
   // Sync state when popover opens - this is intentional to reset picker state
-  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     if (open) {
       const parsed = parseDateValue(value);
@@ -497,8 +496,8 @@ function DateCell({
       if (parsed.from) setStartTime(format(new Date(parsed.from), "HH:mm"));
       if (parsed.to) setEndTime(format(new Date(parsed.to), "HH:mm"));
     }
-  }, [open, value]);
-  /* eslint-enable react-hooks/set-state-in-effect */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   const handleSave = (
     range: DateRange | undefined,

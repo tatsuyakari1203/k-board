@@ -27,7 +27,7 @@ const REGISTRATION_MODE_OPTIONS: {
 ];
 
 interface SystemSettings {
-  registration_mode: RegistrationMode;
+  user_registration_mode: RegistrationMode;
 }
 
 export default function SettingsPage() {
@@ -62,7 +62,7 @@ export default function SettingsPage() {
 
     try {
       const res = await fetch("/api/admin/settings", {
-        method: "POST",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(settings),
       });
@@ -79,7 +79,7 @@ export default function SettingsPage() {
   };
 
   const handleModeChange = (mode: RegistrationMode) => {
-    setSettings((prev) => prev ? { ...prev, registration_mode: mode } : null);
+    setSettings((prev) => (prev ? { ...prev, user_registration_mode: mode } : null));
   };
 
   if (loading) {
@@ -94,9 +94,7 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-semibold">Cài đặt hệ thống</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          Quản lý các cài đặt chung của hệ thống
-        </p>
+        <p className="text-muted-foreground text-sm mt-1">Quản lý các cài đặt chung của hệ thống</p>
       </div>
 
       {/* Registration Mode */}
@@ -116,7 +114,7 @@ export default function SettingsPage() {
             <label
               key={option.value}
               className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                settings?.registration_mode === option.value
+                settings?.user_registration_mode === option.value
                   ? "border-primary bg-primary/5"
                   : "border-transparent hover:border-border hover:bg-muted/50"
               }`}
@@ -125,7 +123,7 @@ export default function SettingsPage() {
                 type="radio"
                 name="registration_mode"
                 value={option.value}
-                checked={settings?.registration_mode === option.value}
+                checked={settings?.user_registration_mode === option.value}
                 onChange={() => handleModeChange(option.value)}
                 className="mt-1"
               />
@@ -137,22 +135,23 @@ export default function SettingsPage() {
           ))}
         </div>
 
-        {settings?.registration_mode === REGISTRATION_MODE.MANUAL_APPROVE && (
+        {settings?.user_registration_mode === REGISTRATION_MODE.MANUAL_APPROVE && (
           <div className="px-4 pb-4">
             <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm text-blue-700 dark:text-blue-400">
               <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
               <div>
                 <p className="font-medium">Lưu ý về chế độ phê duyệt thủ công</p>
                 <p className="mt-1">
-                  Khi có người dùng mới đăng ký, họ sẽ ở trạng thái &quot;Chờ duyệt&quot; và không thể đăng nhập.
-                  Bạn cần vào trang <strong>Quản lý người dùng</strong> để phê duyệt hoặc từ chối.
+                  Khi có người dùng mới đăng ký, họ sẽ ở trạng thái &quot;Chờ duyệt&quot; và không
+                  thể đăng nhập. Bạn cần vào trang <strong>Quản lý người dùng</strong> để phê duyệt
+                  hoặc từ chối.
                 </p>
               </div>
             </div>
           </div>
         )}
 
-        {settings?.registration_mode === REGISTRATION_MODE.DISABLED && (
+        {settings?.user_registration_mode === REGISTRATION_MODE.DISABLED && (
           <div className="px-4 pb-4">
             <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-sm text-amber-700 dark:text-amber-400">
               <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
