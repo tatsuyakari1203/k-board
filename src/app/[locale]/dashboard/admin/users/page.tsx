@@ -15,6 +15,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { USER_ROLES, type UserRole, type UserStatus } from "@/types/user";
+import { useTranslations, useLocale } from "next-intl";
 
 interface User {
   _id: string;
@@ -44,16 +45,14 @@ interface UsersResponse {
   };
 }
 
-const ROLE_LABELS: Record<UserRole, string> = {
-  admin: "Quản trị viên",
-  manager: "Quản lý",
-  staff: "Nhân viên",
-  user: "Người dùng",
-};
-
 export default function UsersPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("Admin.users");
+  const tCommon = useTranslations("Common");
+  const tUsers = useTranslations("Users"); // For roles
+  const locale = useLocale();
+
   const [data, setData] = useState<UsersResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -124,7 +123,7 @@ export default function UsersPage() {
   };
 
   const handleReject = async (userId: string) => {
-    const reason = prompt("Lý do từ chối (không bắt buộc):");
+    const reason = prompt(t("actions.rejectReason"));
     setActionLoading(userId);
     try {
       const res = await fetch(`/api/admin/users/${userId}/approve`, {
@@ -142,7 +141,7 @@ export default function UsersPage() {
   };
 
   const handleDelete = async (userId: string) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa người dùng này?")) return;
+    if (!confirm(t("actions.confirmDelete"))) return;
     setActionLoading(userId);
     try {
       const res = await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
@@ -203,13 +202,10 @@ export default function UsersPage() {
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
-        <h1 className="page-title">Nhân sự</h1>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="btn-ghost"
-        >
+        <h1 className="page-title">{t("title")}</h1>
+        <button onClick={() => setShowCreateModal(true)} className="btn-ghost">
           <Plus className="h-5 w-5" />
-          Thêm mới
+          {t("add")}
         </button>
       </div>
 
@@ -219,14 +215,14 @@ export default function UsersPage() {
           onClick={() => setStatusFilterUrl(null)}
           className={`hover:text-foreground transition-colors ${!statusFilter ? "text-foreground font-medium" : "text-muted-foreground"}`}
         >
-          Tất cả
+          {t("filter.all")}
           <span className="ml-1.5 text-muted-foreground">({data?.counts.total || 0})</span>
         </button>
         <button
           onClick={() => setStatusFilterUrl("pending")}
           className={`hover:text-foreground transition-colors ${statusFilter === "pending" ? "text-foreground font-medium" : "text-muted-foreground"}`}
         >
-          Chờ duyệt
+          {t("filter.pending")}
           {(data?.counts.pending || 0) > 0 && (
             <span className="ml-1.5 text-orange-500">({data?.counts.pending})</span>
           )}
@@ -235,13 +231,13 @@ export default function UsersPage() {
           onClick={() => setStatusFilterUrl("approved")}
           className={`hover:text-foreground transition-colors ${statusFilter === "approved" ? "text-foreground font-medium" : "text-muted-foreground"}`}
         >
-          Đã duyệt
+          {t("filter.approved")}
         </button>
         <button
           onClick={() => setStatusFilterUrl("rejected")}
           className={`hover:text-foreground transition-colors ${statusFilter === "rejected" ? "text-foreground font-medium" : "text-muted-foreground"}`}
         >
-          Từ chối
+          {t("filter.rejected")}
         </button>
 
         <div className="flex-1" />
@@ -250,7 +246,7 @@ export default function UsersPage() {
           <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
             type="text"
-            placeholder="Tìm kiếm..."
+            placeholder={tCommon("search")}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-9 pr-4 py-2 text-base bg-transparent border-0 border-b border-transparent focus:border-muted-foreground focus:outline-none w-48 placeholder:text-muted-foreground/60"
@@ -262,10 +258,10 @@ export default function UsersPage() {
       <table className="w-full mt-3">
         <thead>
           <tr className="text-sm text-muted-foreground uppercase tracking-wider border-b">
-            <th className="text-left py-3 font-medium">Tên</th>
-            <th className="text-left py-3 font-medium w-36">Vai trò</th>
-            <th className="text-left py-3 font-medium w-28">Trạng thái</th>
-            <th className="text-left py-3 font-medium w-28">Ngày tạo</th>
+            <th className="text-left py-3 font-medium">{t("table.name")}</th>
+            <th className="text-left py-3 font-medium w-36">{t("table.role")}</th>
+            <th className="text-left py-3 font-medium w-28">{t("table.status")}</th>
+            <th className="text-left py-3 font-medium w-28">{t("table.created")}</th>
             <th className="w-12"></th>
           </tr>
         </thead>
@@ -279,7 +275,7 @@ export default function UsersPage() {
           ) : data?.users.length === 0 ? (
             <tr>
               <td colSpan={5} className="py-12 text-center text-muted-foreground text-base">
-                Không có dữ liệu
+                {t("table.noData")}
               </td>
             </tr>
           ) : (
@@ -302,8 +298,10 @@ export default function UsersPage() {
                     disabled={actionLoading === user._id}
                     className="text-base bg-transparent border-0 cursor-pointer hover:text-primary focus:outline-none disabled:opacity-50"
                   >
-                    {Object.entries(ROLE_LABELS).map(([value, label]) => (
-                      <option key={value} value={value}>{label}</option>
+                    {Object.values(USER_ROLES).map((role) => (
+                      <option key={role} value={role}>
+                        {tUsers(`roles.${role}`)}
+                      </option>
                     ))}
                   </select>
                 </td>
@@ -311,23 +309,22 @@ export default function UsersPage() {
                 {/* Status */}
                 <td className="py-4 text-base">
                   {user.status === "pending" && (
-                    <span className="text-orange-500">Chờ duyệt</span>
+                    <span className="text-orange-500">{t("status.pending")}</span>
                   )}
                   {user.status === "rejected" && (
-                    <span className="text-red-500">Từ chối</span>
+                    <span className="text-red-500">{t("status.rejected")}</span>
                   )}
-                  {user.status === "approved" && (
-                    user.isActive ? (
-                      <span className="text-green-600">Hoạt động</span>
+                  {user.status === "approved" &&
+                    (user.isActive ? (
+                      <span className="text-green-600">{t("status.active")}</span>
                     ) : (
-                      <span className="text-muted-foreground">Vô hiệu</span>
-                    )
-                  )}
+                      <span className="text-muted-foreground">{t("status.inactive")}</span>
+                    ))}
                 </td>
 
                 {/* Date */}
                 <td className="py-4 text-base text-muted-foreground">
-                  {new Date(user.createdAt).toLocaleDateString("vi-VN")}
+                  {new Date(user.createdAt).toLocaleDateString(locale)}
                 </td>
 
                 {/* Actions */}
@@ -353,14 +350,14 @@ export default function UsersPage() {
                                   className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted text-left text-base"
                                 >
                                   <UserCheck className="h-4 w-4" />
-                                  Phê duyệt
+                                  {t("actions.approve")}
                                 </button>
                                 <button
                                   onClick={() => handleReject(user._id)}
                                   className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted text-left text-base"
                                 >
                                   <UserX className="h-4 w-4" />
-                                  Từ chối
+                                  {t("actions.reject")}
                                 </button>
                                 <div className="border-t my-1.5" />
                               </>
@@ -375,12 +372,12 @@ export default function UsersPage() {
                                   {user.isActive ? (
                                     <>
                                       <X className="h-4 w-4" />
-                                      Vô hiệu hóa
+                                      {t("actions.deactivate")}
                                     </>
                                   ) : (
                                     <>
                                       <Check className="h-4 w-4" />
-                                      Kích hoạt
+                                      {t("actions.activate")}
                                     </>
                                   )}
                                 </button>
@@ -396,7 +393,7 @@ export default function UsersPage() {
                               className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted text-left text-base"
                             >
                               <Pencil className="h-4 w-4" />
-                              Chỉnh sửa
+                              {t("actions.edit")}
                             </button>
 
                             <button
@@ -404,7 +401,7 @@ export default function UsersPage() {
                               className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted text-left text-base text-red-500"
                             >
                               <Trash2 className="h-4 w-4" />
-                              Xóa
+                              {t("actions.delete")}
                             </button>
                           </div>
                         )}
@@ -421,7 +418,9 @@ export default function UsersPage() {
       {/* Pagination - minimal */}
       {data && data.pagination.totalPages > 1 && (
         <div className="flex items-center justify-between py-5 text-base text-muted-foreground">
-          <span>{data.pagination.total} người dùng</span>
+          <span>
+            {data.pagination.total} {t("table.records")}
+          </span>
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
@@ -434,7 +433,9 @@ export default function UsersPage() {
             >
               ←
             </button>
-            <span className="px-3">{currentPage} / {data.pagination.totalPages}</span>
+            <span className="px-3">
+              {currentPage} / {data.pagination.totalPages}
+            </span>
             <button
               onClick={() => {
                 const params = new URLSearchParams(searchParams);
@@ -478,6 +479,8 @@ function UserFormModal({
   onClose: () => void;
   onSuccess: () => void;
 }) {
+  const t = useTranslations("Admin.users.modal");
+  const tUsers = useTranslations("Users");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
@@ -503,7 +506,7 @@ function UserFormModal({
             name: formData.name,
             email: formData.email,
             role: formData.role,
-            ...(formData.password && { password: formData.password })
+            ...(formData.password && { password: formData.password }),
           }
         : formData;
 
@@ -516,13 +519,13 @@ function UserFormModal({
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Có lỗi xảy ra");
+        setError(data.error || t("error"));
         return;
       }
 
       onSuccess();
     } catch {
-      setError("Có lỗi xảy ra");
+      setError(t("error"));
     } finally {
       setLoading(false);
     }
@@ -533,7 +536,7 @@ function UserFormModal({
       <div className="bg-background w-full max-w-lg mx-4 rounded-xl shadow-xl">
         <div className="p-8">
           <h2 className="text-2xl font-semibold mb-8">
-            {isEditing ? "Chỉnh sửa" : "Thêm nhân viên"}
+            {isEditing ? t("editTitle") : t("addTitle")}
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -544,7 +547,7 @@ function UserFormModal({
             )}
 
             <div>
-              <label className="form-label">Họ và tên</label>
+              <label className="form-label">{t("name")}</label>
               <input
                 type="text"
                 value={formData.name}
@@ -555,7 +558,7 @@ function UserFormModal({
             </div>
 
             <div>
-              <label className="form-label">Email</label>
+              <label className="form-label">{t("email")}</label>
               <input
                 type="email"
                 value={formData.email}
@@ -566,29 +569,29 @@ function UserFormModal({
             </div>
 
             <div>
-              <label className="form-label">
-                {isEditing ? "Mật khẩu mới" : "Mật khẩu"}
-              </label>
+              <label className="form-label">{isEditing ? t("newPassword") : t("password")}</label>
               <input
                 type="password"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 required={!isEditing}
                 minLength={6}
-                placeholder={isEditing ? "Để trống nếu không đổi" : ""}
+                placeholder={isEditing ? t("passwordPlaceholder") : ""}
                 className="w-full px-4 py-3 text-base bg-transparent border-b-2 focus:border-foreground focus:outline-none transition-colors placeholder:text-muted-foreground/60"
               />
             </div>
 
             <div>
-              <label className="form-label">Vai trò</label>
+              <label className="form-label">{t("role")}</label>
               <select
                 value={formData.role}
                 onChange={(e) => setFormData({ ...formData, role: e.target.value as UserRole })}
                 className="w-full px-4 py-3 text-base bg-transparent border-b-2 focus:border-foreground focus:outline-none cursor-pointer"
               >
-                {Object.entries(ROLE_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>{label}</option>
+                {Object.values(USER_ROLES).map((role) => (
+                  <option key={role} value={role}>
+                    {tUsers(`roles.${role}`)}
+                  </option>
                 ))}
               </select>
             </div>
@@ -599,14 +602,20 @@ function UserFormModal({
                 onClick={onClose}
                 className="flex-1 py-3 text-base hover:bg-muted rounded-lg transition-colors"
               >
-                Hủy
+                {t("cancel")}
               </button>
               <button
                 type="submit"
                 disabled={loading}
                 className="flex-1 py-3 text-base bg-foreground text-background rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity font-medium"
               >
-                {loading ? <Loader2 className="h-5 w-5 animate-spin mx-auto" /> : isEditing ? "Lưu" : "Tạo"}
+                {loading ? (
+                  <Loader2 className="h-5 w-5 animate-spin mx-auto" />
+                ) : isEditing ? (
+                  t("save")
+                ) : (
+                  t("create")
+                )}
               </button>
             </div>
           </form>

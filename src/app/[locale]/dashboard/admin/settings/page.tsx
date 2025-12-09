@@ -3,28 +3,7 @@
 import { useEffect, useState } from "react";
 import { Settings, Loader2, Check, Info } from "lucide-react";
 import { REGISTRATION_MODE, type RegistrationMode } from "@/types/system-settings";
-
-const REGISTRATION_MODE_OPTIONS: {
-  value: RegistrationMode;
-  label: string;
-  description: string;
-}[] = [
-  {
-    value: REGISTRATION_MODE.AUTO_APPROVE,
-    label: "Tự động phê duyệt",
-    description: "Người dùng đăng ký sẽ được tự động phê duyệt và có thể đăng nhập ngay.",
-  },
-  {
-    value: REGISTRATION_MODE.MANUAL_APPROVE,
-    label: "Phê duyệt thủ công",
-    description: "Admin phải duyệt thủ công từng người dùng mới đăng ký.",
-  },
-  {
-    value: REGISTRATION_MODE.DISABLED,
-    label: "Không cho phép đăng ký",
-    description: "Tắt tính năng đăng ký công khai. Chỉ admin mới có thể tạo tài khoản.",
-  },
-];
+import { useTranslations } from "next-intl";
 
 interface SystemSettings {
   user_registration_mode: RegistrationMode;
@@ -35,6 +14,29 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const t = useTranslations("Admin.settingsPage");
+
+  const REGISTRATION_MODE_OPTIONS: {
+    value: RegistrationMode;
+    label: string;
+    description: string;
+  }[] = [
+    {
+      value: REGISTRATION_MODE.AUTO_APPROVE,
+      label: t("registrationMode.auto.label"),
+      description: t("registrationMode.auto.desc"),
+    },
+    {
+      value: REGISTRATION_MODE.MANUAL_APPROVE,
+      label: t("registrationMode.manual.label"),
+      description: t("registrationMode.manual.desc"),
+    },
+    {
+      value: REGISTRATION_MODE.DISABLED,
+      label: t("registrationMode.disabled.label"),
+      description: t("registrationMode.disabled.desc"),
+    },
+  ];
 
   useEffect(() => {
     fetchSettings();
@@ -93,8 +95,8 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Cài đặt hệ thống</h1>
-        <p className="text-muted-foreground text-sm mt-1">Quản lý các cài đặt chung của hệ thống</p>
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t("subtitle")}</p>
       </div>
 
       {/* Registration Mode */}
@@ -102,11 +104,9 @@ export default function SettingsPage() {
         <div className="p-4 border-b">
           <div className="flex items-center gap-2">
             <Settings className="h-5 w-5 text-muted-foreground" />
-            <h2 className="font-semibold">Chế độ đăng ký</h2>
+            <h2 className="font-semibold">{t("registrationMode.title")}</h2>
           </div>
-          <p className="text-sm text-muted-foreground mt-1">
-            Cấu hình cách hệ thống xử lý khi có người dùng mới đăng ký
-          </p>
+          <p className="text-sm text-muted-foreground mt-1">{t("registrationMode.desc")}</p>
         </div>
 
         <div className="p-4 space-y-3">
@@ -140,12 +140,8 @@ export default function SettingsPage() {
             <div className="flex items-start gap-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-sm text-blue-700 dark:text-blue-400">
               <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="font-medium">Lưu ý về chế độ phê duyệt thủ công</p>
-                <p className="mt-1">
-                  Khi có người dùng mới đăng ký, họ sẽ ở trạng thái &quot;Chờ duyệt&quot; và không
-                  thể đăng nhập. Bạn cần vào trang <strong>Quản lý người dùng</strong> để phê duyệt
-                  hoặc từ chối.
-                </p>
+                <p className="font-medium">{t("registrationMode.manual.infoTitle")}</p>
+                <p className="mt-1">{t("registrationMode.manual.infoDesc")}</p>
               </div>
             </div>
           </div>
@@ -156,11 +152,8 @@ export default function SettingsPage() {
             <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-sm text-amber-700 dark:text-amber-400">
               <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="font-medium">Đăng ký đã bị tắt</p>
-                <p className="mt-1">
-                  Người dùng mới sẽ không thể tự đăng ký. Chỉ admin mới có thể tạo tài khoản mới
-                  thông qua trang <strong>Quản lý người dùng</strong>.
-                </p>
+                <p className="font-medium">{t("registrationMode.disabled.infoTitle")}</p>
+                <p className="mt-1">{t("registrationMode.disabled.infoDesc")}</p>
               </div>
             </div>
           </div>
@@ -179,12 +172,10 @@ export default function SettingsPage() {
           ) : saveSuccess ? (
             <Check className="h-4 w-4" />
           ) : null}
-          {saveSuccess ? "Đã lưu" : "Lưu thay đổi"}
+          {saveSuccess ? t("saved") : t("save")}
         </button>
         {saveSuccess && (
-          <span className="text-sm text-green-600 dark:text-green-400">
-            Cài đặt đã được cập nhật thành công!
-          </span>
+          <span className="text-sm text-green-600 dark:text-green-400">{t("success")}</span>
         )}
       </div>
     </div>

@@ -86,7 +86,11 @@
     "filterActive": "Active Filter",
     "failedToLoad": "Failed to load tasks",
     "updated": "Updated",
-    "failedToUpdate": "Failed to update"
+    "failedToUpdate": "Failed to update",
+    "noTasks": "No tasks",
+    "noResults": "No results",
+    "noTasksDesc": "You have no tasks assigned yet.",
+    "noResultsDesc": "Try changing filters or search terms."
   },
   "Boards": {
     "title": "Boards",
@@ -226,6 +230,124 @@
     "systemSettings": "System Settings",
     "systemSettingsDesc": "Configure registration mode",
     "approveUsers": "Approve {count} users",
-    "approveUsersDesc": "Users waiting for approval"
+    "approveUsersDesc": "Users waiting for approval",
+    "overview": "Overview",
+    "auditLogs": "Audit Logs",
+    "header": "System Administration",
+    "users": {
+      "title": "Personnel",
+      "add": "Add New",
+      "filter": {
+        "all": "All",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected"
+      },
+      "table": {
+        "name": "Name",
+        "role": "Role",
+        "status": "Status",
+        "created": "Created At",
+        "noData": "No data found",
+        "records": "users"
+      },
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive",
+        "pending": "Pending",
+        "rejected": "Rejected"
+      },
+      "actions": {
+        "approve": "Approve",
+        "reject": "Reject",
+        "activate": "Activate",
+        "deactivate": "Deactivate",
+        "edit": "Edit",
+        "delete": "Delete",
+        "confirmDelete": "Are you sure you want to delete this user?",
+        "rejectReason": "Reason for rejection (optional):"
+      },
+      "modal": {
+        "addTitle": "Add User",
+        "editTitle": "Edit User",
+        "name": "Full Name",
+        "email": "Email",
+        "password": "Password",
+        "newPassword": "New Password",
+        "passwordPlaceholder": "Leave empty to keep unchanged",
+        "role": "Role",
+        "cancel": "Cancel",
+        "save": "Save",
+        "create": "Create",
+        "error": "An error occurred"
+      }
+    },
+    "settingsPage": {
+      "title": "System Settings",
+      "subtitle": "Manage general system settings",
+      "registrationMode": {
+        "title": "Registration Mode",
+        "desc": "Configure how the system handles new user registrations",
+        "auto": {
+          "label": "Auto Approve",
+          "desc": "New users are automatically approved and can login immediately."
+        },
+        "manual": {
+          "label": "Manual Approve",
+          "desc": "Admins must manually approve each new user.",
+          "infoTitle": "Note on Manual Approval",
+          "infoDesc": "New users will be in 'Pending' status and cannot login. You need to approve them in the 'Manage Users' page."
+        },
+        "disabled": {
+          "label": "Registration Disabled",
+          "desc": "Public registration is disabled. Only admins can create accounts.",
+          "infoTitle": "Registration Disabled",
+          "infoDesc": "New users cannot self-register. Only admins can create new accounts via the 'Manage Users' page."
+        }
+      },
+      "save": "Save Changes",
+      "saving": "Saving...",
+      "saved": "Saved",
+      "success": "Settings updated successfully!"
+    },
+    "auditLogsPage": {
+      "title": "Audit Logs",
+      "filters": {
+        "allTypes": "All Types",
+        "allActions": "All Actions",
+        "clear": "Clear Filters"
+      },
+      "entities": {
+        "user": "User",
+        "settings": "Settings",
+        "board": "Board",
+        "member": "Member",
+        "invitation": "Invitation"
+      },
+      "actions": {
+        "user_created": "User created",
+        "user_updated": "User updated",
+        "user_deleted": "User deleted",
+        "user_approved": "User approved",
+        "user_rejected": "User rejected",
+        "user_activated": "User activated",
+        "user_deactivated": "User deactivated",
+        "user_role_changed": "Role changed",
+        "settings_updated": "Settings updated",
+        "board_created": "Board created",
+        "board_updated": "Board updated",
+        "board_deleted": "Board deleted",
+        "member_added": "Member added",
+        "member_removed": "Member removed",
+        "member_role_changed": "Member role changed",
+        "ownership_transferred": "Ownership transferred",
+        "invitation_sent": "Invitation sent",
+        "invitation_accepted": "Invitation accepted",
+        "invitation_declined": "Invitation declined",
+        "invitation_cancelled": "Invitation cancelled"
+      },
+      "noData": "No data",
+      "records": "records"
+    }
   }
 }

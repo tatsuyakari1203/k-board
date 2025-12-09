@@ -4,9 +4,12 @@ import Link from "next/link";
 import { LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { USER_ROLES } from "@/types/user";
+import { useTranslations } from "next-intl";
 
 export function UserButton() {
   const { user, isAuthenticated, logout } = useAuth();
+  const t = useTranslations("Auth");
+  const tDashboard = useTranslations("Dashboard");
 
   if (!isAuthenticated || !user) {
     return null;
@@ -42,7 +45,7 @@ export function UserButton() {
             className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
             <Settings className="h-5 w-5" />
-            <span>Cài đặt</span>
+            <span>{tDashboard("settings")}</span>
           </Link>
         )}
         <button
@@ -50,7 +53,7 @@ export function UserButton() {
           className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-destructive"
         >
           <LogOut className="h-5 w-5" />
-          <span>Đăng xuất</span>
+          <span>{t("logout")}</span>
         </button>
       </div>
     </div>

@@ -3,9 +3,12 @@ import { redirect } from "next/navigation";
 import { USER_ROLES } from "@/types/user";
 import Link from "next/link";
 import { Users, Settings, Shield, ChevronLeft, ClipboardList } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
+  const t = await getTranslations("Admin");
+  const tDashboard = await getTranslations("Dashboard");
 
   if (!user) {
     redirect("/auth/login");
@@ -25,12 +28,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
-            <span>Dashboard</span>
+            <span>{tDashboard("home")}</span>
           </Link>
           <div className="h-4 w-px bg-border" />
           <div className="flex items-center gap-2">
             <Shield className="h-4 w-4 text-primary" />
-            <span className="font-medium">Quản trị hệ thống</span>
+            <span className="font-medium">{t("header")}</span>
           </div>
         </div>
       </header>
@@ -39,13 +42,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         {/* Sidebar */}
         <aside className="w-56 border-r bg-muted/30 min-h-[calc(100vh-3.5rem)]">
           <nav className="p-4 space-y-1">
-            <NavItem href="/dashboard/admin" icon={Shield} label="Tổng quan" />
-            <NavItem href="/dashboard/admin/users" icon={Users} label="Quản lý người dùng" />
-            <NavItem href="/dashboard/admin/settings" icon={Settings} label="Cài đặt hệ thống" />
+            <NavItem href="/dashboard/admin" icon={Shield} label={t("overview")} />
+            <NavItem href="/dashboard/admin/users" icon={Users} label={t("manageUsers")} />
+            <NavItem href="/dashboard/admin/settings" icon={Settings} label={t("systemSettings")} />
             <NavItem
               href="/dashboard/admin/audit-logs"
               icon={ClipboardList}
-              label="Nhật ký hoạt động"
+              label={t("auditLogs")}
             />
           </nav>
         </aside>

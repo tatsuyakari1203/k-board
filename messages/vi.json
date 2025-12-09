@@ -86,7 +86,11 @@
     "filterActive": "Đang lọc",
     "failedToLoad": "Không thể tải công việc",
     "updated": "Đã cập nhật",
-    "failedToUpdate": "Không thể cập nhật"
+    "failedToUpdate": "Không thể cập nhật",
+    "noTasks": "Không có công việc nào",
+    "noResults": "Không có kết quả",
+    "noTasksDesc": "Bạn chưa được giao công việc nào.",
+    "noResultsDesc": "Thử thay đổi bộ lọc hoặc từ khóa tìm kiếm."
   },
   "Boards": {
     "title": "Boards",
@@ -226,6 +230,124 @@
     "systemSettings": "Cài đặt hệ thống",
     "systemSettingsDesc": "Cấu hình chế độ đăng ký",
     "approveUsers": "Duyệt {count} người dùng",
-    "approveUsersDesc": "Có người dùng đang chờ phê duyệt"
+    "approveUsersDesc": "Có người dùng đang chờ phê duyệt",
+    "overview": "Tổng quan",
+    "auditLogs": "Nhật ký hoạt động",
+    "header": "Quản trị hệ thống",
+    "users": {
+      "title": "Nhân sự",
+      "add": "Thêm mới",
+      "filter": {
+        "all": "Tất cả",
+        "pending": "Chờ duyệt",
+        "approved": "Đã duyệt",
+        "rejected": "Từ chối"
+      },
+      "table": {
+        "name": "Tên",
+        "role": "Vai trò",
+        "status": "Trạng thái",
+        "created": "Ngày tạo",
+        "noData": "Không có dữ liệu",
+        "records": "người dùng"
+      },
+      "status": {
+        "active": "Hoạt động",
+        "inactive": "Vô hiệu",
+        "pending": "Chờ duyệt",
+        "rejected": "Từ chối"
+      },
+      "actions": {
+        "approve": "Phê duyệt",
+        "reject": "Từ chối",
+        "activate": "Kích hoạt",
+        "deactivate": "Vô hiệu hóa",
+        "edit": "Chỉnh sửa",
+        "delete": "Xóa",
+        "confirmDelete": "Bạn có chắc chắn muốn xóa người dùng này?",
+        "rejectReason": "Lý do từ chối (không bắt buộc):"
+      },
+      "modal": {
+        "addTitle": "Thêm nhân viên",
+        "editTitle": "Chỉnh sửa",
+        "name": "Họ và tên",
+        "email": "Email",
+        "password": "Mật khẩu",
+        "newPassword": "Mật khẩu mới",
+        "passwordPlaceholder": "Để trống nếu không đổi",
+        "role": "Vai trò",
+        "cancel": "Hủy",
+        "save": "Lưu",
+        "create": "Tạo",
+        "error": "Có lỗi xảy ra"
+      }
+    },
+    "settingsPage": {
+      "title": "Cài đặt hệ thống",
+      "subtitle": "Quản lý các cài đặt chung của hệ thống",
+      "registrationMode": {
+        "title": "Chế độ đăng ký",
+        "desc": "Cấu hình cách hệ thống xử lý khi có người dùng mới đăng ký",
+        "auto": {
+          "label": "Tự động phê duyệt",
+          "desc": "Người dùng đăng ký sẽ được tự động phê duyệt và có thể đăng nhập ngay."
+        },
+        "manual": {
+          "label": "Phê duyệt thủ công",
+          "desc": "Admin phải duyệt thủ công từng người dùng mới đăng ký.",
+          "infoTitle": "Lưu ý về chế độ phê duyệt thủ công",
+          "infoDesc": "Khi có người dùng mới đăng ký, họ sẽ ở trạng thái 'Chờ duyệt' và không thể đăng nhập. Bạn cần vào trang 'Quản lý người dùng' để phê duyệt hoặc từ chối."
+        },
+        "disabled": {
+          "label": "Không cho phép đăng ký",
+          "desc": "Tắt tính năng đăng ký công khai. Chỉ admin mới có thể tạo tài khoản.",
+          "infoTitle": "Đăng ký đã bị tắt",
+          "infoDesc": "Người dùng mới sẽ không thể tự đăng ký. Chỉ admin mới có thể tạo tài khoản mới thông qua trang 'Quản lý người dùng'."
+        }
+      },
+      "save": "Lưu thay đổi",
+      "saving": "Đang lưu...",
+      "saved": "Đã lưu",
+      "success": "Cài đặt đã được cập nhật thành công!"
+    },
+    "auditLogsPage": {
+      "title": "Nhật ký hoạt động",
+      "filters": {
+        "allTypes": "Tất cả loại",
+        "allActions": "Tất cả hành động",
+        "clear": "Xóa bộ lọc"
+      },
+      "entities": {
+        "user": "Người dùng",
+        "settings": "Cài đặt",
+        "board": "Board",
+        "member": "Thành viên",
+        "invitation": "Lời mời"
+      },
+      "actions": {
+        "user_created": "Tạo người dùng",
+        "user_updated": "Cập nhật người dùng",
+        "user_deleted": "Xóa người dùng",
+        "user_approved": "Phê duyệt người dùng",
+        "user_rejected": "Từ chối người dùng",
+        "user_activated": "Kích hoạt người dùng",
+        "user_deactivated": "Vô hiệu hóa người dùng",
+        "user_role_changed": "Thay đổi vai trò",
+        "settings_updated": "Cập nhật cài đặt",
+        "board_created": "Tạo board",
+        "board_updated": "Cập nhật board",
+        "board_deleted": "Xóa board",
+        "member_added": "Thêm thành viên",
+        "member_removed": "Xóa thành viên",
+        "member_role_changed": "Thay đổi vai trò thành viên",
+        "ownership_transferred": "Chuyển quyền sở hữu",
+        "invitation_sent": "Gửi lời mời",
+        "invitation_accepted": "Chấp nhận lời mời",
+        "invitation_declined": "Từ chối lời mời",
+        "invitation_cancelled": "Hủy lời mời"
+      },
+      "noData": "Không có dữ liệu",
+      "records": "bản ghi"
+    }
   }
 }
