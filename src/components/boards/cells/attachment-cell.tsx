@@ -29,17 +29,15 @@ export function AttachmentCell({
   const t = useTranslations("BoardComponents.cells.attachment");
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
+  const handleUpload = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
 
     setUploading(true);
     try {
-      const uploadedFiles: AttachmentFile[] = [];
-
-      for (const file of Array.from(files)) {
+      const uploadPromises = Array.from(files).map(async (file) => {
         const formData = new FormData();
         formData.append("file", file);
 
@@ -49,12 +47,17 @@ export function AttachmentCell({
         });
 
         if (res.ok) {
-          const fileInfo = await res.json();
-          uploadedFiles.push(fileInfo);
+          return await res.json();
         }
-      }
+        return null;
+      });
 
-      onChange([...value, ...uploadedFiles]);
+      const results = await Promise.all(uploadPromises);
+      const uploadedFiles = results.filter((f): f is AttachmentFile => f !== null);
+
+      if (uploadedFiles.length > 0) {
+        onChange([...value, ...uploadedFiles]);
+      }
     } catch (error) {
       console.error("Upload failed:", error);
     } finally {
@@ -63,6 +66,26 @@ export function AttachmentCell({
         fileInputRef.current.value = "";
       }
     }
+  };
+
+  const onFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleUpload(e.target.files);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    handleUpload(e.dataTransfer.files);
   };
 
   const removeFile = (fileId: string) => {
@@ -123,7 +146,15 @@ export function AttachmentCell({
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-80 p-2" align="start">
-        <div className="space-y-2">
+        <div
+          className={cn(
+            "space-y-2 transition-colors rounded-md p-1",
+            isDragging && "bg-accent/20 border-2 border-dashed border-primary"
+          )}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
           {/* File list */}
           {value.length > 0 && (
             <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-1">
@@ -182,19 +213,22 @@ export function AttachmentCell({
             </div>
           )}
 
-          {/* Upload button */}
+          {/* Upload button area */}
           <input
             ref={fileInputRef}
             type="file"
             multiple
-            onChange={handleUpload}
+            onChange={onFileInputChange}
             className="hidden"
             accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.zip,.rar"
           />
           <button
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="flex items-center justify-center gap-2 w-full py-2 border border-dashed rounded text-sm text-muted-foreground hover:text-foreground hover:border-foreground transition-colors"
+            className={cn(
+              "flex items-center justify-center gap-2 w-full py-4 border border-dashed rounded-md text-sm text-muted-foreground hover:text-foreground hover:border-foreground transition-all",
+              isDragging && "border-primary bg-primary/5 text-primary"
+            )}
           >
             {uploading ? (
               <>
@@ -204,7 +238,12 @@ export function AttachmentCell({
             ) : (
               <>
                 <Upload className="h-4 w-4" />
-                <span>{t("uploadFile")}</span>
+                <div className="flex flex-col items-center gap-0.5">
+                  <span className="font-medium">{t("uploadFile")}</span>
+                  <span className="text-[10px] opacity-70">
+                    {isDragging ? "Drop to upload" : "Or drag and drop here"}
+                  </span>
+                </div>
               </>
             )}
           </button>

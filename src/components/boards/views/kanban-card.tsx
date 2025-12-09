@@ -24,6 +24,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { AttachmentFile } from "../cells/attachment-cell";
 import { KanbanCardModal } from "./kanban-card-modal";
 import { type Property, PropertyType } from "@/types/board";
 import { type TaskData } from "@/hooks/use-board-tasks";
@@ -79,6 +81,7 @@ export function KanbanCard({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(task.title);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
 
   // Setup sortable
   const {
@@ -226,12 +229,12 @@ export function KanbanCard({
             if (value === null || value === undefined || value === "") return null;
             if (Array.isArray(value) && value.length === 0) return null;
 
-            // Footer types (Date, User, Attachment) - skip here, handled below
+            // Footer types logic (Date, User) - still skipped here
+            // Note: We allow ATTACHMENT here now to show inline
             if (
               prop.type === PropertyType.DATE ||
               prop.type === PropertyType.PERSON ||
-              prop.type === PropertyType.USER ||
-              prop.type === PropertyType.ATTACHMENT
+              prop.type === PropertyType.USER
             ) {
               return null;
             }
@@ -250,6 +253,62 @@ export function KanbanCard({
                   >
                     {getStatusOption(prop.id, value as string)?.label || value}
                   </span>
+                ) : prop.type === PropertyType.ATTACHMENT ? (
+                  /* Attachment Gallery */
+                  <div className="flex flex-col gap-2 mt-1.5">
+                    {(() => {
+                      const images = (value as AttachmentFile[]).filter((f) =>
+                        f.type?.startsWith("image/")
+                      );
+
+                      if (images.length === 0) return null;
+
+                      // Single Image - Full Width
+                      if (images.length === 1) {
+                        const file = images[0];
+                        return (
+                          <div
+                            key={file.id}
+                            className="relative w-full rounded-md overflow-hidden border bg-muted group/image"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setPreviewImage(file.url);
+                            }}
+                          >
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={file.url}
+                              alt={file.name}
+                              className="w-full h-auto max-h-60 object-cover hover:scale-105 transition-transform cursor-zoom-in"
+                            />
+                          </div>
+                        );
+                      }
+
+                      // Multiple Images - Grid
+                      return (
+                        <div className="grid grid-cols-4 gap-1.5">
+                          {images.map((file) => (
+                            <div
+                              key={file.id}
+                              className="relative aspect-square rounded-md overflow-hidden border bg-muted group/image"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPreviewImage(file.url);
+                              }}
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={file.url}
+                                alt={file.name}
+                                className="w-full h-full object-cover hover:scale-110 transition-transform cursor-zoom-in"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
                 ) : (
                   /* Text / Number / Other as Label: Value */
                   <div className="flex flex-col gap-0.5">
@@ -364,6 +423,21 @@ export function KanbanCard({
         onAddPropertyOption={onAddPropertyOption}
         onUpdatePropertyOption={onUpdatePropertyOption}
       />
+
+      {/* Lightbox Dialog */}
+      {previewImage && (
+        <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
+          <DialogContent className="max-w-4xl max-h-[90vh] p-0 overflow-hidden bg-transparent border-none shadow-none flex items-center justify-center">
+            <DialogTitle className="sr-only">Preview Image</DialogTitle>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={previewImage}
+              alt="Preview"
+              className="w-full h-full max-h-[90vh] object-contain rounded-md"
+            />
+          </DialogContent>
+        </Dialog>
+      )}
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
