@@ -2,7 +2,13 @@
 
 import { useState, useCallback } from "react";
 import { arrayMove } from "@dnd-kit/sortable";
-import { type Property, type View, type AggregationType, PropertyType } from "@/types/board";
+import {
+  type Property,
+  type View,
+  type AggregationType,
+  PropertyType,
+  ViewType,
+} from "@/types/board";
 import { showToast } from "@/lib/toast";
 
 // ============================================
@@ -36,7 +42,7 @@ interface UseBoardPropertiesReturn {
   properties: Property[];
 
   // Property CRUD
-  addProperty: (property: Omit<Property, "id" | "order">, insertIndex?: number) => Promise<void>;
+  addProperty: (property: Omit<Property, "id" | "order">, insertIndex?: number) => Promise<string>;
   updateProperty: (propertyId: string, updates: Partial<Property>) => Promise<void>;
   removeProperty: (propertyId: string) => Promise<void>;
   renameProperty: (propertyId: string, newName: string) => Promise<void>;
@@ -118,6 +124,7 @@ export function useBoardProperties({
       updatedProperties.sort((a, b) => a.order - b.order);
 
       await updateBoardAndState(updatedProperties);
+      return newProperty.id;
     },
     [properties, updateBoardAndState]
   );
@@ -164,9 +171,10 @@ export function useBoardProperties({
       if (oldIndex === newIndex) return;
 
       const sortedProperties = [...properties].sort((a, b) => a.order - b.order);
-      const newProperties = arrayMove(sortedProperties, oldIndex, newIndex).map(
-        (p, index) => ({ ...p, order: index })
-      );
+      const newProperties = arrayMove(sortedProperties, oldIndex, newIndex).map((p, index) => ({
+        ...p,
+        order: index,
+      }));
 
       await updateBoardAndState(newProperties);
     },
@@ -196,9 +204,7 @@ export function useBoardProperties({
         options: [...(property.options || []), option],
       };
 
-      const updatedProperties = properties.map((p) =>
-        p.id === propertyId ? updatedProperty : p
-      );
+      const updatedProperties = properties.map((p) => (p.id === propertyId ? updatedProperty : p));
 
       await updateBoardAndState(updatedProperties);
     },
@@ -222,9 +228,7 @@ export function useBoardProperties({
         options: updatedOptions,
       };
 
-      const updatedProperties = properties.map((p) =>
-        p.id === propertyId ? updatedProperty : p
-      );
+      const updatedProperties = properties.map((p) => (p.id === propertyId ? updatedProperty : p));
 
       await updateBoardAndState(updatedProperties);
     },
@@ -244,9 +248,7 @@ export function useBoardProperties({
         options: (property.options || []).filter((opt) => opt.id !== optionId),
       };
 
-      const updatedProperties = properties.map((p) =>
-        p.id === propertyId ? updatedProperty : p
-      );
+      const updatedProperties = properties.map((p) => (p.id === propertyId ? updatedProperty : p));
 
       await updateBoardAndState(updatedProperties);
     },
@@ -307,16 +309,14 @@ interface UseBoardViewsReturn {
   activeView: View | undefined;
 
   setActiveViewId: (viewId: string) => void;
+  createView: (name: string, type: ViewType) => Promise<string>;
   updateViewConfig: (viewId: string, config: Partial<View["config"]>) => Promise<void>;
   updateGroupBy: (propertyId: string | undefined) => Promise<void>;
   updateAggregation: (propertyId: string, type: AggregationType | null) => Promise<void>;
   toggleColumnVisibility: (propertyId: string) => Promise<void>;
 }
 
-export function useBoardViews({
-  board,
-  onBoardUpdate,
-}: UseBoardViewsOptions): UseBoardViewsReturn {
+export function useBoardViews({ board, onBoardUpdate }: UseBoardViewsOptions): UseBoardViewsReturn {
   const [views, setViews] = useState<View[]>(board.views);
   const [activeViewId, setActiveViewId] = useState<string | undefined>(
     board.views.find((v) => v.isDefault)?.id || board.views[0]?.id
@@ -348,6 +348,40 @@ export function useBoardViews({
       }
     },
     [board, onBoardUpdate]
+  );
+
+  // ============================================
+  // CREATE VIEW
+  // ============================================
+  const createView = useCallback(
+    async (name: string, type: ViewType) => {
+      let groupBy: string | undefined = undefined;
+
+      // Ensure Kanban triggers by Status by default
+      if (type === ViewType.KANBAN) {
+        const statusProp = board.properties.find((p) => p.type === PropertyType.STATUS);
+        if (statusProp) {
+          groupBy = statusProp.id;
+        }
+      }
+
+      const newView: View = {
+        id: crypto.randomUUID(),
+        name,
+        type,
+        isDefault: false,
+        config: {
+          visibleProperties: undefined, // All visible by default
+          groupBy,
+        },
+      };
+
+      const updatedViews = [...views, newView];
+      await updateViewsAndState(updatedViews);
+      setActiveViewId(newView.id);
+      return newView.id;
+    },
+    [views, board.properties, updateViewsAndState]
   );
 
   // ============================================
@@ -393,9 +427,7 @@ export function useBoardViews({
       if (type === null) {
         newAggregations = currentAggregations.filter((a) => a.propertyId !== propertyId);
       } else {
-        const existingIndex = currentAggregations.findIndex(
-          (a) => a.propertyId === propertyId
-        );
+        const existingIndex = currentAggregations.findIndex((a) => a.propertyId === propertyId);
         if (existingIndex >= 0) {
           newAggregations = [...currentAggregations];
           newAggregations[existingIndex] = { propertyId, type };
@@ -436,6 +468,7 @@ export function useBoardViews({
     activeViewId,
     activeView,
     setActiveViewId,
+    createView,
     updateViewConfig,
     updateGroupBy,
     updateAggregation,

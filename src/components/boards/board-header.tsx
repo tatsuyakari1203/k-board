@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { ChevronLeft, Table2, Kanban, Users, Building2 } from "lucide-react";
+import { ChevronLeft, Table2, Kanban, Users, Building2, Plus } from "lucide-react";
 import { type View, ViewType } from "@/types/board";
 import {
   type BoardRole,
@@ -11,6 +11,81 @@ import {
   type BoardVisibility,
 } from "@/types/board-member";
 import { BoardMembersModal } from "@/components/board/BoardMembersModal";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+interface ViewOption {
+  type: ViewType;
+  label: string;
+  icon: React.ElementType;
+}
+
+const VIEW_OPTIONS: ViewOption[] = [
+  { type: ViewType.TABLE, label: "Bảng (Table)", icon: Table2 },
+  { type: ViewType.KANBAN, label: "Kanban", icon: Kanban },
+];
+
+function CreateViewForm({ onSubmit }: { onSubmit: (name: string, type: ViewType) => void }) {
+  const [name, setName] = useState("");
+  const [type, setType] = useState<ViewType>(ViewType.TABLE);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    onSubmit(name.trim(), type);
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="space-y-1">
+        <h4 className="font-medium text-sm">Tạo View mới</h4>
+        <p className="text-xs text-muted-foreground">Thêm cách hiển thị khác cho dữ liệu.</p>
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="view-name" className="text-xs">
+          Tên View
+        </Label>
+        <Input
+          id="view-name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="VD: Kanban Status..."
+          className="h-8 text-xs"
+          autoFocus
+        />
+      </div>
+      <div className="space-y-2">
+        <Label className="text-xs">Loại View</Label>
+        <div className="grid grid-cols-2 gap-2">
+          {VIEW_OPTIONS.map((opt) => (
+            <div
+              key={opt.type}
+              onClick={() => setType(opt.type)}
+              className={`flex flex-col items-center gap-1.5 p-2 rounded border cursor-pointer transition-all ${
+                type === opt.type
+                  ? "border-primary bg-primary/5 text-primary"
+                  : "border-border hover:bg-muted/50"
+              }`}
+            >
+              <opt.icon className="h-4 w-4" />
+              <span className="text-[10px] font-medium">{opt.label.split(" ")[0]}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div className="flex justify-end pt-1">
+        {/* Using PopoverClose implicitly by submitting? No, we need to close it manually or use a wrapper */}
+        {/* Since we can't easily control the parent Popover open state here without drilling props, we rely on the parent wrapper or just let the submit action close it if we had the control. */}
+        {/* Ideally the parent handles 'open' state. Let's assume the parent will handle closing or we add a Close button */}
+        <Button type="submit" size="sm" className="h-7 text-xs w-full" disabled={!name.trim()}>
+          Tạo View
+        </Button>
+      </div>
+    </form>
+  );
+}
 
 interface BoardHeaderProps {
   board: {
@@ -23,6 +98,7 @@ interface BoardHeaderProps {
   activeView?: View;
   views: View[];
   onViewChange: (viewId: string) => void;
+  onCreateView: (name: string, type: ViewType) => Promise<string>;
   onUpdateBoard: (updates: {
     name?: string;
     icon?: string;
@@ -38,6 +114,7 @@ export function BoardHeader({
   activeView,
   views,
   onViewChange,
+  onCreateView,
   onUpdateBoard,
   userPermissions,
 }: BoardHeaderProps) {
@@ -139,15 +216,15 @@ export function BoardHeader({
         </div>
       </div>
 
-      {/* View tabs */}
+      {/* View tabs and Add button */}
       <div className="flex items-center gap-0.5 px-4">
         {views.map((view) => (
           <button
             key={view.id}
             onClick={() => onViewChange(view.id)}
-            className={`flex items-center gap-1 px-2 py-1.5 text-xs transition-colors border-b-2 -mb-px ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs transition-colors border-b-2 -mb-px ${
               activeView?.id === view.id
-                ? "border-foreground text-foreground"
+                ? "border-foreground text-foreground font-medium"
                 : "border-transparent text-muted-foreground hover:text-foreground"
             }`}
           >
@@ -159,6 +236,22 @@ export function BoardHeader({
             <span>{view.name}</span>
           </button>
         ))}
+
+        {/* Add View Popover */}
+        <Popover>
+          <PopoverTrigger asChild>
+            <button className="flex items-center justify-center h-7 w-7 ml-1 text-muted-foreground hover:text-foreground hover:bg-muted/50 rounded-sm transition-colors">
+              <Plus className="h-4 w-4" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent className="w-60 p-3" align="start">
+            <CreateViewForm
+              onSubmit={(name, type) => {
+                onCreateView(name, type);
+              }}
+            />
+          </PopoverContent>
+        </Popover>
       </div>
 
       {/* Members Modal */}

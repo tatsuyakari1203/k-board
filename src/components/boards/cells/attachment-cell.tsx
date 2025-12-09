@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { Paperclip, Upload, FileText, Image as ImageIcon, X } from "lucide-react";
+import { Paperclip, Upload, FileText, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
@@ -79,53 +79,92 @@ export function AttachmentCell({
       <PopoverTrigger asChild>
         <button
           className={cn(
-            "flex items-center gap-1 text-sm text-left w-full",
-            compact ? "py-0.5 min-h-[24px]" : "py-0.5 min-h-[28px]",
+            "flex items-center gap-1 text-sm text-left w-full h-full group/cell",
+            compact ? "min-h-[24px]" : "min-h-[28px]",
             className
           )}
         >
           {value.length > 0 ? (
-            <div className="flex items-center gap-1">
-              <Paperclip className="h-3 w-3 text-muted-foreground/60" />
-              <span className="text-xs">{value.length}</span>
+            <div className="flex items-center gap-2 w-full">
+              {/* Show first image thumbnail if available */}
+              {isImage(value[0].type) ? (
+                <div className="relative h-6 w-8 rounded overflow-hidden border border-border/50 bg-muted/50 flex-shrink-0">
+                  <img src={value[0].url} alt="Thumbnail" className="h-full w-full object-cover" />
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-6 w-8 rounded bg-muted/50 flex-shrink-0">
+                  <Paperclip className="h-3.5 w-3.5 text-muted-foreground" />
+                </div>
+              )}
+
+              <div className="flex flex-col min-w-0">
+                <span className="text-xs truncate max-w-[120px]">{value[0].name}</span>
+                {value.length > 1 && (
+                  <span className="text-[10px] text-muted-foreground">
+                    +{value.length - 1} tệp khác
+                  </span>
+                )}
+              </div>
             </div>
           ) : (
-            <span className="text-muted-foreground/40"></span>
+            <span className="text-muted-foreground/40 text-xs px-1 opacity-0 group-hover/cell:opacity-100 transition-opacity">
+              Thêm...
+            </span>
           )}
         </button>
       </PopoverTrigger>
-      <PopoverContent className="w-72 p-2" align="start">
+      <PopoverContent className="w-80 p-2" align="start">
         <div className="space-y-2">
           {/* File list */}
           {value.length > 0 && (
-            <div className="space-y-1 max-h-40 overflow-y-auto">
+            <div className="space-y-1.5 max-h-[300px] overflow-y-auto pr-1">
               {value.map((file) => (
                 <div
                   key={file.id}
-                  className="flex items-center gap-2 p-1.5 rounded bg-accent/50 group"
+                  className="flex items-start gap-2.5 p-2 rounded-md hover:bg-accent/50 group border border-transparent hover:border-border/50 transition-colors"
                 >
+                  {/* Thumbnail or Icon */}
                   {isImage(file.type) ? (
-                    <ImageIcon className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                    <a
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block flex-shrink-0"
+                    >
+                      <div className="h-10 w-10 rounded overflow-hidden border border-border/50 bg-muted">
+                        <img
+                          src={file.url}
+                          alt={file.name}
+                          className="h-full w-full object-cover"
+                        />
+                      </div>
+                    </a>
                   ) : (
-                    <FileText className="h-4 w-4 text-orange-500 flex-shrink-0" />
+                    <div className="h-10 w-10 rounded flex items-center justify-center bg-muted flex-shrink-0">
+                      <FileText className="h-5 w-5 text-muted-foreground" />
+                    </div>
                   )}
-                  <a
-                    href={file.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 min-w-0 text-xs hover:underline"
-                  >
-                    <div className="truncate">{file.name}</div>
-                    <div className="text-muted-foreground">{formatSize(file.size)}</div>
-                  </a>
+
+                  <div className="flex-1 min-w-0 flex flex-col justify-center h-10">
+                    <a
+                      href={file.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium hover:underline truncate"
+                    >
+                      {file.name}
+                    </a>
+                    <span className="text-xs text-muted-foreground">{formatSize(file.size)}</span>
+                  </div>
+
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       removeFile(file.id);
                     }}
-                    className="opacity-0 group-hover:opacity-100 p-0.5 text-muted-foreground hover:text-destructive transition-opacity"
+                    className="opacity-0 group-hover:opacity-100 p-1.5 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full transition-all"
                   >
-                    <X className="h-3.5 w-3.5" />
+                    <X className="h-4 w-4" />
                   </button>
                 </div>
               ))}

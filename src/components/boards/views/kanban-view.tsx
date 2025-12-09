@@ -13,10 +13,7 @@ import {
   type DragEndEvent,
   type DragOverEvent,
 } from "@dnd-kit/core";
-import {
-  SortableContext,
-  verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -56,9 +53,20 @@ interface KanbanViewProps {
   onCreateTask: (title: string, properties?: Record<string, unknown>) => Promise<TaskData | null>;
   onUpdateTask: (taskId: string, updates: Partial<TaskData>) => void;
   onDeleteTask: (taskId: string) => void;
-  onMoveTask: (taskId: string, targetGroupValue: string | null, targetIndex: number) => void;
-  onAddPropertyOption?: (propertyId: string, option: { id: string; label: string; color?: string }) => void;
-  onUpdatePropertyOption?: (propertyId: string, option: { id: string; label: string; color?: string }) => void;
+  onMoveTask: (
+    taskId: string,
+    targetGroupValue: string | null,
+    targetIndex: number,
+    groupByPropertyId: string
+  ) => void;
+  onAddPropertyOption?: (
+    propertyId: string,
+    option: { id: string; label: string; color?: string }
+  ) => void;
+  onUpdatePropertyOption?: (
+    propertyId: string,
+    option: { id: string; label: string; color?: string }
+  ) => void;
 }
 
 interface Column {
@@ -96,11 +104,7 @@ function matchesSearch(task: TaskData, query: string, properties: Property[]): b
   return false;
 }
 
-function matchesFilters(
-  task: TaskData,
-  filters: FilterConfig[],
-  properties: Property[]
-): boolean {
+function matchesFilters(task: TaskData, filters: FilterConfig[], properties: Property[]): boolean {
   if (!filters || filters.length === 0) return true;
 
   return filters.every((filter) => {
@@ -130,11 +134,7 @@ function matchesFilters(
   });
 }
 
-function sortTasks(
-  tasks: TaskData[],
-  sorts: SortConfig[],
-  properties: Property[]
-): TaskData[] {
+function sortTasks(tasks: TaskData[], sorts: SortConfig[], properties: Property[]): TaskData[] {
   if (!sorts || sorts.length === 0) {
     return tasks.sort((a, b) => a.order - b.order);
   }
@@ -338,13 +338,16 @@ export function KanbanView({
   // DRAG HANDLERS
   // ============================================
 
-  const handleDragStart = useCallback((event: DragStartEvent) => {
-    const { active } = event;
-    const task = tasks.find((t) => t._id === active.id);
-    if (task) {
-      setActiveTask(task);
-    }
-  }, [tasks]);
+  const handleDragStart = useCallback(
+    (event: DragStartEvent) => {
+      const { active } = event;
+      const task = tasks.find((t) => t._id === active.id);
+      if (task) {
+        setActiveTask(task);
+      }
+    },
+    [tasks]
+  );
 
   const handleDragOver = useCallback((event: DragOverEvent) => {
     const { over } = event;
@@ -390,9 +393,11 @@ export function KanbanView({
       if (!column) return;
 
       // Call move handler
-      onMoveTask(taskId, column.value, targetIndex);
+      if (groupByPropertyId) {
+        onMoveTask(taskId, column.value, targetIndex, groupByPropertyId);
+      }
     },
-    [columns, tasksByColumn, onMoveTask]
+    [columns, tasksByColumn, onMoveTask, groupByPropertyId]
   );
 
   // ============================================
@@ -446,9 +451,8 @@ export function KanbanView({
       <div className="flex h-full overflow-x-auto px-6 py-4 gap-6 md:px-6 px-3 md:gap-6 gap-3">
         {columns.map((column) => {
           const agg = columnAggregations[column.id];
-          const aggregations = agg && agg.sum > 0
-            ? [{ type: "sum" as const, value: agg.sum, label: "Σ" }]
-            : [];
+          const aggregations =
+            agg && agg.sum > 0 ? [{ type: "sum" as const, value: agg.sum, label: "Σ" }] : [];
 
           return (
             <KanbanColumn

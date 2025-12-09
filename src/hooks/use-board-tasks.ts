@@ -34,6 +34,7 @@ export interface MoveTaskInput {
   taskId: string;
   targetGroupValue: string | null; // Giá trị mới của groupBy property
   targetIndex: number; // Vị trí mới trong group
+  groupByPropertyId?: string; // Tùy chọn: ghi đè groupByPropertyId của hook
 }
 
 interface UseBoardTasksOptions {
@@ -146,9 +147,7 @@ export function useBoardTasks({
 
         if (res.ok) {
           const updatedTask = await res.json();
-          setTasks((prev) =>
-            prev.map((t) => (t._id === taskId ? { ...t, ...updatedTask } : t))
-          );
+          setTasks((prev) => prev.map((t) => (t._id === taskId ? { ...t, ...updatedTask } : t)));
         } else {
           // Revert on error
           setTasks(previousTasksRef.current);
@@ -256,8 +255,15 @@ export function useBoardTasks({
   // MOVE TASK TO GROUP (for Kanban)
   // ============================================
   const moveTaskToGroup = useCallback(
-    async ({ taskId, targetGroupValue, targetIndex }: MoveTaskInput): Promise<void> => {
-      if (!groupByPropertyId) {
+    async ({
+      taskId,
+      targetGroupValue,
+      targetIndex,
+      groupByPropertyId: overrideGroupId,
+    }: MoveTaskInput): Promise<void> => {
+      const effectiveGroupId = overrideGroupId || groupByPropertyId;
+
+      if (!effectiveGroupId) {
         console.warn("moveTaskToGroup called without groupByPropertyId");
         return;
       }
@@ -272,7 +278,7 @@ export function useBoardTasks({
         ...task,
         properties: {
           ...task.properties,
-          [groupByPropertyId]: targetGroupValue,
+          [effectiveGroupId]: targetGroupValue,
         },
       };
 
@@ -280,7 +286,7 @@ export function useBoardTasks({
       const targetGroupTasks = tasks
         .filter((t) => {
           if (t._id === taskId) return false; // Exclude the moving task
-          const groupValue = t.properties[groupByPropertyId];
+          const groupValue = t.properties[effectiveGroupId];
           if (targetGroupValue === null) {
             return groupValue === null || groupValue === undefined || groupValue === "";
           }
@@ -301,7 +307,7 @@ export function useBoardTasks({
       setTasks((prev) => {
         const otherTasks = prev.filter((t) => {
           if (t._id === taskId) return false;
-          const groupValue = t.properties[groupByPropertyId];
+          const groupValue = t.properties[effectiveGroupId];
           if (targetGroupValue === null) {
             return !(groupValue === null || groupValue === undefined || groupValue === "");
           }
@@ -317,7 +323,7 @@ export function useBoardTasks({
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            properties: { [groupByPropertyId]: targetGroupValue },
+            properties: { [effectiveGroupId]: targetGroupValue },
           }),
         });
 

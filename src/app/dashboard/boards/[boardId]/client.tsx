@@ -78,11 +78,17 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
   // ============================================
 
   // Views hook
-  const { activeView, setActiveViewId, updateGroupBy, updateAggregation, toggleColumnVisibility } =
-    useBoardViews({
-      board: hookBoardData,
-      onBoardUpdate: handleBoardUpdate,
-    });
+  const {
+    activeView,
+    setActiveViewId,
+    createView,
+    updateGroupBy,
+    updateAggregation,
+    toggleColumnVisibility,
+  } = useBoardViews({
+    board: hookBoardData,
+    onBoardUpdate: handleBoardUpdate,
+  });
 
   // Tasks hook
   const {
@@ -161,10 +167,15 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
   // Handle add property with index
   const handleAddProperty = useCallback(
     async (property: Omit<Property, "id" | "order">) => {
-      await addProperty(property, addPropertyIndex ?? undefined);
+      const newPropertyId = await addProperty(property, addPropertyIndex ?? undefined);
       setAddPropertyIndex(null);
+
+      // Automatically show the new column in the active view
+      if (newPropertyId) {
+        await toggleColumnVisibility(newPropertyId);
+      }
     },
-    [addProperty, addPropertyIndex]
+    [addProperty, addPropertyIndex, toggleColumnVisibility]
   );
 
   // Filter handlers
@@ -219,8 +230,13 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
 
   // Handler for moving task to different column (Kanban)
   const handleMoveTask = useCallback(
-    (taskId: string, targetGroupValue: string | null, targetIndex: number) => {
-      moveTaskToGroup({ taskId, targetGroupValue, targetIndex });
+    (
+      taskId: string,
+      targetGroupValue: string | null,
+      targetIndex: number,
+      groupByPropertyId: string
+    ) => {
+      moveTaskToGroup({ taskId, targetGroupValue, targetIndex, groupByPropertyId });
     },
     [moveTaskToGroup]
   );
@@ -238,6 +254,7 @@ export function BoardDetailClient({ initialBoard }: BoardDetailClientProps) {
         activeView={activeView}
         views={board.views}
         onViewChange={setActiveViewId}
+        onCreateView={createView}
         onUpdateBoard={handleUpdateBoard}
         userRole={board.userRole}
         userPermissions={board.userPermissions}

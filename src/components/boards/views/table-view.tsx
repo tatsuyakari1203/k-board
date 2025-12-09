@@ -1066,7 +1066,7 @@ export function TableView({
         {/* Desktop Table View */}
         <div
           ref={parentRef}
-          className="hidden md:block overflow-x-auto flex-1 h-full overflow-y-auto"
+          className="hidden md:block overflow-x-auto flex-1 h-full overflow-y-auto px-8"
         >
           <table className="w-full border-collapse text-sm min-w-max">
             <thead className="sticky top-0 bg-background z-30">

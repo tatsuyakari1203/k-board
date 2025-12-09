@@ -313,6 +313,74 @@ async function runTests() {
         console.log(`${RED}   ❌ User cannot see 'Công việc nội bộ' board.${RESET}`);
       }
     }
+
+    // ==========================================
+    // SCENARIO 4: PROPERTY MANAGEMENT
+    // Manager (Owner) can add property, Staff (Editor) cannot
+    // ==========================================
+    console.log(`\n${BLUE}▶ SCENARIO 4: PROPERTY MANAGEMENT (COLUMN CREATION)${RESET}`);
+
+    // 1. Manager (Owner) tries to add a property
+    if (await login(manager, "manager@k-erp.com")) {
+      const boardsRes = await manager.get("/api/boards");
+      const boards = (
+        Array.isArray(boardsRes.data) ? boardsRes.data : boardsRes.data.boards
+      ) as Board[];
+      // Wait, Scenario 1 deletes the board. We should use "Dự án Mật (Private)" where Manager is Owner.
+      const privateBoard = boards?.find((b) => b.name === "Dự án Mật (Private)");
+
+      if (privateBoard) {
+        console.log(`   Target Board (Owner): ${privateBoard.name}`);
+
+        // Fetch full details
+        const boardDetail = await manager.get(`/api/boards/${privateBoard._id}`);
+        const currentProperties = boardDetail.data.properties as Property[];
+
+        // 123e4567-e89b-12d3-a456-426614174000 is a valid UUID
+        const newPropId = "123e4567-e89b-12d3-a456-426614174000";
+        const newProperties = [
+          ...currentProperties,
+          { id: newPropId, name: "Manager Column", type: "text", order: 99 },
+        ];
+
+        await check(
+          "Manager Add Property (Should Pass)",
+          manager.patch(`/api/boards/${privateBoard._id}`, { properties: newProperties }),
+          200
+        );
+      } else {
+        console.log(`${YELLOW}   ⚠ Could not find 'Dự án Mật (Private)' for Manager test.${RESET}`);
+      }
+    }
+
+    // 2. Staff (Editor) tries to add a property to "Công việc nội bộ"
+    if (await login(staff, "staff@k-erp.com")) {
+      const boardsRes = await staff.get("/api/boards");
+      const boards = (
+        Array.isArray(boardsRes.data) ? boardsRes.data : boardsRes.data.boards
+      ) as Board[];
+      const publicBoard = boards?.find((b) => b.name === "Công việc nội bộ");
+
+      if (publicBoard) {
+        console.log(`   Target Board (Editor): ${publicBoard.name}`);
+
+        // Fetch full details
+        const boardDetail = await staff.get(`/api/boards/${publicBoard._id}`);
+        const currentProperties = boardDetail.data.properties as Property[];
+
+        const newPropId = "123e4567-e89b-12d3-a456-426614174001";
+        const newProperties = [
+          ...currentProperties,
+          { id: newPropId, name: "Staff Column", type: "text", order: 99 },
+        ];
+
+        await check(
+          "Staff Add Property (Should Fail)",
+          staff.patch(`/api/boards/${publicBoard._id}`, { properties: newProperties }),
+          403
+        );
+      }
+    }
   } finally {
     // Run cleanup after tests (even if they fail)
     await cleanup();
