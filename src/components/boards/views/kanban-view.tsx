@@ -16,6 +16,7 @@ import {
 } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { KanbanColumn } from "./kanban-column";
@@ -230,6 +231,31 @@ export function KanbanView({
 
     return result;
   }, [tasks, searchQuery, filters, sorts, board.properties]);
+
+  // Handlers for column actions
+  const handleRenameColumn = (columnId: string, newTitle: string) => {
+    if (!groupByProperty || !onUpdatePropertyOption) return;
+
+    // Check if column is an option (not "all" or "no-value")
+    const option = groupByProperty.options?.find((opt) => opt.id === columnId);
+    if (!option) {
+      toast.error(t("cannotRenameSystemColumn"));
+      return;
+    }
+
+    if (newTitle && newTitle !== option.label) {
+      onUpdatePropertyOption(groupByProperty.id, {
+        id: columnId,
+        label: newTitle,
+      });
+    }
+  };
+
+  const handleHideColumn = (columnId: string) => {
+    // TODO: Implement column hiding via filters or view config
+    console.log("Hide column:", columnId);
+    toast.info(t("hideColumn") + ": " + t("comingSoon"));
+  };
 
   // Build columns from groupBy property options
   const columns = useMemo((): Column[] => {
@@ -462,12 +488,14 @@ export function KanbanView({
               aggregations={aggregations}
               isOver={overId === column.id}
               onAddCard={() => handleCreateTaskInColumn(column.id)}
+              onRename={(newTitle) => handleRenameColumn(column.id, newTitle)}
+              onHide={() => handleHideColumn(column.id)}
             >
               <SortableContext
                 items={tasksByColumn[column.id]?.map((t) => t._id) || []}
                 strategy={verticalListSortingStrategy}
               >
-                <div className="flex flex-col">
+                <div className="flex flex-col gap-2">
                   {tasksByColumn[column.id]?.map((task) => (
                     <KanbanCard
                       key={task._id}

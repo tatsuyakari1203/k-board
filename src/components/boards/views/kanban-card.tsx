@@ -3,13 +3,10 @@
 import { useState, useCallback, useMemo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { MoreHorizontal, Trash2, Copy, ExternalLink, Calendar, Paperclip } from "lucide-react";
+import { MoreHorizontal, Trash2, Copy, Calendar, Paperclip } from "lucide-react";
 import { format } from "date-fns";
 import { vi, enUS } from "date-fns/locale";
-import { useLocale } from "next-intl";
-
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useLocale, useTranslations } from "next-intl";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -76,11 +73,12 @@ export function KanbanCard({
   onAddPropertyOption,
   onUpdatePropertyOption,
 }: KanbanCardProps) {
+  const t = useTranslations("BoardDetails.card");
+  const locale = useLocale();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(task.title);
-  const locale = useLocale();
 
   // Setup sortable
   const {

@@ -151,7 +151,11 @@
       "noStatusAction": "Vui lòng thêm thuộc tính trạng thái hoặc chọn trong menu Nhóm.",
       "addCard": "Thêm thẻ",
       "addColumn": "Thêm cột",
-      "newTask": "Công việc mới"
+      "newTask": "Công việc mới",
+      "renameColumn": "Đổi tên cột",
+      "hideColumn": "Ẩn cột",
+      "cannotRenameSystemColumn": "Không thể đổi tên cột mặc định",
+      "comingSoon": "Tính năng đang xây dựng"
     },
     "table": {
       "untitled": "Chưa đặt tên",
@@ -166,7 +170,8 @@
       "noResults": "Không tìm thấy kết quả",
       "noRecords": "Chưa có dữ liệu",
       "addFirstRecord": "Thêm dòng đầu tiên",
-      "selected": "đã chọn"
+      "selected": "đã chọn",
+      "titleColumn": "Tiêu đề"
     },
     "addProperty": {
       "title": "Thêm cột mới",

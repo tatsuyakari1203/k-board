@@ -3,7 +3,6 @@
 import { useState, useCallback } from "react";
 import { Trash2, X, MoreHorizontal } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
-import { vi, enUS } from "date-fns/locale";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
@@ -118,9 +117,6 @@ export function KanbanCardModal({
     setShowDeleteDialog(false);
     onClose();
   }, [onDelete, onClose]);
-
-  // Helper date
-  const dateLocale = locale === "vi" ? vi : enUS;
 
   return (
     <>

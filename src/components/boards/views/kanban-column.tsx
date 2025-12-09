@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { Plus, MoreHorizontal } from "lucide-react";
+
+import { Input } from "@/components/ui/input";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -33,6 +35,8 @@ interface KanbanColumnProps {
   isOver?: boolean;
   children: React.ReactNode;
   onAddCard?: () => void;
+  onRename?: (newName: string) => void;
+  onHide?: () => void;
 }
 
 // Parse color from PropertyCell format
@@ -90,9 +94,17 @@ export function KanbanColumn({
   isOver,
   children,
   onAddCard,
+  onRename,
+  onHide,
 }: KanbanColumnProps) {
   const t = useTranslations("BoardDetails.kanban");
   const [isHovered, setIsHovered] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedTitle, setEditedTitle] = useState(title);
+
+  useEffect(() => {
+    setEditedTitle(title);
+  }, [title]);
 
   const { setNodeRef, isOver: isDndOver } = useDroppable({ id });
   const isDropTarget = isOver || isDndOver;
@@ -113,7 +125,41 @@ export function KanbanColumn({
           <div className={cn("w-2 h-2 rounded-full shrink-0", dotColor)} />
 
           {/* Title */}
-          <span className="text-sm font-medium text-foreground/80 truncate">{title}</span>
+          {/* Title */}
+          {isEditing ? (
+            <Input
+              ref={(el) => {
+                if (el) el.focus();
+              }}
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              onBlur={() => {
+                setIsEditing(false);
+                if (editedTitle.trim() && editedTitle !== title && onRename) {
+                  onRename(editedTitle.trim());
+                } else {
+                  setEditedTitle(title);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.currentTarget.blur();
+                }
+                if (e.key === "Escape") {
+                  setEditedTitle(title);
+                  setIsEditing(false);
+                }
+              }}
+              className="h-7 px-1 py-0 text-sm font-medium bg-transparent border-transparent hover:border-input focus:border-ring"
+            />
+          ) : (
+            <span
+              className="text-sm font-medium text-foreground/80 truncate cursor-pointer"
+              onDoubleClick={() => setIsEditing(true)}
+            >
+              {title}
+            </span>
+          )}
 
           {/* Count */}
           <span className="text-xs text-muted-foreground tabular-nums">{count}</span>
@@ -161,8 +207,10 @@ export function KanbanColumn({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem>{t("renameColumn")}</DropdownMenuItem>
-              <DropdownMenuItem>{t("hideColumn")}</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                {t("renameColumn")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onHide}>{t("hideColumn")}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

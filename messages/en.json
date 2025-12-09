@@ -151,7 +151,11 @@
       "noStatusAction": "Please add a Status property or select one in the Group By menu.",
       "addCard": "Add Card",
       "addColumn": "Add Column",
-      "newTask": "New Task"
+      "newTask": "New Task",
+      "renameColumn": "Rename Column",
+      "hideColumn": "Hide Column",
+      "cannotRenameSystemColumn": "Cannot rename system column",
+      "comingSoon": "Coming soon"
     },
     "table": {
       "untitled": "Untitled",
@@ -166,7 +170,8 @@
       "noResults": "No results found",
       "noRecords": "No records yet",
       "addFirstRecord": "Add first record",
-      "selected": "selected"
+      "selected": "selected",
+      "titleColumn": "Title"
     },
     "addProperty": {
       "title": "Add New Property",
