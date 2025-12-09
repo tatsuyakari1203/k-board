@@ -101,18 +101,33 @@
   },
   "BoardDetails": {
     "views": {
+      "create": "Create New View",
+      "createDesc": "Choose a layout for your new view",
+      "viewName": "View Name",
+      "viewNamePlaceholder": "e.g. My Tasks",
+      "viewType": "View Type",
       "table": "Table",
       "kanban": "Kanban",
-      "create": "Create New View",
-      "createDesc": "Add another way to view data.",
-      "viewName": "View Name",
-      "viewNamePlaceholder": "e.g., Kanban Status...",
-      "viewType": "View Type",
       "submitCreate": "Create View"
     },
-    "header": {
-      "boardsLink": "Boards",
+    "card": {
+      "rename": "Rename",
+      "duplicate": "Duplicate",
+      "deleteCard": "Delete Card",
+      "deleteTask": "Delete Task",
+      "deleteTitle": "Delete Task?",
+      "deleteConfirm": "This action cannot be undone. The task will be permanently deleted.",
+      "cancel": "Cancel",
+      "delete": "Delete",
       "untitled": "Untitled",
+      "taskDetails": "Task Details",
+      "noProperties": "No properties yet",
+      "created": "Created at",
+      "updated": "Updated at"
+    },
+    "header": {
+      "boardsLink": "Back to Boards",
+      "untitled": "Untitled Board",
       "members": "Members"
     },
     "toolbar": {
@@ -187,16 +202,63 @@
       }
     }
   },
-  "Aggregations": {
-    "percentEmpty": "Percent empty",
-    "percentNotEmpty": "Percent not empty",
-    "sum": "Sum",
-    "average": "Average",
-    "min": "Min",
-    "max": "Max",
-    "median": "Median",
-    "range": "Range"
+  "BoardRoles": {
+    "owner": "Owner",
+    "admin": "Admin",
+    "editor": "Editor",
+    "viewer": "Viewer",
+    "restricted_editor": "Collaborator (Assigned only)",
+    "restricted_viewer": "Guest (Assigned only)"
   },
+  "BoardVisibility": {
+    "private": "Private",
+    "workspace": "Workspace",
+    "privateDesc": "Only owner and invited members",
+    "workspaceDesc": "Everyone in workspace can view"
+  },
+  "BoardMembers": {
+    "title": "Share & Members",
+    "tabs": {
+      "members": "Members",
+      "activity": "Activity",
+      "settings": "Settings"
+    },
+    "visibility": {
+      "title": "Visibility",
+      "private": "Private",
+      "workspace": "Workspace",
+      "privateDesc": "Only owner and invited members can access",
+      "workspaceDesc": "All users in the workspace can view"
+    },
+    "transfer": {
+      "title": "Transfer Ownership",
+      "desc": "Transfer board ownership to another member. You will become an Admin after transfer.",
+      "confirmTransfer": "Are you sure you want to transfer ownership to {name}?"
+    },
+    "add": {
+      "direct": "Add Direct",
+      "invite": "Send Invite",
+      "searchPlaceholder": "Search users...",
+      "noResults": "No users found",
+      "allMembers": "All users are already members",
+      "selectUser": "Please select a user",
+      "cancel": "Cancel",
+      "submitAdd": "Add",
+      "submitInvite": "Send Invite",
+      "inviteSent": "Invitation sent"
+    },
+    "invitations": {
+      "title": "Pending Invitations",
+      "cancelConfirm": "Are you sure you want to cancel this invitation?"
+    },
+    "list": {
+      "noMembers": "No members yet",
+      "removeConfirm": "Are you sure you want to remove this member?"
+    },
+    "loading": "Loading...",
+    "error": "An error occurred"
+  },
+
   "Users": {
     "title": "Members",
     "subtitle": "List of all members in the system",
@@ -347,7 +409,154 @@
         "invitation_cancelled": "Invitation cancelled"
       },
       "noData": "No data",
-      "records": "records"
+      "records": "records",
+      "table": {
+        "rename": "Rename column",
+        "addColumnLeft": "Add column left",
+        "addColumnRight": "Add column right",
+        "deleteColumn": "Delete column",
+        "untitled": "Untitled",
+        "newTask": "New Task",
+        "new": "New",
+        "more": "more",
+        "noResults": "No results found",
+        "noRecords": "No records yet",
+        "addFirstRecord": "Add your first record",
+        "selected": "selected",
+        "delete": "Delete",
+        "titleColumn": "Title"
+      }
+    }
+  },
+  "Aggregations": {
+    "calculate": "Calculate",
+    "none": "None",
+    "count": "Count",
+    "countAll": "Count all",
+    "countEmpty": "Count empty",
+    "countNotEmpty": "Count not empty",
+    "percentEmpty": "% Empty",
+    "percentNotEmpty": "% Not Empty",
+    "sum": "Sum",
+    "average": "Average",
+    "min": "Min",
+    "max": "Max",
+    "median": "Median",
+    "range": "Range"
+  },
+  "BoardComponents": {
+    "createDialog": {
+      "title": "Create New Board",
+      "nameLabel": "Board Name *",
+      "namePlaceholder": "e.g., Project Alpha 2024",
+      "descLabel": "Description",
+      "descPlaceholder": "Short description of this board",
+      "templateLabel": "Select Template",
+      "visibilityLabel": "Visibility",
+      "cancel": "Cancel",
+      "create": "Create Board",
+      "creating": "Creating...",
+      "toastNameRequired": "Please enter board name",
+      "toastSuccess": "Board created successfully!",
+      "toastError": "An error occurred",
+      "templates": {
+        "blank": "Blank Board",
+        "blankDesc": "Design your workflow from scratch"
+      },
+      "visibility": {
+        "privateDesc": "Only owner and invited members",
+        "workspaceDesc": "Everyone in workspace can view"
+      }
+    },
+    "card": {
+      "taskCount": "tasks",
+      "deleteBoard": "Delete board",
+      "noDeletePermission": "You don't have permission to delete",
+      "deleteTitle": "Delete board?",
+      "deleteDesc": "Board \"{name}\" and all {count} tasks in it will be permanently deleted. This action cannot be undone.",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "deleting": "Deleting...",
+      "toastDeleted": "Board deleted",
+      "toastDeleteError": "Failed to delete board",
+      "toastError": "An error occurred"
+    },
+    "filter": {
+      "title": "Filters",
+      "clearAll": "Clear all",
+      "addFilter": "Add filter",
+      "selectColumn": "Select column...",
+      "selectValue": "Select value...",
+      "enterValue": "Enter value...",
+      "select": "Select...",
+      "true": "Yes",
+      "false": "No",
+      "operators": {
+        "contains": "Contains",
+        "equals": "Equals",
+        "not_equals": "Not equal",
+        "is_empty": "Is empty",
+        "is_not_empty": "Is not empty",
+        "greater_than": ">",
+        "less_than": "<",
+        "greater_or_equal": "≥",
+        "less_or_equal": "≤",
+        "before": "Before",
+        "after": "After"
+      }
+    },
+    "sort": {
+      "title": "Sort",
+      "clearAll": "Clear all",
+      "addSort": "Add sort",
+      "selectColumn": "Select column...",
+      "add": "Add",
+      "allSorted": "All columns are sorted",
+      "asc": "Ascending",
+      "desc": "Descending",
+      "ascShort": "Asc",
+      "descShort": "Desc"
+    },
+    "cells": {
+      "date": {
+        "dateLabel": "Date",
+        "start": "Start",
+        "end": "End",
+        "endDateLabel": "End Date",
+        "includeTime": "Include Time",
+        "startTime": "Start Time",
+        "endTime": "End Time",
+        "clear": "Clear"
+      },
+      "user": {
+        "search": "Search...",
+        "noUsers": "No users yet",
+        "notFound": "Not found",
+        "delete": "Remove",
+        "all": "all"
+      },
+      "attachment": {
+        "add": "Add...",
+        "otherFiles": "other files",
+        "uploading": "Uploading...",
+        "uploadFile": "Upload file"
+      },
+      "select": {
+        "addNew": "Add new...",
+        "delete": "Delete",
+        "colors": {
+          "gray": "Gray",
+          "red": "Red",
+          "orange": "Orange",
+          "yellow": "Yellow",
+          "green": "Green",
+          "teal": "Teal",
+          "blue": "Blue",
+          "indigo": "Indigo",
+          "purple": "Purple",
+          "pink": "Pink"
+        }
+      }
     }
   }
 }

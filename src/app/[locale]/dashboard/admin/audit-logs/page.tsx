@@ -181,9 +181,8 @@ export default function AuditLogsPage() {
         >
           <option value="">{t("filters.allTypes")}</option>
           {Object.keys(ENTITY_ICONS).map((type) => (
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             <option key={type} value={type}>
-              {t(`entities.${type}` as any)}
+              {t(`entities.${type}`)}
             </option>
           ))}
         </select>

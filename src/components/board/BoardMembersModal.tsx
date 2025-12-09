@@ -26,13 +26,12 @@ import {
 } from "lucide-react";
 import {
   BOARD_ROLES,
-  BOARD_ROLE_LABELS,
   BOARD_VISIBILITY,
-  BOARD_VISIBILITY_LABELS,
   type BoardRole,
   type BoardVisibility,
 } from "@/types/board-member";
 import { BoardActivityFeed } from "./BoardActivityFeed";
+import { useTranslations } from "next-intl";
 
 interface BoardMember {
   _id: string;
@@ -93,11 +92,6 @@ const VISIBILITY_ICONS: Record<BoardVisibility, React.ReactNode> = {
   workspace: <Building2 className="h-4 w-4" />,
 };
 
-const VISIBILITY_DESCRIPTIONS: Record<BoardVisibility, string> = {
-  private: "Chỉ chủ sở hữu và thành viên được mời mới có thể truy cập",
-  workspace: "Tất cả người dùng trong workspace có thể xem",
-};
-
 export function BoardMembersModal({
   boardId,
   isOpen,
@@ -108,6 +102,10 @@ export function BoardMembersModal({
   onVisibilityChange,
   isOwner = false,
 }: BoardMembersModalProps) {
+  const t = useTranslations("BoardMembers");
+  const tRoles = useTranslations("BoardRoles");
+  const tVisibility = useTranslations("BoardVisibility");
+
   const [members, setMembers] = useState<BoardMember[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -248,7 +246,7 @@ export function BoardMembersModal({
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUser) {
-      setAddError("Vui lòng chọn người dùng");
+      setAddError(t("add.selectUser"));
       return;
     }
 
@@ -274,7 +272,7 @@ export function BoardMembersModal({
       const data = await res.json();
 
       if (!res.ok) {
-        setAddError(data.error || "Có lỗi xảy ra");
+        setAddError(data.error || t("error"));
         return;
       }
 
@@ -289,14 +287,14 @@ export function BoardMembersModal({
         fetchMembers();
       }
     } catch {
-      setAddError("Có lỗi xảy ra");
+      setAddError(t("error"));
     } finally {
       setAddLoading(false);
     }
   };
 
   const handleCancelInvitation = async (invitationId: string) => {
-    if (!confirm("Bạn có chắc chắn muốn hủy lời mời này?")) return;
+    if (!confirm(t("invitations.cancelConfirm"))) return;
 
     setActionLoading(invitationId);
     try {
@@ -331,11 +329,11 @@ export function BoardMembersModal({
         fetchMembers();
       } else {
         const data = await res.json();
-        alert(data.error || "Có lỗi xảy ra");
+        alert(data.error || t("error"));
       }
     } catch (error) {
       console.error("Failed to transfer ownership:", error);
-      alert("Có lỗi xảy ra khi chuyển quyền sở hữu");
+      alert(t("error"));
     } finally {
       setTransferLoading(false);
     }
@@ -368,7 +366,7 @@ export function BoardMembersModal({
   };
 
   const handleRemoveMember = async (memberId: string) => {
-    if (!confirm("Bạn có chắc chắn muốn xóa thành viên này?")) return;
+    if (!confirm(t("list.removeConfirm"))) return;
 
     setActionLoading(memberId);
     try {
@@ -395,7 +393,7 @@ export function BoardMembersModal({
         <div className="flex items-center justify-between p-5 border-b">
           <div className="flex items-center gap-3">
             <Users className="h-6 w-6" />
-            <h2 className="text-xl font-semibold">Chia sẻ & Thành viên</h2>
+            <h2 className="text-xl font-semibold">{t("title")}</h2>
           </div>
           <button onClick={onClose} className="p-2 hover:bg-muted rounded-lg">
             <X className="h-5 w-5" />
@@ -414,7 +412,7 @@ export function BoardMembersModal({
               }`}
             >
               <Users className="h-5 w-5 inline mr-2" />
-              Thành viên
+              {t("tabs.members")}
             </button>
             <button
               onClick={() => setActiveTab("activity")}
@@ -425,7 +423,7 @@ export function BoardMembersModal({
               }`}
             >
               <Activity className="h-5 w-5 inline mr-2" />
-              Hoạt động
+              {t("tabs.activity")}
             </button>
             <button
               onClick={() => setActiveTab("settings")}
@@ -436,7 +434,7 @@ export function BoardMembersModal({
               }`}
             >
               <Settings className="h-5 w-5 inline mr-2" />
-              Cài đặt
+              {t("tabs.settings")}
             </button>
           </div>
         )}
@@ -445,7 +443,7 @@ export function BoardMembersModal({
         {activeTab === "settings" && canEditBoardState && (
           <div className="p-5 space-y-5 overflow-y-auto flex-1">
             <div>
-              <h3 className="text-base font-medium mb-4">Chế độ hiển thị</h3>
+              <h3 className="text-base font-medium mb-4">{t("visibility.title")}</h3>
               <div className="space-y-3">
                 {Object.entries(BOARD_VISIBILITY).map(([key, value]) => (
                   <label
@@ -468,12 +466,10 @@ export function BoardMembersModal({
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
                         {VISIBILITY_ICONS[value]}
-                        <span className="font-medium text-base">
-                          {BOARD_VISIBILITY_LABELS[value]}
-                        </span>
+                        <span className="font-medium text-base">{tVisibility(value)}</span>
                       </div>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {VISIBILITY_DESCRIPTIONS[value]}
+                        {tVisibility(`${value}Desc`)}
                       </p>
                     </div>
                   </label>
@@ -486,12 +482,9 @@ export function BoardMembersModal({
               <div className="pt-4 border-t">
                 <h3 className="text-base font-medium mb-4 flex items-center gap-2">
                   <ArrowRightLeft className="h-5 w-5" />
-                  Chuyển quyền sở hữu
+                  {t("transfer.title")}
                 </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Chuyển quyền sở hữu board cho một thành viên khác. Bạn sẽ trở thành Admin sau khi
-                  chuyển.
-                </p>
+                <p className="text-sm text-muted-foreground mb-4">{t("transfer.desc")}</p>
                 <div className="space-y-2 max-h-48 overflow-y-auto">
                   {members
                     .filter((m) => !m.isOwner)
@@ -552,7 +545,7 @@ export function BoardMembersModal({
                     }`}
                   >
                     <UserPlus className="h-4 w-4" />
-                    Thêm trực tiếp
+                    {t("add.direct")}
                   </button>
                   <button
                     type="button"
@@ -564,7 +557,7 @@ export function BoardMembersModal({
                     }`}
                   >
                     <Send className="h-4 w-4" />
-                    Gửi lời mời
+                    {t("add.invite")}
                   </button>
                 </div>
 
@@ -595,7 +588,7 @@ export function BoardMembersModal({
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                         <input
                           type="text"
-                          placeholder="Tìm kiếm người dùng..."
+                          placeholder={t("add.searchPlaceholder")}
                           value={searchQuery}
                           onChange={(e) => {
                             setSearchQuery(e.target.value);
@@ -616,10 +609,10 @@ export function BoardMembersModal({
                           ) : filteredUsers.length === 0 ? (
                             <div className="px-4 py-6 text-center text-base text-muted-foreground">
                               {searchQuery
-                                ? "Không tìm thấy người dùng"
+                                ? t("add.noResults")
                                 : availableUsers.length === 0
-                                  ? "Tất cả người dùng đã là thành viên"
-                                  : "Nhập để tìm kiếm..."}
+                                  ? t("add.allMembers")
+                                  : t("add.searchPlaceholder")}
                             </div>
                           ) : (
                             filteredUsers.map((user) => (
@@ -653,14 +646,14 @@ export function BoardMembersModal({
                     onChange={(e) => setAddRole(e.target.value as BoardRole)}
                     className="flex-1 px-4 py-3 border rounded-lg bg-background text-base focus:outline-none focus:ring-2 focus:ring-ring/30"
                   >
-                    <option value={BOARD_ROLES.VIEWER}>{BOARD_ROLE_LABELS.viewer}</option>
-                    <option value={BOARD_ROLES.EDITOR}>{BOARD_ROLE_LABELS.editor}</option>
-                    <option value={BOARD_ROLES.ADMIN}>{BOARD_ROLE_LABELS.admin}</option>
+                    <option value={BOARD_ROLES.VIEWER}>{tRoles("viewer")}</option>
+                    <option value={BOARD_ROLES.EDITOR}>{tRoles("editor")}</option>
+                    <option value={BOARD_ROLES.ADMIN}>{tRoles("admin")}</option>
                     <option value={BOARD_ROLES.RESTRICTED_EDITOR}>
-                      {BOARD_ROLE_LABELS.restricted_editor}
+                      {tRoles("restricted_editor")}
                     </option>
                     <option value={BOARD_ROLES.RESTRICTED_VIEWER}>
-                      {BOARD_ROLE_LABELS.restricted_viewer}
+                      {tRoles("restricted_viewer")}
                     </option>
                   </select>
                   <button
@@ -672,7 +665,7 @@ export function BoardMembersModal({
                     }}
                     className="px-4 py-3 border rounded-lg hover:bg-muted text-base"
                   >
-                    Hủy
+                    {t("add.cancel")}
                   </button>
                   <button
                     type="submit"
@@ -682,9 +675,9 @@ export function BoardMembersModal({
                     {addLoading ? (
                       <Loader2 className="h-5 w-5 animate-spin" />
                     ) : addMode === "invite" ? (
-                      "Gửi lời mời"
+                      t("add.submitInvite")
                     ) : (
-                      "Thêm"
+                      t("add.submitAdd")
                     )}
                   </button>
                 </div>
@@ -695,7 +688,7 @@ export function BoardMembersModal({
                 className="flex items-center gap-2 text-base text-primary hover:underline"
               >
                 <UserPlus className="h-5 w-5" />
-                Thêm thành viên
+                {t("title")}
               </button>
             )}
           </div>
@@ -706,7 +699,7 @@ export function BoardMembersModal({
           <div className="p-5 border-b bg-muted/30">
             <h4 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
               <Mail className="h-4 w-4" />
-              Lời mời đang chờ ({invitations.length})
+              {t("invitations.title")} ({invitations.length})
             </h4>
             <div className="space-y-2">
               {invitations.map((invitation) => (
@@ -721,7 +714,7 @@ export function BoardMembersModal({
                     <div>
                       <div className="text-sm font-medium">{invitation.user.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        {invitation.user.email} • {BOARD_ROLE_LABELS[invitation.role]}
+                        {invitation.user.email} • {tRoles(invitation.role)}
                       </div>
                     </div>
                   </div>
@@ -731,7 +724,7 @@ export function BoardMembersModal({
                     <button
                       onClick={() => handleCancelInvitation(invitation._id)}
                       className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg text-red-600"
-                      title="Hủy lời mời"
+                      title={t("add.cancel")}
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -751,7 +744,7 @@ export function BoardMembersModal({
               </div>
             ) : members.length === 0 ? (
               <div className="text-center py-12 text-muted-foreground text-base">
-                Chưa có thành viên nào
+                {t("list.noMembers")}
               </div>
             ) : (
               <div className="space-y-2">
@@ -777,7 +770,7 @@ export function BoardMembersModal({
                       <Loader2 className="h-5 w-5 animate-spin" />
                     ) : member.isOwner ? (
                       <span className="text-sm text-muted-foreground px-3 py-1.5 bg-muted rounded-lg">
-                        {BOARD_ROLE_LABELS.owner}
+                        {tRoles("owner")}
                       </span>
                     ) : canManageMembersState ? (
                       <div className="flex items-center gap-2">
@@ -789,29 +782,29 @@ export function BoardMembersModal({
                             }
                             className="appearance-none pr-7 pl-3 py-2 text-sm border rounded-lg bg-background cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring/30"
                           >
-                            <option value={BOARD_ROLES.VIEWER}>{BOARD_ROLE_LABELS.viewer}</option>
-                            <option value={BOARD_ROLES.EDITOR}>{BOARD_ROLE_LABELS.editor}</option>
-                            <option value={BOARD_ROLES.ADMIN}>{BOARD_ROLE_LABELS.admin}</option>
+                            <option value={BOARD_ROLES.VIEWER}>{tRoles("viewer")}</option>
+                            <option value={BOARD_ROLES.EDITOR}>{tRoles("editor")}</option>
+                            <option value={BOARD_ROLES.ADMIN}>{tRoles("admin")}</option>
                             <option value={BOARD_ROLES.RESTRICTED_EDITOR}>
-                              {BOARD_ROLE_LABELS.restricted_editor}
+                              {tRoles("restricted_editor")}
                             </option>
                             <option value={BOARD_ROLES.RESTRICTED_VIEWER}>
-                              {BOARD_ROLE_LABELS.restricted_viewer}
+                              {tRoles("restricted_viewer")}
                             </option>
                           </select>
-                          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 pointer-events-none" />
+                          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                         </div>
                         <button
                           onClick={() => handleRemoveMember(member._id)}
-                          className="p-2 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600"
-                          title="Xóa thành viên"
+                          className="p-2 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg text-red-600 transition-colors"
+                          title={t("list.removeConfirm")}
                         >
-                          <Trash2 className="h-5 w-5" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
                     ) : (
                       <span className="text-sm text-muted-foreground px-3 py-1.5 bg-muted rounded-lg">
-                        {BOARD_ROLE_LABELS[member.role]}
+                        {tRoles(member.role)}
                       </span>
                     )}
                   </div>
@@ -820,43 +813,37 @@ export function BoardMembersModal({
             )}
           </div>
         )}
+      </div>
 
-        {/* Transfer Ownership Confirmation Dialog */}
-        {showTransferDialog && transferTarget && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center rounded-xl">
-            <div className="bg-background m-4 p-6 rounded-xl shadow-xl max-w-sm w-full">
-              <h3 className="text-lg font-semibold mb-2">Xác nhận chuyển quyền sở hữu</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Bạn có chắc chắn muốn chuyển quyền sở hữu board này cho{" "}
-                <strong>{transferTarget.user.name}</strong>? Hành động này không thể hoàn tác.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  onClick={() => {
-                    setShowTransferDialog(false);
-                    setTransferTarget(null);
-                  }}
-                  disabled={transferLoading}
-                  className="flex-1 px-4 py-2 border rounded-lg hover:bg-muted"
-                >
-                  Hủy
-                </button>
-                <button
-                  onClick={handleTransferOwnership}
-                  disabled={transferLoading}
-                  className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
-                >
-                  {transferLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin mx-auto" />
-                  ) : (
-                    "Xác nhận"
-                  )}
-                </button>
-              </div>
+      {/* Transfer Ownership Confirmation Dialog - keeping inline for simplicity or extract if needed */}
+      {showTransferDialog && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50">
+          <div className="bg-background rounded-lg shadow-xl w-full max-w-sm mx-4 p-5">
+            <h3 className="text-lg font-semibold mb-2">{t("transfer.title")}</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {t("transfer.confirmTransfer", { name: transferTarget?.user.name || "" })}
+            </p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => {
+                  setShowTransferDialog(false);
+                  setTransferTarget(null);
+                }}
+                className="px-3 py-2 border rounded-md text-sm"
+              >
+                {t("add.cancel")}
+              </button>
+              <button
+                onClick={handleTransferOwnership}
+                disabled={transferLoading}
+                className="px-3 py-2 bg-primary text-primary-foreground rounded-md text-sm font-medium"
+              >
+                {transferLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Confirm"}
+              </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

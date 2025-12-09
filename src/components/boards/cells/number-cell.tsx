@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useLocale } from "next-intl";
 
 export function NumberCell({
   value,
@@ -9,23 +11,61 @@ export function NumberCell({
   compact = false,
   className,
 }: {
-  value: number;
-  onChange: (v: number) => void;
+  value: number | null;
+  onChange: (v: number | null) => void;
   compact?: boolean;
   className?: string;
 }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [inputValue, setInputValue] = useState("");
+
+  const handleBlur = () => {
+    setIsEditing(false);
+    if (inputValue === "") {
+      onChange(null);
+    } else {
+      const num = parseFloat(inputValue);
+      if (!isNaN(num)) {
+        onChange(num);
+      }
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleBlur();
+    }
+  };
+
+  if (isEditing) {
+    return (
+      <Input
+        type="number"
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        className={cn("h-full w-full px-2 py-1", className)}
+        autoFocus
+      />
+    );
+  }
+
   return (
-    <input
-      type="number"
-      value={value ?? ""}
-      onChange={(e) => onChange(e.target.value ? Number(e.target.value) : 0)}
+    <div
+      onClick={() => {
+        setIsEditing(true);
+        setInputValue(value?.toString() ?? "");
+      }}
       className={cn(
-        "w-full bg-transparent border-none outline-none text-sm focus:ring-0 placeholder:text-muted-foreground/40",
-        compact ? "py-0.5 px-0" : "py-1 px-0",
+        "w-full cursor-text hover:bg-muted/50 rounded px-2",
+        compact ? "py-0.5" : "py-1",
+        !value && value !== 0 && "h-6",
         className
       )}
-      placeholder=""
-    />
+    >
+      {value || value === 0 ? value : <span className="text-muted-foreground/40"></span>}
+    </div>
   );
 }
 
@@ -35,59 +75,71 @@ export function CurrencyCell({
   compact = false,
   className,
 }: {
-  value: number;
-  onChange: (v: number) => void;
+  value: number | null;
+  onChange: (v: number | null) => void;
   compact?: boolean;
-  className?: string;
+  className?: string; // Add className prop
 }) {
+  const locale = useLocale();
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState("");
 
   const formatCurrency = (num: number) => {
     if (!num && num !== 0) return "";
-    return new Intl.NumberFormat("vi-VN").format(num);
-  };
-
-  const handleFocus = () => {
-    setIsEditing(true);
-    setInputValue(value?.toString() || "");
+    // Dynamically format based on locale
+    return new Intl.NumberFormat(locale === "vi" ? "vi-VN" : "en-US").format(num);
   };
 
   const handleBlur = () => {
     setIsEditing(false);
-    const parsed = parseFloat(inputValue.replace(/[^\d.-]/g, ""));
-    if (!isNaN(parsed)) {
-      onChange(parsed);
+    if (inputValue === "") {
+      onChange(null);
+    } else {
+      const num = parseFloat(inputValue);
+      if (!isNaN(num)) {
+        onChange(num);
+      }
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleBlur();
     }
   };
 
   if (isEditing) {
     return (
-      <input
-        type="text"
+      <Input
+        type="number"
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
         onBlur={handleBlur}
+        onKeyDown={handleKeyDown}
+        className={cn("h-full w-full px-2 py-1", className)}
         autoFocus
-        className={cn(
-          "w-full bg-transparent border-none outline-none text-sm focus:ring-0",
-          compact ? "py-0.5 px-0" : "py-1 px-0",
-          className
-        )}
       />
     );
   }
 
   return (
     <div
-      onClick={handleFocus}
+      onClick={() => {
+        setIsEditing(true);
+        setInputValue(value?.toString() ?? "");
+      }}
       className={cn(
-        "text-sm cursor-text flex items-center",
-        compact ? "py-0.5 min-h-[24px]" : "py-1 min-h-[28px]",
+        "w-full cursor-text hover:bg-muted/50 rounded px-2 text-right font-mono", // Add font-mono for better alignment
+        compact ? "py-0.5" : "py-1",
+        !value && value !== 0 && "h-6",
         className
       )}
     >
-      {value ? `${formatCurrency(value)} ₫` : <span className="text-muted-foreground/40"></span>}
+      {value || value === 0 ? (
+        `${formatCurrency(value)} ${locale === "vi" ? "₫" : "$"}`
+      ) : (
+        <span className="text-muted-foreground/40"></span>
+      )}
     </div>
   );
 }

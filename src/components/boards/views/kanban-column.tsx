@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 // ============================================
 // TYPES
@@ -37,7 +38,18 @@ interface KanbanColumnProps {
 // Parse color from PropertyCell format
 function parseColorName(color: string | undefined): string {
   if (!color) return "gray";
-  const simpleColors = ["gray", "red", "orange", "yellow", "green", "teal", "blue", "indigo", "purple", "pink"];
+  const simpleColors = [
+    "gray",
+    "red",
+    "orange",
+    "yellow",
+    "green",
+    "teal",
+    "blue",
+    "indigo",
+    "purple",
+    "pink",
+  ];
   if (simpleColors.includes(color)) return color;
   const match = color.match(/bg-(\w+)-\d+/);
   if (match && match[1]) return match[1];
@@ -79,6 +91,7 @@ export function KanbanColumn({
   children,
   onAddCard,
 }: KanbanColumnProps) {
+  const t = useTranslations("BoardDetails.kanban");
   const [isHovered, setIsHovered] = useState(false);
 
   const { setNodeRef, isOver: isDndOver } = useDroppable({ id });
@@ -100,14 +113,10 @@ export function KanbanColumn({
           <div className={cn("w-2 h-2 rounded-full shrink-0", dotColor)} />
 
           {/* Title */}
-          <span className="text-sm font-medium text-foreground/80 truncate">
-            {title}
-          </span>
+          <span className="text-sm font-medium text-foreground/80 truncate">{title}</span>
 
           {/* Count */}
-          <span className="text-xs text-muted-foreground tabular-nums">
-            {count}
-          </span>
+          <span className="text-xs text-muted-foreground tabular-nums">{count}</span>
 
           {/* Aggregations */}
           {aggregations.length > 0 && (
@@ -127,10 +136,12 @@ export function KanbanColumn({
         </div>
 
         {/* Actions - show on hover */}
-        <div className={cn(
-          "flex items-center gap-0.5 transition-opacity",
-          isHovered ? "opacity-100" : "opacity-0"
-        )}>
+        <div
+          className={cn(
+            "flex items-center gap-0.5 transition-opacity",
+            isHovered ? "opacity-100" : "opacity-0"
+          )}
+        >
           <Button
             variant="ghost"
             size="icon"
@@ -150,8 +161,8 @@ export function KanbanColumn({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
-              <DropdownMenuItem>Đổi tên cột</DropdownMenuItem>
-              <DropdownMenuItem>Ẩn cột</DropdownMenuItem>
+              <DropdownMenuItem>{t("renameColumn")}</DropdownMenuItem>
+              <DropdownMenuItem>{t("hideColumn")}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

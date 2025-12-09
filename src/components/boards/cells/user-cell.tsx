@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Check, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 export interface UserOption {
   id: string;
@@ -27,6 +28,7 @@ export function UserCell({
   className?: string;
   multiSelect?: boolean;
 }) {
+  const t = useTranslations("BoardComponents.cells.user");
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
@@ -107,7 +109,7 @@ export function UserCell({
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Tìm kiếm..."
+            placeholder={t("search")}
             className="w-full text-sm px-2 py-1.5 bg-transparent border-b outline-none focus:ring-0"
           />
 
@@ -171,7 +173,7 @@ export function UserCell({
               ))
             ) : (
               <div className="px-2 py-4 text-center text-sm text-muted-foreground">
-                {users.length === 0 ? "Chưa có user nào" : "Không tìm thấy"}
+                {users.length === 0 ? t("noUsers") : t("notFound")}
               </div>
             )}
           </div>
@@ -183,7 +185,7 @@ export function UserCell({
                 onClick={clearAll}
                 className="w-full px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground text-left rounded hover:bg-accent transition-colors"
               >
-                Xóa {multiSelect && selectedUsers.length > 1 ? "tất cả" : ""}
+                {t("delete")} {multiSelect && selectedUsers.length > 1 ? t("all") : ""}
               </button>
             </>
           )}

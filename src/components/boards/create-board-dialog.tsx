@@ -15,43 +15,43 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { BOARD_TEMPLATES } from "@/lib/templates";
-import {
-  BOARD_VISIBILITY,
-  BOARD_VISIBILITY_LABELS,
-  type BoardVisibility,
-} from "@/types/board-member";
+import { BOARD_VISIBILITY, type BoardVisibility } from "@/types/board-member";
+import { useTranslations } from "next-intl";
 
 interface CreateBoardDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const VISIBILITY_OPTIONS = [
-  {
-    value: BOARD_VISIBILITY.PRIVATE,
-    icon: Lock,
-    description: "Chỉ chủ sở hữu và thành viên được mời",
-  },
-  {
-    value: BOARD_VISIBILITY.WORKSPACE,
-    icon: Building2,
-    description: "Mọi người trong workspace có thể xem",
-  },
-] as const;
-
 export function CreateBoardDialog({ open, onOpenChange }: CreateBoardDialogProps) {
   const router = useRouter();
+  const t = useTranslations("BoardComponents.createDialog");
+  const tVisibility = useTranslations("BoardVisibility");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [useTemplate, setUseTemplate] = useState<string>("survey"); // Default to survey
   const [visibility, setVisibility] = useState<BoardVisibility>(BOARD_VISIBILITY.PRIVATE);
   const [loading, setLoading] = useState(false);
 
+  // Memoize options to use t()
+  const VISIBILITY_OPTIONS = [
+    {
+      value: BOARD_VISIBILITY.PRIVATE,
+      icon: Lock,
+      description: t("visibility.privateDesc"),
+    },
+    {
+      value: BOARD_VISIBILITY.WORKSPACE,
+      icon: Building2,
+      description: t("visibility.workspaceDesc"),
+    },
+  ] as const;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!name.trim()) {
-      toast.error("Vui lòng nhập tên board");
+      toast.error(t("toastNameRequired"));
       return;
     }
 
@@ -71,11 +71,11 @@ export function CreateBoardDialog({ open, onOpenChange }: CreateBoardDialogProps
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Không thể tạo board");
+        throw new Error(data.error || t("toastError"));
       }
 
       const board = await res.json();
-      toast.success("Tạo board thành công!");
+      toast.success(t("toastSuccess"));
       onOpenChange(false);
       setName("");
       setDescription("");
@@ -83,7 +83,7 @@ export function CreateBoardDialog({ open, onOpenChange }: CreateBoardDialogProps
       router.push(`/dashboard/boards/${board._id}`);
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra");
+      toast.error(error instanceof Error ? error.message : t("toastError"));
     } finally {
       setLoading(false);
     }
@@ -93,33 +93,33 @@ export function CreateBoardDialog({ open, onOpenChange }: CreateBoardDialogProps
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Tạo Board mới</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Tên board *</Label>
+            <Label htmlFor="name">{t("nameLabel")}</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="VD: Hồ sơ đo đạc 2024"
+              placeholder={t("namePlaceholder")}
               autoFocus
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Mô tả</Label>
+            <Label htmlFor="description">{t("descLabel")}</Label>
             <Input
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Mô tả ngắn về board này"
+              placeholder={t("descPlaceholder")}
             />
           </div>
 
           <div className="space-y-3">
-            <Label>Chọn Template</Label>
+            <Label>{t("templateLabel")}</Label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
@@ -133,9 +133,9 @@ export function CreateBoardDialog({ open, onOpenChange }: CreateBoardDialogProps
                 <div className="mb-2 w-8 h-8 rounded-full bg-background border flex items-center justify-center text-lg">
                   ⚪
                 </div>
-                <span className="text-sm font-medium">Bảng trắng</span>
+                <span className="text-sm font-medium">{t("templates.blank")}</span>
                 <span className="text-xs text-muted-foreground mt-1 line-clamp-2">
-                  Tự thiết kế quy trình làm việc từ đầu
+                  {t("templates.blankDesc")}
                 </span>
               </button>
 
@@ -163,7 +163,7 @@ export function CreateBoardDialog({ open, onOpenChange }: CreateBoardDialogProps
           </div>
 
           <div className="space-y-2">
-            <Label>Chế độ hiển thị</Label>
+            <Label>{t("visibilityLabel")}</Label>
             <div className="grid grid-cols-3 gap-2">
               {VISIBILITY_OPTIONS.map((option) => (
                 <button
@@ -177,9 +177,7 @@ export function CreateBoardDialog({ open, onOpenChange }: CreateBoardDialogProps
                   }`}
                 >
                   <option.icon className="h-4 w-4" />
-                  <span className="text-xs font-medium">
-                    {BOARD_VISIBILITY_LABELS[option.value]}
-                  </span>
+                  <span className="text-xs font-medium">{tVisibility(option.value)}</span>
                   <span className="text-[10px] text-muted-foreground leading-tight">
                     {option.description}
                   </span>
@@ -195,10 +193,10 @@ export function CreateBoardDialog({ open, onOpenChange }: CreateBoardDialogProps
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              Hủy
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Đang tạo..." : "Tạo board"}
+              {loading ? t("creating") : t("create")}
             </Button>
           </DialogFooter>
         </form>

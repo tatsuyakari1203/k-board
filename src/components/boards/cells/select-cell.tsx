@@ -5,32 +5,43 @@ import { Check, Plus } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 // Color palette for options
-const OPTION_COLORS = [
-  { value: "bg-gray-100 text-gray-800", label: "Xám", preview: "bg-gray-400" },
-  { value: "bg-red-100 text-red-800", label: "Đỏ", preview: "bg-red-400" },
-  { value: "bg-orange-100 text-orange-800", label: "Cam", preview: "bg-orange-400" },
-  { value: "bg-yellow-100 text-yellow-800", label: "Vàng", preview: "bg-yellow-400" },
-  { value: "bg-green-100 text-green-800", label: "Xanh lá", preview: "bg-green-400" },
-  { value: "bg-teal-100 text-teal-800", label: "Xanh ngọc", preview: "bg-teal-400" },
-  { value: "bg-blue-100 text-blue-800", label: "Xanh dương", preview: "bg-blue-400" },
-  { value: "bg-indigo-100 text-indigo-800", label: "Chàm", preview: "bg-indigo-400" },
-  { value: "bg-purple-100 text-purple-800", label: "Tím", preview: "bg-purple-400" },
-  { value: "bg-pink-100 text-pink-800", label: "Hồng", preview: "bg-pink-400" },
+type TranslationFunction = (key: string) => string;
+
+interface OptionColor {
+  value: string;
+  label: string;
+  preview: string;
+}
+
+const getOptionColors = (t: TranslationFunction): OptionColor[] => [
+  { value: "bg-gray-100 text-gray-800", label: t("colors.gray"), preview: "bg-gray-400" },
+  { value: "bg-red-100 text-red-800", label: t("colors.red"), preview: "bg-red-400" },
+  { value: "bg-orange-100 text-orange-800", label: t("colors.orange"), preview: "bg-orange-400" },
+  { value: "bg-yellow-100 text-yellow-800", label: t("colors.yellow"), preview: "bg-yellow-400" },
+  { value: "bg-green-100 text-green-800", label: t("colors.green"), preview: "bg-green-400" },
+  { value: "bg-teal-100 text-teal-800", label: t("colors.teal"), preview: "bg-teal-400" },
+  { value: "bg-blue-100 text-blue-800", label: t("colors.blue"), preview: "bg-blue-400" },
+  { value: "bg-indigo-100 text-indigo-800", label: t("colors.indigo"), preview: "bg-indigo-400" },
+  { value: "bg-purple-100 text-purple-800", label: t("colors.purple"), preview: "bg-purple-400" },
+  { value: "bg-pink-100 text-pink-800", label: t("colors.pink"), preview: "bg-pink-400" },
 ];
 
 function ColorPicker({
   value,
   onChange,
   className,
+  optionColors,
 }: {
   value: string;
   onChange: (color: string) => void;
   className?: string;
+  optionColors: OptionColor[];
 }) {
   const [open, setOpen] = useState(false);
-  const currentColor = OPTION_COLORS.find((c) => c.value === value) || OPTION_COLORS[0];
+  const currentColor = optionColors.find((c) => c.value === value) || optionColors[0];
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -47,7 +58,7 @@ function ColorPicker({
       </PopoverTrigger>
       <PopoverContent className="w-auto p-2" align="start">
         <div className="grid grid-cols-5 gap-1.5">
-          {OPTION_COLORS.map((color) => (
+          {optionColors.map((color) => (
             <button
               key={color.value}
               onClick={() => {
@@ -93,9 +104,11 @@ export function SelectCell({
   compact?: boolean;
   className?: string;
 }) {
+  const t = useTranslations("BoardComponents.cells.select");
+  const optionColors = getOptionColors(t);
   const [open, setOpen] = useState(false);
   const [newOptionLabel, setNewOptionLabel] = useState("");
-  const [newOptionColor, setNewOptionColor] = useState(OPTION_COLORS[0].value);
+  const [newOptionColor, setNewOptionColor] = useState(optionColors[0].value);
   const selectedOption = options.find((o) => o.id === value);
 
   const handleAddOption = () => {
@@ -108,7 +121,7 @@ export function SelectCell({
     onAddOption(newOption);
     onChange(newOption.id); // Auto-select new option
     setNewOptionLabel("");
-    setNewOptionColor(OPTION_COLORS[0].value);
+    setNewOptionColor(optionColors[0].value);
   };
 
   const handleUpdateOptionColor = (optionId: string, newColor: string) => {
@@ -154,9 +167,10 @@ export function SelectCell({
               {/* Color picker for existing option */}
               {onUpdateOption && (
                 <ColorPicker
-                  value={option.color || OPTION_COLORS[0].value}
+                  value={option.color || optionColors[0].value}
                   onChange={(color) => handleUpdateOptionColor(option.id, color)}
                   className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  optionColors={optionColors}
                 />
               )}
               <button
@@ -179,7 +193,11 @@ export function SelectCell({
             <>
               <div className="border-t my-1" />
               <div className="flex items-center gap-1.5 px-1">
-                <ColorPicker value={newOptionColor} onChange={setNewOptionColor} />
+                <ColorPicker
+                  value={newOptionColor}
+                  onChange={setNewOptionColor}
+                  optionColors={optionColors}
+                />
                 <input
                   type="text"
                   value={newOptionLabel}
@@ -190,14 +208,14 @@ export function SelectCell({
                       handleAddOption();
                     }
                   }}
-                  placeholder="Thêm mới..."
+                  placeholder={t("addNew")}
                   className="flex-1 text-sm px-2 py-1.5 bg-transparent border-none outline-none focus:ring-0"
                 />
                 {newOptionLabel.trim() && (
                   <button
                     onClick={handleAddOption}
                     className="p-1 text-primary hover:bg-accent rounded"
-                    title="Thêm"
+                    title={t("addNew")}
                   >
                     <Plus className="h-4 w-4" />
                   </button>
@@ -216,7 +234,7 @@ export function SelectCell({
                 }}
                 className="w-full px-2 py-1.5 text-sm text-muted-foreground hover:text-foreground text-left rounded hover:bg-accent transition-colors"
               >
-                Xóa
+                {t("delete")}
               </button>
             </>
           )}
@@ -243,9 +261,11 @@ export function MultiSelectCell({
   compact?: boolean;
   className?: string;
 }) {
+  const t = useTranslations("BoardComponents.cells.select");
+  const optionColors = getOptionColors(t);
   const [open, setOpen] = useState(false);
   const [newOptionLabel, setNewOptionLabel] = useState("");
-  const [newOptionColor, setNewOptionColor] = useState(OPTION_COLORS[0].value);
+  const [newOptionColor, setNewOptionColor] = useState(optionColors[0].value);
   const selectedOptions = options.filter((o) => value.includes(o.id));
 
   const toggleOption = (optionId: string) => {
@@ -266,7 +286,7 @@ export function MultiSelectCell({
     onAddOption(newOption);
     onChange([...value, newOption.id]); // Auto-select new option
     setNewOptionLabel("");
-    setNewOptionColor(OPTION_COLORS[0].value);
+    setNewOptionColor(optionColors[0].value);
   };
 
   const handleUpdateOptionColor = (optionId: string, newColor: string) => {
@@ -312,9 +332,10 @@ export function MultiSelectCell({
               {/* Color picker for existing option */}
               {onUpdateOption && (
                 <ColorPicker
-                  value={option.color || OPTION_COLORS[0].value}
+                  value={option.color || optionColors[0].value}
                   onChange={(color) => handleUpdateOptionColor(option.id, color)}
                   className="opacity-0 group-hover:opacity-100 transition-opacity"
+                  optionColors={optionColors}
                 />
               )}
               <button
@@ -343,7 +364,11 @@ export function MultiSelectCell({
             <>
               <div className="border-t my-1" />
               <div className="flex items-center gap-1.5 px-1">
-                <ColorPicker value={newOptionColor} onChange={setNewOptionColor} />
+                <ColorPicker
+                  value={newOptionColor}
+                  onChange={setNewOptionColor}
+                  optionColors={optionColors}
+                />
                 <input
                   type="text"
                   value={newOptionLabel}
@@ -354,14 +379,14 @@ export function MultiSelectCell({
                       handleAddOption();
                     }
                   }}
-                  placeholder="Thêm mới..."
+                  placeholder={t("addNew")}
                   className="flex-1 text-sm px-2 py-1.5 bg-transparent border-none outline-none focus:ring-0"
                 />
                 {newOptionLabel.trim() && (
                   <button
                     onClick={handleAddOption}
                     className="p-1 text-primary hover:bg-accent rounded"
-                    title="Thêm"
+                    title={t("addNew")}
                   >
                     <Plus className="h-4 w-4" />
                   </button>

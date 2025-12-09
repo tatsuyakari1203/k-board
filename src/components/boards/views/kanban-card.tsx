@@ -5,7 +5,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { MoreHorizontal, Trash2, Copy, ExternalLink, Calendar, Paperclip } from "lucide-react";
 import { format } from "date-fns";
-import { vi } from "date-fns/locale";
+import { vi, enUS } from "date-fns/locale";
+import { useLocale } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -79,6 +80,7 @@ export function KanbanCard({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [editedTitle, setEditedTitle] = useState(task.title);
+  const locale = useLocale();
 
   // Setup sortable
   const {
@@ -175,14 +177,17 @@ export function KanbanCard({
   const findUser = useCallback((userId: string) => users.find((u) => u.id === userId), [users]);
 
   // Format date
-  const formatDate = useCallback((dateStr: string) => {
-    try {
-      const date = new Date(dateStr);
-      return format(date, "dd/MM", { locale: vi });
-    } catch {
-      return dateStr;
-    }
-  }, []);
+  const formatDate = useCallback(
+    (dateStr: string) => {
+      try {
+        const date = new Date(dateStr);
+        return format(date, "dd/MM", { locale: locale === "vi" ? vi : enUS });
+      } catch {
+        return dateStr;
+      }
+    },
+    [locale]
+  );
 
   // Get status option
   const getStatusOption = useCallback(
@@ -198,18 +203,10 @@ export function KanbanCard({
   if (isDragging || isSortableDragging) {
     return (
       <div ref={setNodeRef} style={style} className="opacity-40">
-        <div className="bg-primary/10 border-2 border-dashed border-primary rounded-lg p-3">
-          <p className="text-sm font-medium text-primary">{task.title}</p>
-        </div>
+        <div className="bg-background rounded-lg border shadow-sm p-3 h-[80px]"></div>
       </div>
     );
   }
-
-  // Count info items for footer
-  const hasFooterInfo =
-    displayInfo.dates.length > 0 ||
-    displayInfo.attachments.length > 0 ||
-    displayInfo.people.length > 0;
 
   return (
     <>
@@ -218,202 +215,170 @@ export function KanbanCard({
         style={style}
         {...attributes}
         {...listeners}
-        className={cn("group cursor-pointer mb-2", isSortableDragging && "opacity-40")}
+        onClick={() => setIsModalOpen(true)}
+        className="group relative bg-background hover:bg-muted/30 rounded-lg border shadow-sm p-3 space-y-2.5 transition-all select-none cursor-pointer"
       >
-        {/* Notion-style card: subtle shadow, clean white bg */}
-        <div
-          className={cn(
-            "bg-background rounded-lg border border-border/50",
-            "shadow-sm hover:shadow-md transition-shadow duration-200",
-            "active:shadow-lg active:scale-[1.02] transition-transform"
-          )}
-          onClick={() => setIsModalOpen(true)}
-        >
-          <div className="p-3 space-y-2">
-            {/* Title row with menu */}
-            <div className="flex items-start gap-2">
-              {/* Title - editable */}
-              <div className="flex-1 min-w-0">
-                {isEditingTitle ? (
-                  <input
-                    type="text"
-                    value={editedTitle}
-                    onChange={(e) => setEditedTitle(e.target.value)}
-                    onBlur={handleTitleBlur}
-                    onKeyDown={handleTitleKeyDown}
-                    onClick={(e) => e.stopPropagation()}
-                    className="w-full text-sm bg-transparent border-none outline-none focus:ring-1 focus:ring-primary/50 rounded"
-                    autoFocus
-                  />
-                ) : (
-                  <p
-                    className="text-sm text-foreground leading-snug line-clamp-3"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setIsEditingTitle(true);
-                    }}
-                  >
-                    {task.title}
-                  </p>
-                )}
-              </div>
-
-              {/* Menu - appears on hover */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className={cn(
-                      "h-6 w-6 shrink-0 -mt-0.5 -mr-1",
-                      "opacity-0 group-hover:opacity-100 transition-opacity",
-                      "text-muted-foreground hover:text-foreground"
-                    )}
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <MoreHorizontal className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  align="end"
-                  className="w-48"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <DropdownMenuItem onClick={() => setIsModalOpen(true)}>
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Mở chi tiết
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <Copy className="h-4 w-4 mr-2" />
-                    Nhân bản
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem
-                    className="text-destructive focus:text-destructive"
-                    onClick={() => setShowDeleteDialog(true)}
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Xóa
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+        {/* Title */}
+        <div className="flex items-start justify-between gap-2">
+          {isEditingTitle ? (
+            <input
+              type="text"
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              onBlur={handleTitleBlur}
+              onKeyDown={handleTitleKeyDown}
+              onClick={(e) => e.stopPropagation()}
+              className="flex-1 bg-transparent border-none outline-none focus:ring-0 p-0 text-sm font-medium w-full"
+              autoFocus
+            />
+          ) : (
+            <div className="text-sm font-medium leading-tight text-foreground/90 break-words">
+              {task.title}
             </div>
+          )}
 
-            {/* Tags/Status - inline pills */}
-            {displayInfo.statuses.length > 0 && (
-              <div className="flex flex-wrap gap-1.5" onClick={(e) => e.stopPropagation()}>
-                {displayInfo.statuses.slice(0, 3).map(({ prop, value }) => {
-                  const option = getStatusOption(prop.id, value);
-                  if (!option) return null;
-                  return (
-                    <span
-                      key={prop.id}
-                      className={cn(
-                        "inline-flex items-center px-2 py-0.5 rounded text-xs font-medium",
-                        option.color || "bg-gray-100 text-gray-700"
-                      )}
-                    >
-                      {option.label}
-                    </span>
-                  );
-                })}
-              </div>
-            )}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              // Menu trigger
+            }}
+            className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:bg-muted rounded text-muted-foreground"
+          >
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <MoreHorizontal className="h-4 w-4" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem onClick={() => setIsEditingTitle(true)}>
+                  {t("rename")}
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    // duplication logic
+                  }}
+                >
+                  <Copy className="mr-2 h-4 w-4" /> {t("duplicate")}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="text-destructive focus:text-destructive"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" /> {t("deleteCard")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </button>
+        </div>
 
-            {/* Footer: meta info row */}
-            {hasFooterInfo && (
-              <div className="flex items-center justify-between pt-1">
-                {/* Left: dates, attachments */}
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  {displayInfo.dates.length > 0 && (
-                    <div className="flex items-center gap-1">
-                      <Calendar className="h-3.5 w-3.5" />
-                      <span>{formatDate(displayInfo.dates[0].value)}</span>
-                    </div>
-                  )}
-                  {displayInfo.attachments.length > 0 && (
-                    <div className="flex items-center gap-1">
-                      <Paperclip className="h-3.5 w-3.5" />
-                      <span>
-                        {displayInfo.attachments.reduce((acc, { value }) => acc + value.length, 0)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Right: assignees */}
-                {displayInfo.people.length > 0 && (
-                  <div className="flex items-center">
-                    <div className="flex -space-x-1.5">
-                      {displayInfo.people.slice(0, 2).flatMap(({ value }) => {
-                        const ids = Array.isArray(value) ? value.slice(0, 2) : [value];
-                        return ids.map((userId, idx) => {
-                          const user = findUser(userId);
-                          if (!user) return null;
-                          return (
-                            <Avatar
-                              key={`${userId}-${idx}`}
-                              className="h-5 w-5 border border-background"
-                            >
-                              <AvatarImage src={user.image || undefined} alt={user.name || ""} />
-                              <AvatarFallback className="text-[9px] bg-muted">
-                                {(user.name || user.email || "?").charAt(0).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                          );
-                        });
-                      })}
-                    </div>
-                    {displayInfo.people.reduce((acc, { value }) => {
-                      const count = Array.isArray(value) ? value.length : 1;
-                      return acc + count;
-                    }, 0) > 2 && (
-                      <span className="text-[10px] text-muted-foreground ml-1">
-                        +
-                        {displayInfo.people.reduce((acc, { value }) => {
-                          const count = Array.isArray(value) ? value.length : 1;
-                          return acc + count;
-                        }, 0) - 2}
-                      </span>
+        {/* Properties Preview */}
+        <div className="space-y-2">
+          {/* Statuses and Selects */}
+          {displayInfo.statuses.length > 0 && (
+            <div className="flex flex-wrap gap-1.5">
+              {displayInfo.statuses.map(({ prop, value }) => {
+                const opt = getStatusOption(prop.id, value);
+                if (!opt) return null;
+                return (
+                  <div
+                    key={prop.id}
+                    className={cn(
+                      "px-2 py-0.5 rounded-md text-[11px] font-medium border border-transparent truncate max-w-full",
+                      opt.color
                     )}
+                  >
+                    {opt.label}
                   </div>
-                )}
-              </div>
-            )}
-          </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Other metadata row */}
+          {(displayInfo.dates.length > 0 ||
+            displayInfo.people.length > 0 ||
+            displayInfo.attachments.length > 0) && (
+            <div className="flex flex-wrap items-center gap-3 text-muted-foreground">
+              {/* Dates */}
+              {displayInfo.dates.map(({ prop, value }) => (
+                <div
+                  key={prop.id}
+                  className="flex items-center gap-1 text-[11px]"
+                  title={prop.name}
+                >
+                  <Calendar className="h-3 w-3" />
+                  <span>{formatDate(value)}</span>
+                </div>
+              ))}
+
+              {/* Attachments Count */}
+              {displayInfo.attachments.length > 0 && (
+                <div className="flex items-center gap-1 text-[11px]" title="Tệp đính kèm">
+                  <Paperclip className="h-3 w-3" />
+                  <span>
+                    {displayInfo.attachments.reduce((acc, curr) => acc + curr.value.length, 0)}
+                  </span>
+                </div>
+              )}
+
+              {/* Members */}
+              {displayInfo.people.length > 0 && (
+                <div className="flex items-center -space-x-1.5 ml-auto">
+                  {displayInfo.people.flatMap(({ prop, value }) => {
+                    const userIds = Array.isArray(value) ? value : [value];
+                    return userIds.map((uid) => {
+                      const user = findUser(uid);
+                      if (!user) return null;
+                      return (
+                        <div
+                          key={`${prop.id}-${uid}`}
+                          className="h-4 w-4 rounded-full ring-1 ring-background bg-muted flex items-center justify-center overflow-hidden"
+                          title={user.name}
+                        >
+                          {user.image ? (
+                            /* eslint-disable-next-line @next/next/no-img-element */
+                            <img src={user.image} alt="" className="h-full w-full object-cover" />
+                          ) : (
+                            <span className="text-[8px] font-medium text-muted-foreground">
+                              {user.name.charAt(0)}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    });
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Card Modal */}
       <KanbanCardModal
         task={task}
-        properties={allProperties || properties}
-        users={users}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        properties={allProperties || properties}
+        users={users}
         onUpdate={onUpdate}
         onDelete={onDelete}
         onAddPropertyOption={onAddPropertyOption}
         onUpdatePropertyOption={onUpdatePropertyOption}
       />
 
-      {/* Delete confirmation */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xóa công việc</AlertDialogTitle>
+            <AlertDialogTitle>Xóa công việc?</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa &quot;{task.title}&quot;? Hành động này không thể hoàn tác.
+              Hành động này không thể hoàn tác. Công việc sẽ bị xóa vĩnh viễn khỏi hệ thống.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Hủy</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              onClick={() => {
-                onDelete();
-                setShowDeleteDialog(false);
-              }}
+              onClick={onDelete}
+              className="bg-destructive hover:bg-destructive/90"
             >
               Xóa
             </AlertDialogAction>

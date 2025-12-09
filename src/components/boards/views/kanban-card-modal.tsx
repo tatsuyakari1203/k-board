@@ -2,13 +2,11 @@
 
 import { useState, useCallback } from "react";
 import { Trash2, X, MoreHorizontal } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
+import { vi, enUS } from "date-fns/locale";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,7 +28,6 @@ import { type Property } from "@/types/board";
 import { type TaskData } from "@/hooks/use-board-tasks";
 import { cn } from "@/lib/utils";
 
-
 // ============================================
 // TYPES
 // ============================================
@@ -50,8 +47,14 @@ interface KanbanCardModalProps {
   onClose: () => void;
   onUpdate: (updates: Partial<TaskData>) => void;
   onDelete: () => void;
-  onAddPropertyOption?: (propertyId: string, option: { id: string; label: string; color?: string }) => void;
-  onUpdatePropertyOption?: (propertyId: string, option: { id: string; label: string; color?: string }) => void;
+  onAddPropertyOption?: (
+    propertyId: string,
+    option: { id: string; label: string; color?: string }
+  ) => void;
+  onUpdatePropertyOption?: (
+    propertyId: string,
+    option: { id: string; label: string; color?: string }
+  ) => void;
 }
 
 // ============================================
@@ -69,6 +72,8 @@ export function KanbanCardModal({
   onAddPropertyOption,
   onUpdatePropertyOption,
 }: KanbanCardModalProps) {
+  const t = useTranslations("BoardDetails.card");
+  const locale = useLocale();
   const [editedTitle, setEditedTitle] = useState(task.title);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
@@ -114,14 +119,15 @@ export function KanbanCardModal({
     onClose();
   }, [onDelete, onClose]);
 
+  // Helper date
+  const dateLocale = locale === "vi" ? vi : enUS;
+
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="max-w-2xl max-h-[85vh] p-0 gap-0 overflow-hidden">
           {/* Visually hidden title for accessibility */}
-          <DialogTitle className="sr-only">
-            {task.title || "Chi tiết công việc"}
-          </DialogTitle>
+          <DialogTitle className="sr-only">{task.title || t("taskDetails")}</DialogTitle>
 
           {/* Header - Notion style: large title, minimal chrome */}
           <div className="px-10 pt-8 pb-4">
@@ -133,7 +139,7 @@ export function KanbanCardModal({
                 onChange={(e) => setEditedTitle(e.target.value)}
                 onBlur={handleTitleBlur}
                 onKeyDown={handleTitleKeyDown}
-                placeholder="Untitled"
+                placeholder={t("untitled")}
                 className={cn(
                   "flex-1 text-3xl font-bold bg-transparent border-none outline-none",
                   "placeholder:text-muted-foreground/40",
@@ -155,7 +161,7 @@ export function KanbanCardModal({
                       onClick={() => setShowDeleteDialog(true)}
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
-                      Xóa
+                      {t("delete")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -207,17 +213,18 @@ export function KanbanCardModal({
               ))}
 
               {properties.length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                  Chưa có thuộc tính nào
-                </div>
+                <div className="text-center py-12 text-muted-foreground">{t("noProperties")}</div>
               )}
             </div>
 
             {/* Meta info - subtle footer */}
             <div className="mt-8 pt-4 border-t text-xs text-muted-foreground">
-              Tạo lúc {new Date(task.createdAt).toLocaleDateString("vi-VN")}
+              {t("created")} {new Date(task.createdAt).toLocaleDateString(locale)}
               {task.updatedAt !== task.createdAt && (
-                <> · Cập nhật {new Date(task.updatedAt).toLocaleDateString("vi-VN")}</>
+                <>
+                  {" "}
+                  · {t("updated")} {new Date(task.updatedAt).toLocaleDateString(locale)}
+                </>
               )}
             </div>
           </div>
@@ -228,18 +235,18 @@ export function KanbanCardModal({
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Xóa công việc</AlertDialogTitle>
+            <AlertDialogTitle>{t("deleteTask")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Bạn có chắc chắn muốn xóa &quot;{task.title}&quot;? Hành động này không thể hoàn tác.
+              {t("deleteConfirm", { title: task.title })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               onClick={handleDelete}
             >
-              Xóa
+              {t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

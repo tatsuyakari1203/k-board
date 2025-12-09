@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
+import { useTranslations, useLocale } from "next-intl";
 import {
   MoreHorizontal,
   Trash2,
@@ -34,12 +35,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import {
-  BOARD_ROLES,
-  BOARD_ROLE_LABELS,
-  type BoardRole,
-  type BoardVisibility,
-} from "@/types/board-member";
+import { BOARD_ROLES, type BoardRole, type BoardVisibility } from "@/types/board-member";
 
 interface BoardListItem {
   _id: string;
@@ -77,8 +73,22 @@ interface BoardCardProps {
 
 export function BoardCard({ board }: BoardCardProps) {
   const router = useRouter();
+  const t = useTranslations("BoardComponents.card");
+  const tRoles = useTranslations("BoardRoles");
+  const tVisibility = useTranslations("BoardVisibility");
+  const locale = useLocale();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [deleting, setDeleting] = useState(false);
+
+  // This effect is not ideal way to handle date-fns locale but works for client comp
+  // Better would be a utility hook, but for now we follow pattern in other files or just import both
+  // Actually, formatDistanceToNow requires the specific locale object
+  // Let's rely on the fact we only have vi and en
+  const getDateLocale = () => {
+    // This is a simplified approach, ideally we import dynamically or have a map
+    // but since we only have 'vi' and 'en' logic in other places:
+    return locale === "vi" ? vi : undefined; // undefined defaults to enUS
+  };
 
   const canDelete = board.role === BOARD_ROLES.OWNER;
 
@@ -90,13 +100,13 @@ export function BoardCard({ board }: BoardCardProps) {
       });
 
       if (!res.ok) {
-        throw new Error("Không thể xóa board");
+        throw new Error(t("toastDeleteError"));
       }
 
-      toast.success("Đã xóa board");
+      toast.success(t("toastDeleted"));
       router.refresh();
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra");
+      toast.error(error instanceof Error ? error.message : t("toastError"));
     } finally {
       setDeleting(false);
       setShowDeleteDialog(false);
@@ -142,12 +152,12 @@ export function BoardCard({ board }: BoardCardProps) {
                   }}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Xóa board
+                  {t("deleteBoard")}
                 </DropdownMenuItem>
               )}
               {!canDelete && (
                 <DropdownMenuItem disabled className="text-muted-foreground">
-                  Bạn không có quyền xóa
+                  {t("noDeletePermission")}
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -157,23 +167,26 @@ export function BoardCard({ board }: BoardCardProps) {
         <div className="flex items-center gap-5 mt-5 text-sm text-muted-foreground">
           <span className="flex items-center gap-1.5">
             <FileText className="h-4 w-4" />
-            {board.taskCount} hồ sơ
+            {board.taskCount} {t("taskCount")}
           </span>
           {board.visibility && (
-            <span className="flex items-center gap-1.5" title={`Chế độ: ${board.visibility}`}>
+            <span
+              className="flex items-center gap-1.5"
+              title={`${tVisibility("title")}: ${tVisibility(board.visibility)}`}
+            >
               {VISIBILITY_ICONS[board.visibility]}
             </span>
           )}
           {board.role && (
-            <span className="flex items-center gap-1.5" title={BOARD_ROLE_LABELS[board.role]}>
+            <span className="flex items-center gap-1.5" title={tRoles(board.role)}>
               {ROLE_ICONS[board.role]}
-              <span className="text-sm">{BOARD_ROLE_LABELS[board.role]}</span>
+              <span className="text-sm">{tRoles(board.role)}</span>
             </span>
           )}
           <span className="ml-auto">
             {formatDistanceToNow(new Date(board.updatedAt), {
               addSuffix: true,
-              locale: vi,
+              locale: getDateLocale(),
             })}
           </span>
         </div>
@@ -182,20 +195,19 @@ export function BoardCard({ board }: BoardCardProps) {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="text-xl">Xóa board?</AlertDialogTitle>
+            <AlertDialogTitle className="text-xl">{t("deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription className="text-base">
-              Board &quot;{board.name}&quot; và tất cả {board.taskCount} hồ sơ trong đó sẽ bị xóa
-              vĩnh viễn. Hành động này không thể hoàn tác.
+              {t("deleteDesc", { name: board.name, count: board.taskCount })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deleting}>Hủy</AlertDialogCancel>
+            <AlertDialogCancel disabled={deleting}>{t("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               disabled={deleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {deleting ? "Đang xóa..." : "Xóa"}
+              {deleting ? t("deleting") : t("delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

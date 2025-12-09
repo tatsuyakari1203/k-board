@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Paperclip, Upload, FileText, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 export interface AttachmentFile {
   id: string;
@@ -25,6 +26,7 @@ export function AttachmentCell({
   compact?: boolean;
   className?: string;
 }) {
+  const t = useTranslations("BoardComponents.cells.attachment");
   const [open, setOpen] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -108,14 +110,14 @@ export function AttachmentCell({
                 <span className="text-xs truncate max-w-[120px]">{value[0].name}</span>
                 {value.length > 1 && (
                   <span className="text-[10px] text-muted-foreground">
-                    +{value.length - 1} tệp khác
+                    +{value.length - 1} {t("otherFiles")}
                   </span>
                 )}
               </div>
             </div>
           ) : (
             <span className="text-muted-foreground/40 text-xs px-1 opacity-0 group-hover/cell:opacity-100 transition-opacity">
-              Thêm...
+              {t("add")}
             </span>
           )}
         </button>
@@ -197,12 +199,12 @@ export function AttachmentCell({
             {uploading ? (
               <>
                 <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                <span>Đang tải...</span>
+                <span>{t("uploading")}</span>
               </>
             ) : (
               <>
                 <Upload className="h-4 w-4" />
-                <span>Tải lên tệp</span>
+                <span>{t("uploadFile")}</span>
               </>
             )}
           </button>

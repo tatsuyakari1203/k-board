@@ -103,16 +103,31 @@
     "views": {
       "table": "Bảng",
       "kanban": "Kanban",
-      "create": "Tạo View mới",
-      "createDesc": "Thêm cách hiển thị khác cho dữ liệu.",
-      "viewName": "Tên View",
-      "viewNamePlaceholder": "VD: Kanban Status...",
-      "viewType": "Loại View",
-      "submitCreate": "Tạo View"
+      "create": "Tạo chế độ xem mới",
+      "createDesc": "Chọn giao diện cho chế độ xem",
+      "viewName": "Tên chế độ xem",
+      "viewNamePlaceholder": "VD: Công việc của tôi",
+      "viewType": "Kiểu hiển thị",
+      "submitCreate": "Tạo mới"
+    },
+    "card": {
+      "rename": "Đổi tên",
+      "duplicate": "Sao chép",
+      "deleteCard": "Xóa thẻ",
+      "deleteTask": "Xóa công việc",
+      "deleteTitle": "Xóa công việc?",
+      "deleteConfirm": "Hành động này không thể hoàn tác. Công việc sẽ bị xóa vĩnh viễn khỏi hệ thống.",
+      "cancel": "Hủy",
+      "delete": "Xóa",
+      "untitled": "Chưa đặt tên",
+      "taskDetails": "Chi tiết công việc",
+      "noProperties": "Chưa có thuộc tính nào",
+      "created": "Tạo lúc",
+      "updated": "Cập nhật"
     },
     "header": {
-      "boardsLink": "Boards",
-      "untitled": "Chưa đặt tên",
+      "boardsLink": "Quay lại danh sách",
+      "untitled": "Board chưa đặt tên",
       "members": "Thành viên"
     },
     "toolbar": {
@@ -187,16 +202,63 @@
       }
     }
   },
-  "Aggregations": {
-    "percentEmpty": "Tỷ lệ trống",
-    "percentNotEmpty": "Tỷ lệ có dữ liệu",
-    "sum": "Tổng",
-    "average": "Trung bình",
-    "min": "Min",
-    "max": "Max",
-    "median": "Trung vị",
-    "range": "Phạm vi"
+  "BoardRoles": {
+    "owner": "Chủ sở hữu",
+    "admin": "Quản trị viên",
+    "editor": "Biên tập viên",
+    "viewer": "Người xem",
+    "restricted_editor": "Cộng tác viên (Chỉ việc được giao)",
+    "restricted_viewer": "Khách (Chỉ việc được giao)"
   },
+  "BoardVisibility": {
+    "private": "Riêng tư",
+    "workspace": "Workspace",
+    "privateDesc": "Chỉ chủ sở hữu và thành viên được mời",
+    "workspaceDesc": "Tất cả người dùng trong workspace có thể xem"
+  },
+  "BoardMembers": {
+    "title": "Chia sẻ & Thành viên",
+    "tabs": {
+      "members": "Thành viên",
+      "activity": "Hoạt động",
+      "settings": "Cài đặt"
+    },
+    "visibility": {
+      "title": "Chế độ hiển thị",
+      "private": "Riêng tư",
+      "workspace": "Workspace",
+      "privateDesc": "Chỉ chủ sở hữu và thành viên được mời mới có thể truy cập",
+      "workspaceDesc": "Tất cả người dùng trong workspace có thể xem"
+    },
+    "transfer": {
+      "title": "Chuyển quyền sở hữu",
+      "desc": "Chuyển quyền sở hữu board cho một thành viên khác. Bạn sẽ trở thành Admin sau khi chuyển.",
+      "confirmTransfer": "Bạn có chắc chắn muốn chuyển quyền sở hữu cho {name} không?"
+    },
+    "add": {
+      "direct": "Thêm trực tiếp",
+      "invite": "Gửi lời mời",
+      "searchPlaceholder": "Tìm kiếm người dùng...",
+      "noResults": "Không tìm thấy người dùng",
+      "allMembers": "Tất cả người dùng đã là thành viên",
+      "selectUser": "Vui lòng chọn người dùng",
+      "cancel": "Hủy",
+      "submitAdd": "Thêm",
+      "submitInvite": "Gửi lời mời",
+      "inviteSent": "Đã gửi lời mời"
+    },
+    "invitations": {
+      "title": "Lời mời đang chờ",
+      "cancelConfirm": "Bạn có chắc chắn muốn hủy lời mời này?"
+    },
+    "list": {
+      "noMembers": "Chưa có thành viên nào",
+      "removeConfirm": "Bạn có chắc chắn muốn xóa thành viên này?"
+    },
+    "loading": "Đang tải...",
+    "error": "Có lỗi xảy ra"
+  },
+
   "Users": {
     "title": "Nhân sự",
     "subtitle": "Danh sách nhân viên trong hệ thống",
@@ -347,7 +409,154 @@
         "invitation_cancelled": "Hủy lời mời"
       },
       "noData": "Không có dữ liệu",
-      "records": "bản ghi"
+      "records": "bản ghi",
+      "table": {
+        "rename": "Đổi tên cột",
+        "addColumnLeft": "Thêm cột bên trái",
+        "addColumnRight": "Thêm cột bên phải",
+        "deleteColumn": "Xóa cột",
+        "untitled": "Chưa đặt tên",
+        "newTask": "Công việc mới",
+        "new": "Mới",
+        "more": "thêm",
+        "noResults": "Không tìm thấy kết quả",
+        "noRecords": "Chưa có dữ liệu",
+        "addFirstRecord": "Thêm dữ liệu đầu tiên",
+        "selected": "đã chọn",
+        "delete": "Xóa",
+        "titleColumn": "Tiêu đề"
+      }
+    }
+  },
+  "Aggregations": {
+    "calculate": "Tính toán",
+    "none": "Không",
+    "count": "Đếm",
+    "countAll": "Đếm tất cả",
+    "countEmpty": "Đếm trống",
+    "countNotEmpty": "Đếm có dữ liệu",
+    "percentEmpty": "% Trống",
+    "percentNotEmpty": "% Có dữ liệu",
+    "sum": "Tổng",
+    "average": "Trung bình",
+    "min": "Nhỏ nhất",
+    "max": "Lớn nhất",
+    "median": "Trung vị",
+    "range": "Phạm vi"
+  },
+  "BoardComponents": {
+    "createDialog": {
+      "title": "Tạo Board mới",
+      "nameLabel": "Tên board *",
+      "namePlaceholder": "VD: Hồ sơ đo đạc 2024",
+      "descLabel": "Mô tả",
+      "descPlaceholder": "Mô tả ngắn về board này",
+      "templateLabel": "Chọn Template",
+      "visibilityLabel": "Chế độ hiển thị",
+      "cancel": "Hủy",
+      "create": "Tạo board",
+      "creating": "Đang tạo...",
+      "toastNameRequired": "Vui lòng nhập tên board",
+      "toastSuccess": "Tạo board thành công!",
+      "toastError": "Có lỗi xảy ra",
+      "templates": {
+        "blank": "Bảng trắng",
+        "blankDesc": "Tự thiết kế quy trình làm việc từ đầu"
+      },
+      "visibility": {
+        "privateDesc": "Chỉ chủ sở hữu và thành viên được mời",
+        "workspaceDesc": "Mọi người trong workspace có thể xem"
+      }
+    },
+    "card": {
+      "taskCount": "hồ sơ",
+      "deleteBoard": "Xóa board",
+      "noDeletePermission": "Bạn không có quyền xóa",
+      "deleteTitle": "Xóa board?",
+      "deleteDesc": "Board \"{name}\" và tất cả {count} hồ sơ trong đó sẽ bị xóa vĩnh viễn. Hành động này không thể hoàn tác.",
+      "cancel": "Hủy",
+      "delete": "Xóa",
+      "deleting": "Đang xóa...",
+      "toastDeleted": "Đã xóa board",
+      "toastDeleteError": "Không thể xóa board",
+      "toastError": "Có lỗi xảy ra"
+    },
+    "filter": {
+      "title": "Bộ lọc",
+      "clearAll": "Xóa tất cả",
+      "addFilter": "Thêm bộ lọc",
+      "selectColumn": "Chọn cột...",
+      "selectValue": "Chọn giá trị...",
+      "enterValue": "Nhập giá trị...",
+      "select": "Chọn...",
+      "true": "Có",
+      "false": "Không",
+      "operators": {
+        "contains": "Chứa",
+        "equals": "Bằng",
+        "not_equals": "Không bằng",
+        "is_empty": "Trống",
+        "is_not_empty": "Không trống",
+        "greater_than": ">",
+        "less_than": "<",
+        "greater_or_equal": "≥",
+        "less_or_equal": "≤",
+        "before": "Trước",
+        "after": "Sau"
+      }
+    },
+    "sort": {
+      "title": "Sắp xếp",
+      "clearAll": "Xóa tất cả",
+      "addSort": "Thêm sắp xếp",
+      "selectColumn": "Chọn cột...",
+      "add": "Thêm",
+      "allSorted": "Tất cả các cột đã được sắp xếp",
+      "asc": "Tăng dần",
+      "desc": "Giảm dần",
+      "ascShort": "Tăng",
+      "descShort": "Giảm"
+    },
+    "cells": {
+      "date": {
+        "dateLabel": "Ngày",
+        "endDateLabel": "Ngày kết thúc",
+        "includeTime": "Kèm giờ",
+        "startTime": "Giờ bắt đầu",
+        "endTime": "Giờ kết thúc",
+        "clear": "Xóa",
+        "start": "Bắt đầu",
+        "end": "Kết thúc"
+      },
+      "user": {
+        "search": "Tìm kiếm...",
+        "noUsers": "Chưa có user nào",
+        "notFound": "Không tìm thấy",
+        "delete": "Xóa",
+        "all": "tất cả"
+      },
+      "attachment": {
+        "add": "Thêm...",
+        "otherFiles": "tệp khác",
+        "uploading": "Đang tải...",
+        "uploadFile": "Tải lên tệp"
+      },
+      "select": {
+        "addNew": "Thêm mới...",
+        "delete": "Xóa",
+        "colors": {
+          "gray": "Xám",
+          "red": "Đỏ",
+          "orange": "Cam",
+          "yellow": "Vàng",
+          "green": "Xanh lá",
+          "teal": "Xanh ngọc",
+          "blue": "Xanh dương",
+          "indigo": "Chàm",
+          "purple": "Tím",
+          "pink": "Hồng"
+        }
+      }
     }
   }
 }

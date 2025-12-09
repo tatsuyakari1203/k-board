@@ -4,12 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { ChevronLeft, Table2, Kanban, Users, Building2, Plus } from "lucide-react";
 import { type View, ViewType } from "@/types/board";
-import {
-  type BoardRole,
-  type BoardPermissions,
-  BOARD_VISIBILITY_LABELS,
-  type BoardVisibility,
-} from "@/types/board-member";
+import { type BoardRole, type BoardPermissions, type BoardVisibility } from "@/types/board-member";
 import { BoardMembersModal } from "@/components/board/BoardMembersModal";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
@@ -61,6 +56,7 @@ export function BoardHeader({
   userPermissions,
 }: BoardHeaderProps) {
   const t = useTranslations("BoardDetails");
+  const tVisibility = useTranslations("BoardVisibility");
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [title, setTitle] = useState(board.name);
   const [showMembersModal, setShowMembersModal] = useState(false);
@@ -141,7 +137,7 @@ export function BoardHeader({
             {board.visibility === "workspace" && (
               <span className="flex items-center gap-1 text-xs text-muted-foreground px-2 py-0.5 bg-muted rounded">
                 <Building2 className="h-3 w-3" />
-                {BOARD_VISIBILITY_LABELS[board.visibility]}
+                {tVisibility(board.visibility)}
               </span>
             )}
           </div>

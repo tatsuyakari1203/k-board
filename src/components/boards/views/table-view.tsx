@@ -222,7 +222,6 @@ function matchesFilter(task: TaskData, filter: FilterConfig, properties: Propert
 }
 
 // Sortable Header Component
-// Sortable Header Component
 function SortableHeader({
   property,
   width,
@@ -351,6 +350,7 @@ function SortableHeader({
     </th>
   );
 }
+
 // Title Cell Component
 function TitleCell({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const t = useTranslations("BoardDetails.table");
@@ -604,17 +604,6 @@ export function TableView({
   const tAgg = useTranslations("Aggregations");
   const dndId = useId();
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
-
-  // ... (rest of the code is unchanged until lines 1438)
-
-  // I need to skip the huge body of TableView. I can't replace the whole function.
-  // I will just add the hooks at the top.
-  // And then replace the bottom part in a separate chunk. But wait, I can do multiple chunks?
-  // "Use this tool ONLY when you are making a SINGLE CONTIGUOUS block of edits".
-  // So I can't do both.
-
-  // I will just add the hooks first.
-
   const [resizing, setResizing] = useState<{
     id: string;
     startX: number;
@@ -795,9 +784,6 @@ export function TableView({
       }
 
       if (Array.isArray(value)) {
-        // Multi-select: task can be in multiple groups? Or just first one?
-        // Usually grouping by multi-select duplicates the task or picks primary.
-        // For simplicity, let's put in first matching group or no value.
         if (value.length === 0) {
           noValueTasks.push(task);
         } else {
@@ -828,12 +814,9 @@ export function TableView({
       });
     }
 
-    // Filter out empty groups if desired, or keep them.
-    // Usually we keep them to allow dragging into them (if we supported drag).
     return groups;
   }, [processedTasks, groupBy, board.properties, users]);
 
-  // Flatten tasks for visual index calculation
   // Flatten tasks for virtualization (handling both grouped and flat views)
   const flatItems = useMemo(() => {
     const items: Array<
@@ -872,87 +855,11 @@ export function TableView({
     overscan: 20,
   });
 
-  // Fill Handle Logic
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const handleFillStart = (
-    _e: React.MouseEvent,
-    _taskId: string,
-    propertyId: string,
-    value: unknown,
-    index: number
-  ) => {
-    setFillRange({ start: index, end: index, propertyId, value });
-
-    const handleMouseUp = () => {
-      setFillRange((prev) => {
-        if (prev && prev.start !== prev.end) {
-          // Apply changes - unused for now
-          // const _start = Math.min(prev.start, prev.end);
-          // const _end = Math.max(prev.start, prev.end);
-        }
-        return null;
-      });
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-
-    document.addEventListener("mouseup", handleMouseUp);
-  };
-
-  // We need to apply the changes when fillRange becomes null (on mouse up)
-  // But we can't do it inside the setState callback easily because we need side effects (API calls).
-  // So let's use an effect that watches for the transition from non-null to null?
-  // Or just handle it in the mouseup handler with a ref to flatItems.
+  const [isFilling, setIsFilling] = useState(false);
   const flatItemsRef = useRef(flatItems);
   useEffect(() => {
     flatItemsRef.current = flatItems;
   }, [flatItems]);
-
-  useEffect(() => {
-    if (!fillRange) return;
-
-    const handleMouseUp = () => {
-      if (fillRange.start !== fillRange.end) {
-        const start = Math.min(fillRange.start, fillRange.end);
-        const end = Math.max(fillRange.start, fillRange.end);
-        const itemsToUpdate = flatItemsRef.current.slice(start, end + 1);
-
-        itemsToUpdate.forEach((item) => {
-          if (item.type !== "task") return;
-          const task = item.task;
-
-          // Skip the source task if it's included (it is)
-          // Actually we want to copy TO the range.
-          // If dragging down: start is source.
-          // If dragging up: end is source?
-          // Excel logic: The source is the cell you started dragging FROM.
-          // So we apply `fillRange.value` to all tasks in range.
-          if (task.properties[fillRange.propertyId] !== fillRange.value) {
-            onUpdateTask(task._id, {
-              properties: { ...task.properties, [fillRange.propertyId]: fillRange.value },
-            });
-          }
-        });
-      }
-      setFillRange(null);
-    };
-
-    const onMouseUp = () => {
-      handleMouseUp();
-      document.removeEventListener("mouseup", onMouseUp);
-    };
-    document.addEventListener("mouseup", onMouseUp);
-    return () => document.removeEventListener("mouseup", onMouseUp);
-  }, [fillRange, onUpdateTask]); // Re-binds if fillRange changes, which happens on move. This is inefficient.
-
-  // Better approach:
-  // Keep fillRange in state.
-  // On mouse up (global), read the current fillRange state and apply.
-  // But global listener needs access to current state.
-
-  // Let's refactor handleFillStart to NOT add the listener, but set a flag `isFilling`.
-  // And have a global `useEffect` that handles the mouseup if `isFilling` is true.
-
-  const [isFilling, setIsFilling] = useState(false);
 
   const onFillStartAction = (
     e: React.MouseEvent,
@@ -984,9 +891,6 @@ export function TableView({
         itemsToUpdate.forEach((item) => {
           if (item.type !== "task") return;
           const task = item.task;
-
-          // Don't update if value is same (optimization)
-          // Also skip the source task ideally, but updating it with same value is harmless
           onUpdateTask(task._id, {
             properties: { ...task.properties, [fillRange.propertyId]: fillRange.value },
           });
@@ -1054,8 +958,6 @@ export function TableView({
 
     const activeData = active.data.current;
 
-    const _overData = over.data.current;
-
     if (activeData?.type === "COLUMN" && onReorderProperties) {
       const oldIndex = sortedProperties.findIndex((p) => p.id === active.id);
       const newIndex = sortedProperties.findIndex((p) => p.id === over.id);
@@ -1105,7 +1007,7 @@ export function TableView({
                 <th className="w-6 sticky left-8 z-40 border-b border-border/50 bg-background" />
                 {isTitleVisible && (
                   <th className="text-left font-normal text-muted-foreground px-2 min-w-[200px] sticky left-[56px] z-40 border-b border-r border-border/50 h-8 bg-background">
-                    <span className="text-xs font-medium">Title</span>
+                    <span className="text-xs font-medium">{t("titleColumn")}</span>
                   </th>
                 )}
                 <SortableContext
@@ -1176,11 +1078,6 @@ export function TableView({
                           );
                         } else {
                           const task = item.task;
-                          // Find index in flatItems for filling logic?
-                          // Or use virtualRow.index?
-                          // Visual index logic in SortableRow was used for "fill handle".
-                          // We can use virtualRow.index as visualIndex.
-
                           return (
                             <SortableRow
                               key={task._id}
@@ -1192,7 +1089,7 @@ export function TableView({
                               users={users}
                               onAddPropertyOption={onAddPropertyOption}
                               onUpdatePropertyOption={onUpdatePropertyOption}
-                              isDragEnabled={isRowDragEnabled && !groupedTasks} // Only enable if not grouped
+                              isDragEnabled={isRowDragEnabled && !groupedTasks}
                               isSelected={selectedTaskIds.has(task._id)}
                               onToggleSelect={handleToggleSelect}
                               visualIndex={virtualRow.index}
@@ -1229,7 +1126,7 @@ export function TableView({
                   >
                     <button className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors w-full h-full text-xs">
                       <Plus className="h-3.5 w-3.5" />
-                      <span>New</span>
+                      <span>{t("new")}</span>
                     </button>
                   </td>
                 )}
@@ -1241,7 +1138,7 @@ export function TableView({
                         className="flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors w-full h-full text-xs px-2"
                       >
                         <Plus className="h-3.5 w-3.5" />
-                        <span>New</span>
+                        <span>{t("new")}</span>
                       </button>
                     )}
                   </td>
@@ -1256,7 +1153,7 @@ export function TableView({
                 {isTitleVisible && (
                   <td className="px-2 border-t border-border/50 text-muted-foreground text-right sticky left-[56px] bg-background z-40 h-7">
                     <div className="flex items-center justify-end gap-1.5 h-full">
-                      <span className="text-[10px] text-muted-foreground">Count</span>
+                      <span className="text-[10px] text-muted-foreground">{tAgg("count")}</span>
                       <span className="text-xs">{processedTasks.length}</span>
                     </div>
                   </td>
@@ -1278,18 +1175,20 @@ export function TableView({
                               <span className="text-xs">{value}</span>
                             ) : (
                               <span className="opacity-0 group-hover/calc:opacity-40 transition-opacity">
-                                Calculate
+                                {tAgg("calculate")}
                               </span>
                             )}
                           </button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuLabel className="text-xs">Calculate</DropdownMenuLabel>
+                          <DropdownMenuLabel className="text-xs">
+                            {tAgg("calculate")}
+                          </DropdownMenuLabel>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
                             onClick={() => onUpdateAggregation?.(property.id, null)}
                           >
-                            None
+                            {tAgg("none")}
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
                           <DropdownMenuItem
@@ -1297,21 +1196,21 @@ export function TableView({
                               onUpdateAggregation?.(property.id, AggregationType.COUNT)
                             }
                           >
-                            Count all
+                            {tAgg("countAll")}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() =>
                               onUpdateAggregation?.(property.id, AggregationType.COUNT_EMPTY)
                             }
                           >
-                            Count empty
+                            {tAgg("countEmpty")}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() =>
                               onUpdateAggregation?.(property.id, AggregationType.COUNT_NOT_EMPTY)
                             }
                           >
-                            Count not empty
+                            {tAgg("countNotEmpty")}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() =>
@@ -1407,7 +1306,7 @@ export function TableView({
                     value={task.title}
                     onChange={(e) => onUpdateTask(task._id, { title: e.target.value })}
                     className="flex-1 text-sm bg-transparent border-none outline-none focus:ring-0"
-                    placeholder="Untitled"
+                    placeholder={t("untitled")}
                   />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -1421,7 +1320,7 @@ export function TableView({
                         className="text-destructive text-xs"
                       >
                         <Trash2 className="h-3.5 w-3.5 mr-1.5" />
-                        Delete
+                        {t("delete")}
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

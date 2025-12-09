@@ -2,11 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { Plus, X } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -27,57 +23,9 @@ interface FilterPopoverProps {
   onClearFilters: () => void;
 }
 
-const OPERATORS = {
-  text: [
-    { value: "contains", label: "Chứa" },
-    { value: "equals", label: "Bằng" },
-    { value: "not_equals", label: "Không bằng" },
-    { value: "is_empty", label: "Trống" },
-    { value: "is_not_empty", label: "Không trống" },
-  ],
-  number: [
-    { value: "equals", label: "=" },
-    { value: "not_equals", label: "≠" },
-    { value: "greater_than", label: ">" },
-    { value: "less_than", label: "<" },
-    { value: "greater_or_equal", label: "≥" },
-    { value: "less_or_equal", label: "≤" },
-  ],
-  date: [
-    { value: "equals", label: "Bằng" },
-    { value: "before", label: "Trước" },
-    { value: "after", label: "Sau" },
-    { value: "is_empty", label: "Trống" },
-    { value: "is_not_empty", label: "Không trống" },
-  ],
-  select: [
-    { value: "equals", label: "Là" },
-    { value: "not_equals", label: "Không là" },
-    { value: "is_empty", label: "Trống" },
-    { value: "is_not_empty", label: "Không trống" },
-  ],
-  checkbox: [
-    { value: "equals", label: "Là" },
-  ],
-};
+import { useTranslations } from "next-intl";
 
-function getOperatorsForType(type: PropertyType) {
-  switch (type) {
-    case PropertyType.NUMBER:
-    case PropertyType.CURRENCY:
-      return OPERATORS.number;
-    case PropertyType.DATE:
-      return OPERATORS.date;
-    case PropertyType.SELECT:
-    case PropertyType.MULTI_SELECT:
-    case PropertyType.STATUS:
-      return OPERATORS.select;
-    case PropertyType.CHECKBOX:
-      return OPERATORS.checkbox;
-    default:
-      return OPERATORS.text;
-  }
-}
+// ... (imports remain)
 
 export function FilterPopover({
   children,
@@ -87,10 +35,61 @@ export function FilterPopover({
   onRemoveFilter,
   onClearFilters,
 }: FilterPopoverProps) {
+  const t = useTranslations("BoardComponents.filter");
   const [open, setOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<string>("");
   const [operator, setOperator] = useState<string>("contains");
   const [value, setValue] = useState<string>("");
+
+  const OPERATORS = {
+    text: [
+      { value: "contains", label: t("operators.contains") },
+      { value: "equals", label: t("operators.equals") },
+      { value: "not_equals", label: t("operators.not_equals") },
+      { value: "is_empty", label: t("operators.is_empty") },
+      { value: "is_not_empty", label: t("operators.is_not_empty") },
+    ],
+    number: [
+      { value: "equals", label: t("operators.equals") },
+      { value: "not_equals", label: t("operators.not_equals") },
+      { value: "greater_than", label: t("operators.greater_than") },
+      { value: "less_than", label: t("operators.less_than") },
+      { value: "greater_or_equal", label: t("operators.greater_or_equal") },
+      { value: "less_or_equal", label: t("operators.less_or_equal") },
+    ],
+    date: [
+      { value: "equals", label: t("operators.equals") },
+      { value: "before", label: t("operators.before") },
+      { value: "after", label: t("operators.after") },
+      { value: "is_empty", label: t("operators.is_empty") },
+      { value: "is_not_empty", label: t("operators.is_not_empty") },
+    ],
+    select: [
+      { value: "equals", label: t("operators.equals") },
+      { value: "not_equals", label: t("operators.not_equals") },
+      { value: "is_empty", label: t("operators.is_empty") },
+      { value: "is_not_empty", label: t("operators.is_not_empty") },
+    ],
+    checkbox: [{ value: "equals", label: t("operators.equals") }],
+  };
+
+  function getOperatorsForType(type: PropertyType) {
+    switch (type) {
+      case PropertyType.NUMBER:
+      case PropertyType.CURRENCY:
+        return OPERATORS.number;
+      case PropertyType.DATE:
+        return OPERATORS.date;
+      case PropertyType.SELECT:
+      case PropertyType.MULTI_SELECT:
+      case PropertyType.STATUS:
+        return OPERATORS.select;
+      case PropertyType.CHECKBOX:
+        return OPERATORS.checkbox;
+      default:
+        return OPERATORS.text;
+    }
+  }
 
   const selectedProp = properties.find((p) => p.id === selectedProperty);
   const operators = selectedProp ? getOperatorsForType(selectedProp.type) : OPERATORS.text;
@@ -118,15 +117,10 @@ export function FilterPopover({
       <PopoverContent className="w-80 p-3" align="start">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="font-medium text-sm">Bộ lọc</h4>
+            <h4 className="font-medium text-sm">{t("title")}</h4>
             {filters.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 text-xs"
-                onClick={onClearFilters}
-              >
-                Xóa tất cả
+              <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={onClearFilters}>
+                {t("clearAll")}
               </Button>
             )}
           </div>
@@ -162,12 +156,12 @@ export function FilterPopover({
 
           {/* Add new filter */}
           <div className="space-y-2 pt-2 border-t">
-            <p className="text-xs text-muted-foreground">Thêm bộ lọc</p>
+            <p className="text-xs text-muted-foreground">{t("addFilter")}</p>
 
             {/* Property select */}
             <Select value={selectedProperty} onValueChange={setSelectedProperty}>
               <SelectTrigger className="h-8 text-sm">
-                <SelectValue placeholder="Chọn cột..." />
+                <SelectValue placeholder={t("selectColumn")} />
               </SelectTrigger>
               <SelectContent>
                 {properties.map((prop) => (
@@ -202,7 +196,7 @@ export function FilterPopover({
                     selectedProp?.type === PropertyType.STATUS ? (
                       <Select value={value} onValueChange={setValue}>
                         <SelectTrigger className="h-8 text-sm">
-                          <SelectValue placeholder="Chọn giá trị..." />
+                          <SelectValue placeholder={t("selectValue")} />
                         </SelectTrigger>
                         <SelectContent>
                           {selectedProp.options?.map((opt) => (
@@ -215,11 +209,11 @@ export function FilterPopover({
                     ) : selectedProp?.type === PropertyType.CHECKBOX ? (
                       <Select value={value} onValueChange={setValue}>
                         <SelectTrigger className="h-8 text-sm">
-                          <SelectValue placeholder="Chọn..." />
+                          <SelectValue placeholder={t("select")} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="true">Có</SelectItem>
-                          <SelectItem value="false">Không</SelectItem>
+                          <SelectItem value="true">{t("true")}</SelectItem>
+                          <SelectItem value="false">{t("false")}</SelectItem>
                         </SelectContent>
                       </Select>
                     ) : selectedProp?.type === PropertyType.DATE ? (
@@ -239,7 +233,7 @@ export function FilterPopover({
                         }
                         value={value}
                         onChange={(e) => setValue(e.target.value)}
-                        placeholder="Nhập giá trị..."
+                        placeholder={t("enterValue")}
                         className="h-8 text-sm"
                       />
                     )}
@@ -254,7 +248,7 @@ export function FilterPopover({
                   disabled={needsValue && !value.trim()}
                 >
                   <Plus className="h-4 w-4 mr-1" />
-                  Thêm bộ lọc
+                  {t("addFilter")}
                 </Button>
               </>
             )}

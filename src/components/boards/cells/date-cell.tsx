@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
-import { vi } from "date-fns/locale";
+import { vi, enUS } from "date-fns/locale";
 import { Clock, Calendar as CalendarIcon, ArrowRight } from "lucide-react";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { DateRange } from "react-day-picker";
+import { useTranslations, useLocale } from "next-intl";
 
 interface DateValue {
   from: string | null;
@@ -75,8 +76,12 @@ export function DateCell({
   compact?: boolean;
   className?: string;
 }) {
+  const t = useTranslations("BoardComponents.cells.date");
+  const locale = useLocale();
   const [open, setOpen] = useState(false);
   const dateValue = parseDateValue(value);
+
+  const dateFnsLocale = locale === "vi" ? vi : enUS;
 
   const [isRange, setIsRange] = useState(!!dateValue.to);
   const [includeTime, setIncludeTime] = useState(dateValue.hasTime);
@@ -187,13 +192,13 @@ export function DateCell({
     const timeFormat = "HH:mm";
 
     const fromStr = format(fromDate, dateFormat + (dateValue.hasTime ? ` ${timeFormat}` : ""), {
-      locale: vi,
+      locale: dateFnsLocale,
     });
 
     if (dateValue.to) {
       const toDate = new Date(dateValue.to);
       const toStr = format(toDate, dateFormat + (dateValue.hasTime ? ` ${timeFormat}` : ""), {
-        locale: vi,
+        locale: dateFnsLocale,
       });
       return (
         <span className="flex items-center gap-1">
@@ -225,14 +230,14 @@ export function DateCell({
       <PopoverContent className="w-auto p-0" align="start">
         <div className="p-3 border-b">
           <div className="flex items-center justify-between mb-2">
-            <div className="text-sm font-medium">Ngày</div>
+            <div className="text-sm font-medium">{t("dateLabel")}</div>
             <div className="flex items-center gap-2">
               <input
                 type="text"
                 className="w-24 text-xs border rounded px-1 py-0.5 bg-background"
                 value={selectedRange?.from ? format(selectedRange.from, "dd/MM/yyyy") : ""}
                 readOnly
-                placeholder="Start"
+                placeholder={t("start")}
               />
               {isRange && <ArrowRight className="h-3 w-3 text-muted-foreground" />}
               {isRange && (
@@ -241,7 +246,7 @@ export function DateCell({
                   className="w-24 text-xs border rounded px-1 py-0.5 bg-background"
                   value={selectedRange?.to ? format(selectedRange.to, "dd/MM/yyyy") : ""}
                   readOnly
-                  placeholder="End"
+                  placeholder={t("end")}
                 />
               )}
             </div>
@@ -251,7 +256,7 @@ export function DateCell({
               mode="range"
               selected={selectedRange}
               onSelect={(val) => handleSelect(val as DateRange)}
-              locale={vi}
+              locale={dateFnsLocale}
               initialFocus
             />
           ) : (
@@ -259,7 +264,7 @@ export function DateCell({
               mode="single"
               selected={selectedRange?.from}
               onSelect={(val) => handleSelect({ from: val as Date, to: undefined })}
-              locale={vi}
+              locale={dateFnsLocale}
               initialFocus
             />
           )}
@@ -268,19 +273,19 @@ export function DateCell({
         <div className="p-3 space-y-3 bg-muted/10">
           {/* Options */}
           <div className="flex items-center justify-between">
-            <label className="text-sm text-muted-foreground">Ngày kết thúc</label>
+            <label className="text-sm text-muted-foreground">{t("endDateLabel")}</label>
             <Switch checked={isRange} onCheckedChange={toggleRange} />
           </div>
 
           <div className="flex items-center justify-between">
-            <label className="text-sm text-muted-foreground">Bao gồm giờ</label>
+            <label className="text-sm text-muted-foreground">{t("includeTime")}</label>
             <Switch checked={includeTime} onCheckedChange={toggleTime} />
           </div>
 
           {includeTime && (
             <div className="flex items-center gap-2 pt-1">
               <div className="flex-1">
-                <label className="text-xs text-muted-foreground block mb-1">Giờ bắt đầu</label>
+                <label className="text-xs text-muted-foreground block mb-1">{t("startTime")}</label>
                 <div className="relative">
                   <Clock className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                   <input
@@ -293,7 +298,7 @@ export function DateCell({
               </div>
               {isRange && (
                 <div className="flex-1">
-                  <label className="text-xs text-muted-foreground block mb-1">Giờ kết thúc</label>
+                  <label className="text-xs text-muted-foreground block mb-1">{t("endTime")}</label>
                   <div className="relative">
                     <Clock className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
                     <input
@@ -316,7 +321,7 @@ export function DateCell({
               }}
               className="text-xs text-muted-foreground hover:text-foreground"
             >
-              Xóa
+              {t("clear")}
             </button>
             <div className="text-xs text-muted-foreground">GMT+7</div>
           </div>

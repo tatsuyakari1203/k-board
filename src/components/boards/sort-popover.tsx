@@ -2,11 +2,7 @@
 
 import { useState, type ReactNode } from "react";
 import { Plus, X, ArrowUp, ArrowDown } from "lucide-react";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -26,6 +22,10 @@ interface SortPopoverProps {
   onClearSorts: () => void;
 }
 
+import { useTranslations } from "next-intl";
+
+// ... (imports remain)
+
 export function SortPopover({
   children,
   properties,
@@ -34,14 +34,13 @@ export function SortPopover({
   onRemoveSort,
   onClearSorts,
 }: SortPopoverProps) {
+  const t = useTranslations("BoardComponents.sort");
   const [open, setOpen] = useState(false);
   const [selectedProperty, setSelectedProperty] = useState<string>("");
   const [direction, setDirection] = useState<"asc" | "desc">("asc");
 
   // Filter out already sorted properties
-  const availableProperties = properties.filter(
-    (p) => !sorts.some((s) => s.propertyId === p.id)
-  );
+  const availableProperties = properties.filter((p) => !sorts.some((s) => s.propertyId === p.id));
 
   const handleAddSort = () => {
     if (!selectedProperty) return;
@@ -62,15 +61,10 @@ export function SortPopover({
       <PopoverContent className="w-72 p-3" align="start">
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h4 className="font-medium text-sm">Sắp xếp</h4>
+            <h4 className="font-medium text-sm">{t("title")}</h4>
             {sorts.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 text-xs"
-                onClick={onClearSorts}
-              >
-                Xóa tất cả
+              <Button variant="ghost" size="sm" className="h-6 text-xs" onClick={onClearSorts}>
+                {t("clearAll")}
               </Button>
             )}
           </div>
@@ -98,12 +92,12 @@ export function SortPopover({
                       {sort.direction === "asc" ? (
                         <>
                           <ArrowUp className="h-3 w-3" />
-                          <span>Tăng dần</span>
+                          <span>{t("asc")}</span>
                         </>
                       ) : (
                         <>
                           <ArrowDown className="h-3 w-3" />
-                          <span>Giảm dần</span>
+                          <span>{t("desc")}</span>
                         </>
                       )}
                     </button>
@@ -122,13 +116,13 @@ export function SortPopover({
           {/* Add new sort */}
           {availableProperties.length > 0 && (
             <div className="space-y-2 pt-2 border-t">
-              <p className="text-xs text-muted-foreground">Thêm sắp xếp</p>
+              <p className="text-xs text-muted-foreground">{t("addSort")}</p>
 
               <div className="flex gap-2">
                 {/* Property select */}
                 <Select value={selectedProperty} onValueChange={setSelectedProperty}>
                   <SelectTrigger className="h-8 text-sm flex-1">
-                    <SelectValue placeholder="Chọn cột..." />
+                    <SelectValue placeholder={t("selectColumn")} />
                   </SelectTrigger>
                   <SelectContent>
                     {availableProperties.map((prop) => (
@@ -148,13 +142,13 @@ export function SortPopover({
                     <SelectItem value="asc">
                       <div className="flex items-center gap-1">
                         <ArrowUp className="h-3 w-3" />
-                        <span>Tăng</span>
+                        <span>{t("ascShort")}</span>
                       </div>
                     </SelectItem>
                     <SelectItem value="desc">
                       <div className="flex items-center gap-1">
                         <ArrowDown className="h-3 w-3" />
-                        <span>Giảm</span>
+                        <span>{t("descShort")}</span>
                       </div>
                     </SelectItem>
                   </SelectContent>
@@ -169,15 +163,13 @@ export function SortPopover({
                 disabled={!selectedProperty}
               >
                 <Plus className="h-4 w-4 mr-1" />
-                Thêm
+                {t("add")}
               </Button>
             </div>
           )}
 
           {availableProperties.length === 0 && sorts.length > 0 && (
-            <p className="text-xs text-muted-foreground text-center py-2">
-              Tất cả các cột đã được sắp xếp
-            </p>
+            <p className="text-xs text-muted-foreground text-center py-2">{t("allSorted")}</p>
           )}
         </div>
       </PopoverContent>
