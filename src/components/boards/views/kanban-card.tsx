@@ -251,7 +251,7 @@ export function KanbanCard({
                         "bg-secondary text-secondary-foreground"
                     )}
                   >
-                    {getStatusOption(prop.id, value as string)?.label || value}
+                    {getStatusOption(prop.id, value as string)?.label || (value as string)}
                   </span>
                 ) : prop.type === PropertyType.ATTACHMENT ? (
                   /* Attachment Gallery */
