@@ -13,6 +13,7 @@ import {
   Mail,
   Clock,
 } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
 
 interface AuditLog {
   _id: string;
@@ -42,29 +43,6 @@ interface AuditLogsResponse {
   };
 }
 
-const ACTION_LABELS: Record<string, string> = {
-  "user.created": "Tạo người dùng",
-  "user.updated": "Cập nhật người dùng",
-  "user.deleted": "Xóa người dùng",
-  "user.approved": "Phê duyệt người dùng",
-  "user.rejected": "Từ chối người dùng",
-  "user.activated": "Kích hoạt người dùng",
-  "user.deactivated": "Vô hiệu hóa người dùng",
-  "user.role_changed": "Thay đổi vai trò",
-  "settings.updated": "Cập nhật cài đặt",
-  "board.created": "Tạo board",
-  "board.updated": "Cập nhật board",
-  "board.deleted": "Xóa board",
-  "member.added": "Thêm thành viên",
-  "member.removed": "Xóa thành viên",
-  "member.role_changed": "Thay đổi vai trò thành viên",
-  "ownership.transferred": "Chuyển quyền sở hữu",
-  "invitation.sent": "Gửi lời mời",
-  "invitation.accepted": "Chấp nhận lời mời",
-  "invitation.declined": "Từ chối lời mời",
-  "invitation.cancelled": "Hủy lời mời",
-};
-
 const ENTITY_ICONS: Record<string, React.ReactNode> = {
   user: <User className="h-4 w-4" />,
   settings: <Settings className="h-4 w-4" />,
@@ -73,9 +51,36 @@ const ENTITY_ICONS: Record<string, React.ReactNode> = {
   invitation: <Mail className="h-4 w-4" />,
 };
 
+// Define keys here to iterate over potentially
+const ACTION_KEYS = [
+  "user.created",
+  "user.updated",
+  "user.deleted",
+  "user.approved",
+  "user.rejected",
+  "user.activated",
+  "user.deactivated",
+  "user.role_changed",
+  "settings.updated",
+  "board.created",
+  "board.updated",
+  "board.deleted",
+  "member.added",
+  "member.removed",
+  "member.role_changed",
+  "ownership.transferred",
+  "invitation.sent",
+  "invitation.accepted",
+  "invitation.declined",
+  "invitation.cancelled",
+];
+
 export default function AuditLogsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("Admin.auditLogsPage");
+  const locale = useLocale();
+
   const [data, setData] = useState<AuditLogsResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionFilter, setActionFilter] = useState(searchParams.get("action") || "");
@@ -117,7 +122,7 @@ export default function AuditLogsPage() {
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
-    return new Intl.DateTimeFormat("vi-VN", {
+    return new Intl.DateTimeFormat(locale, {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -146,10 +151,22 @@ export default function AuditLogsPage() {
     return "";
   };
 
+  const getActionLabel = (action: string) => {
+    // Convert dots to underscores for translation key lookup if needed,
+    // but our keys in JSON match the action string with underscores.
+    // The incoming action from API uses dots (e.g. "user.created").
+    // The JSON keys use underscores (e.g. "user_created").
+    const key = action.replace(/\./g, "_");
+    // Use a try-catch or just return the key if translation is missing fallback?
+    // t() will return the key if missing, so it's safe.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return t(`actions.${key}` as any);
+  };
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h1 className="page-title">Nhật ký hoạt động</h1>
+        <h1 className="page-title">{t("title")}</h1>
       </div>
 
       {/* Filters */}
@@ -162,12 +179,13 @@ export default function AuditLogsPage() {
           }}
           className="px-3 py-2 text-sm border rounded-lg bg-background"
         >
-          <option value="">Tất cả loại</option>
-          <option value="user">Người dùng</option>
-          <option value="settings">Cài đặt</option>
-          <option value="board">Board</option>
-          <option value="member">Thành viên</option>
-          <option value="invitation">Lời mời</option>
+          <option value="">{t("filters.allTypes")}</option>
+          {Object.keys(ENTITY_ICONS).map((type) => (
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            <option key={type} value={type}>
+              {t(`entities.${type}` as any)}
+            </option>
+          ))}
         </select>
 
         <select
@@ -178,10 +196,10 @@ export default function AuditLogsPage() {
           }}
           className="px-3 py-2 text-sm border rounded-lg bg-background"
         >
-          <option value="">Tất cả hành động</option>
-          {Object.entries(ACTION_LABELS).map(([value, label]) => (
-            <option key={value} value={value}>
-              {label}
+          <option value="">{t("filters.allActions")}</option>
+          {ACTION_KEYS.map((action) => (
+            <option key={action} value={action}>
+              {getActionLabel(action)}
             </option>
           ))}
         </select>
@@ -195,7 +213,7 @@ export default function AuditLogsPage() {
             }}
             className="text-sm text-muted-foreground hover:text-foreground"
           >
-            Xóa bộ lọc
+            {t("filters.clear")}
           </button>
         )}
       </div>
@@ -206,7 +224,7 @@ export default function AuditLogsPage() {
           <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         </div>
       ) : !data || data.logs.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground">Không có dữ liệu</div>
+        <div className="text-center py-12 text-muted-foreground">{t("noData")}</div>
       ) : (
         <div className="space-y-2">
           {data.logs.map((log) => (
@@ -221,9 +239,7 @@ export default function AuditLogsPage() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="font-medium">{log.performedBy?.name || "System"}</span>
-                  <span className="text-muted-foreground">
-                    {ACTION_LABELS[log.action] || log.action}
-                  </span>
+                  <span className="text-muted-foreground">{getActionLabel(log.action)}</span>
                   {log.entityName && (
                     <span className="font-medium text-primary">{log.entityName}</span>
                   )}
@@ -249,7 +265,9 @@ export default function AuditLogsPage() {
       {/* Pagination */}
       {data && data.pagination.totalPages > 1 && (
         <div className="flex items-center justify-between py-5 text-sm text-muted-foreground">
-          <span>{data.pagination.total} bản ghi</span>
+          <span>
+            {data.pagination.total} {t("records")}
+          </span>
           <div className="flex items-center gap-2">
             <button
               onClick={() => {
