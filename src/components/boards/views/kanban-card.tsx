@@ -25,6 +25,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { AttachmentFile } from "../cells/attachment-cell";
 import { KanbanCardModal } from "./kanban-card-modal";
 import { type Property, PropertyType } from "@/types/board";
@@ -389,20 +390,16 @@ export function KanbanCard({
                     const user = findUser(uid as string);
                     if (!user) return null;
                     return (
-                      <div
+                      <Avatar
                         key={`${prop.id}-${uid}`}
-                        className="h-4 w-4 rounded-full ring-1 ring-background bg-muted flex items-center justify-center overflow-hidden"
+                        className="h-6 w-6 ring-1 ring-background"
                         title={user.name}
                       >
-                        {user.image ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={user.image} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          <span className="text-[8px] font-medium text-muted-foreground">
-                            {user.name.charAt(0)}
-                          </span>
-                        )}
-                      </div>
+                        <AvatarImage src={user.image} alt={user.name} />
+                        <AvatarFallback className="text-[10px] bg-muted text-muted-foreground">
+                          {user.name.charAt(0)}
+                        </AvatarFallback>
+                      </Avatar>
                     );
                   });
                 })}

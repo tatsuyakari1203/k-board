@@ -7,7 +7,7 @@ import type { UserRole } from "@/types/user";
 import { ROLE_HIERARCHY } from "@/types/user";
 
 export function useAuth() {
-  const { data: session, status } = useSession();
+  const { data: session, status, update } = useSession();
   const router = useRouter();
 
   const user = session?.user;
@@ -61,5 +61,6 @@ export function useAuth() {
     logout,
     hasRole,
     isRole,
+    update,
   };
 }

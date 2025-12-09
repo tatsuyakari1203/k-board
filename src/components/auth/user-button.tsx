@@ -1,15 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut, Settings } from "lucide-react";
+import { LogOut, Settings, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { USER_ROLES } from "@/types/user";
 import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { UserProfileDialog } from "./user-profile-dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export function UserButton() {
   const { user, isAuthenticated, logout } = useAuth();
   const t = useTranslations("Auth");
   const tDashboard = useTranslations("Dashboard");
+  const [showProfileDialog, setShowProfileDialog] = useState(false);
 
   if (!isAuthenticated || !user) {
     return null;
@@ -28,9 +32,12 @@ export function UserButton() {
     <div className="space-y-1.5">
       {/* User info */}
       <div className="flex items-center gap-3 rounded-md px-3 py-2">
-        <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary text-sm font-medium text-primary-foreground">
-          {initials}
-        </div>
+        <Avatar className="h-8 w-8 rounded-md">
+          <AvatarImage src={user.image || undefined} alt={user.name} />
+          <AvatarFallback className="rounded-md bg-primary text-primary-foreground">
+            {initials}
+          </AvatarFallback>
+        </Avatar>
         <div className="flex-1 truncate">
           <p className="truncate text-base font-medium">{user.name}</p>
           <p className="truncate text-sm text-muted-foreground">{user.email}</p>
@@ -39,15 +46,24 @@ export function UserButton() {
 
       {/* Action buttons */}
       <div className="space-y-0.5">
+        <button
+          onClick={() => setShowProfileDialog(true)}
+          className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+        >
+          <Settings className="h-5 w-5" />
+          <span>{t("profile")}</span>
+        </button>
+
         {isAdmin && (
           <Link
             href="/dashboard/admin"
             className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           >
-            <Settings className="h-5 w-5" />
-            <span>{tDashboard("settings")}</span>
+            <Shield className="h-5 w-5" />
+            <span>{tDashboard("admin")}</span>
           </Link>
         )}
+
         <button
           onClick={logout}
           className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-destructive"
@@ -56,6 +72,8 @@ export function UserButton() {
           <span>{t("logout")}</span>
         </button>
       </div>
+
+      <UserProfileDialog open={showProfileDialog} onOpenChange={setShowProfileDialog} />
     </div>
   );
 }

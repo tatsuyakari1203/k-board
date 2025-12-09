@@ -75,6 +75,7 @@ export function useKeyboardShortcuts(shortcuts: Shortcut[], enabled: boolean = t
       for (const shortcut of shortcuts) {
         if (isInput && !shortcut.global) continue;
 
+        if (!event.key || !shortcut.key) continue;
         const keyMatch = event.key.toLowerCase() === shortcut.key.toLowerCase();
         const ctrlMatch = shortcut.ctrl ? event.ctrlKey || event.metaKey : !event.ctrlKey;
         const shiftMatch = shortcut.shift ? event.shiftKey : !event.shiftKey;
