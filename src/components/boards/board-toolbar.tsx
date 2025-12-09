@@ -1,16 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Plus,
-  Filter,
-  ArrowUpDown,
-  MoreHorizontal,
-  Search,
-  X,
-  Layers,
-  Eye,
-} from "lucide-react";
+import { Plus, Filter, ArrowUpDown, MoreHorizontal, Search, X, Layers, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,6 +37,8 @@ interface BoardToolbarProps {
   onToggleColumnVisibility: (propertyId: string) => void;
 }
 
+import { useTranslations } from "next-intl";
+
 export function BoardToolbar({
   properties,
   filters,
@@ -66,10 +59,13 @@ export function BoardToolbar({
   onGroupByChange,
   onToggleColumnVisibility,
 }: BoardToolbarProps) {
+  const t = useTranslations("BoardDetails.toolbar");
   const [showSearch, setShowSearch] = useState(false);
 
-  const groupableProperties = properties.filter(p =>
-    ([PropertyType.SELECT, PropertyType.STATUS, PropertyType.PERSON, PropertyType.USER] as string[]).includes(p.type)
+  const groupableProperties = properties.filter((p) =>
+    (
+      [PropertyType.SELECT, PropertyType.STATUS, PropertyType.PERSON, PropertyType.USER] as string[]
+    ).includes(p.type)
   );
 
   return (
@@ -90,7 +86,7 @@ export function BoardToolbar({
             className={`h-6 text-xs gap-1 px-2 ${filters.length > 0 ? "text-foreground" : "text-muted-foreground"}`}
           >
             <Filter className="h-3 w-3" />
-            <span className="hidden sm:inline">Filter</span>
+            <span className="hidden sm:inline">{t("filter")}</span>
             {filters.length > 0 && (
               <span className="bg-muted text-foreground px-1 rounded text-[10px]">
                 {filters.length}
@@ -113,7 +109,7 @@ export function BoardToolbar({
             className={`h-6 text-xs gap-1 px-2 ${sorts.length > 0 ? "text-foreground" : "text-muted-foreground"}`}
           >
             <ArrowUpDown className="h-3 w-3" />
-            <span className="hidden sm:inline">Sort</span>
+            <span className="hidden sm:inline">{t("sort")}</span>
             {sorts.length > 0 && (
               <span className="bg-muted text-foreground px-1 rounded text-[10px]">
                 {sorts.length}
@@ -131,17 +127,15 @@ export function BoardToolbar({
               className={`h-6 text-xs gap-1 px-2 ${groupBy ? "text-foreground" : "text-muted-foreground"}`}
             >
               <Layers className="h-3 w-3" />
-              <span className="hidden sm:inline">Group</span>
+              <span className="hidden sm:inline">{t("group")}</span>
               {groupBy && (
-                <span className="bg-muted text-foreground px-1 rounded text-[10px]">
-                  1
-                </span>
+                <span className="bg-muted text-foreground px-1 rounded text-[10px]">1</span>
               )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-48">
             <DropdownMenuItem onClick={() => onGroupByChange(undefined)} className="text-xs">
-              No grouping
+              {t("noGrouping")}
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             {groupableProperties.map((prop) => (
@@ -156,7 +150,7 @@ export function BoardToolbar({
             ))}
             {groupableProperties.length === 0 && (
               <div className="p-2 text-[10px] text-muted-foreground text-center">
-                No groupable properties
+                {t("noGroupable")}
               </div>
             )}
           </DropdownMenuContent>
@@ -171,18 +165,18 @@ export function BoardToolbar({
               className="h-6 text-xs gap-1 px-2 text-muted-foreground"
             >
               <Eye className="h-3 w-3" />
-              <span className="hidden sm:inline">Properties</span>
+              <span className="hidden sm:inline">{t("properties")}</span>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="w-48 max-h-[280px] overflow-y-auto">
-            <DropdownMenuLabel className="text-xs">Show columns</DropdownMenuLabel>
+            <DropdownMenuLabel className="text-xs">{t("showColumns")}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuCheckboxItem
-                checked={!visibleProperties || visibleProperties.includes("title")}
-                onCheckedChange={() => onToggleColumnVisibility("title")}
-                className="text-xs"
+              checked={!visibleProperties || visibleProperties.includes("title")}
+              onCheckedChange={() => onToggleColumnVisibility("title")}
+              className="text-xs"
             >
-                Title
+              {t("titleColumn")}
             </DropdownMenuCheckboxItem>
             {properties.map((prop) => (
               <DropdownMenuCheckboxItem
@@ -212,7 +206,7 @@ export function BoardToolbar({
           <Search className="absolute left-1.5 h-3 w-3 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search..."
+            placeholder={t("search")}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="h-6 w-40 pl-6 text-xs border-0 bg-muted/50 focus-visible:ring-0"
@@ -237,7 +231,7 @@ export function BoardToolbar({
           onClick={onAddPropertyClick}
         >
           <Plus className="h-3 w-3" />
-          <span className="hidden sm:inline">New column</span>
+          <span className="hidden sm:inline">{t("newColumn")}</span>
         </Button>
 
         {/* More options */}
@@ -248,11 +242,19 @@ export function BoardToolbar({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onClearFilters} disabled={filters.length === 0} className="text-xs">
-              Clear all filters
+            <DropdownMenuItem
+              onClick={onClearFilters}
+              disabled={filters.length === 0}
+              className="text-xs"
+            >
+              {t("clearFilters")}
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={onClearSorts} disabled={sorts.length === 0} className="text-xs">
-              Clear sorting
+            <DropdownMenuItem
+              onClick={onClearSorts}
+              disabled={sorts.length === 0}
+              className="text-xs"
+            >
+              {t("clearSorting")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -264,7 +266,7 @@ export function BoardToolbar({
           <Search className="absolute left-2 h-3 w-3 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="Search..."
+            placeholder={t("search")}
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
             className="h-7 pl-6 text-xs w-full"

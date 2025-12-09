@@ -11,7 +11,10 @@ interface UserCounts {
   rejected: number;
 }
 
+import { useTranslations } from "next-intl";
+
 export default function AdminDashboardPage() {
+  const t = useTranslations("Admin");
   const { data: counts = { total: 0, pending: 0, approved: 0, rejected: 0 }, isLoading: loading } =
     useQuery({
       queryKey: ["admin-stats"],
@@ -26,21 +29,21 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold">Tổng quan quản trị</h1>
-        <p className="text-muted-foreground text-sm mt-1">Quản lý người dùng và cài đặt hệ thống</p>
+        <h1 className="text-2xl font-semibold">{t("title")}</h1>
+        <p className="text-muted-foreground text-sm mt-1">{t("subtitle")}</p>
       </div>
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard
-          title="Tổng người dùng"
+          title={t("totalUsers")}
           value={counts.total}
           icon={Users}
           loading={loading}
           href="/dashboard/admin/users"
         />
         <StatCard
-          title="Chờ duyệt"
+          title={t("pending")}
           value={counts.pending}
           icon={Clock}
           loading={loading}
@@ -48,14 +51,14 @@ export default function AdminDashboardPage() {
           highlight={counts.pending > 0}
         />
         <StatCard
-          title="Đã duyệt"
+          title={t("approved")}
           value={counts.approved}
           icon={UserCheck}
           loading={loading}
           href="/dashboard/admin/users?status=approved"
         />
         <StatCard
-          title="Đã từ chối"
+          title={t("rejected")}
           value={counts.rejected}
           icon={UserX}
           loading={loading}
@@ -65,22 +68,22 @@ export default function AdminDashboardPage() {
 
       {/* Quick Actions */}
       <div className="space-y-3">
-        <h2 className="text-lg font-medium">Thao tác nhanh</h2>
+        <h2 className="text-lg font-medium">{t("quickActions")}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           <QuickAction
-            title="Quản lý người dùng"
-            description="Xem, thêm, sửa, xóa người dùng"
+            title={t("manageUsers")}
+            description={t("manageUsersDesc")}
             href="/dashboard/admin/users"
           />
           <QuickAction
-            title="Cài đặt hệ thống"
-            description="Cấu hình chế độ đăng ký"
+            title={t("systemSettings")}
+            description={t("systemSettingsDesc")}
             href="/dashboard/admin/settings"
           />
           {counts.pending > 0 && (
             <QuickAction
-              title={`Duyệt ${counts.pending} người dùng`}
-              description="Có người dùng đang chờ phê duyệt"
+              title={t("approveUsers", { count: counts.pending })}
+              description={t("approveUsersDesc")}
               href="/dashboard/admin/users?status=pending"
               highlight
             />

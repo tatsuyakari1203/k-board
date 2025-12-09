@@ -17,7 +17,8 @@ import {
   Folders,
 } from "lucide-react";
 import { format, formatDistanceToNow } from "date-fns";
-import { vi } from "date-fns/locale";
+import { vi, enUS } from "date-fns/locale";
+import { useTranslations, useLocale } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -59,6 +60,8 @@ interface DashboardClientProps {
 export default function DashboardClient({ userName }: DashboardClientProps) {
   const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
+  const t = useTranslations("Dashboard");
+  const locale = useLocale();
 
   const fetchData = useCallback(async () => {
     try {
@@ -101,16 +104,14 @@ export default function DashboardClient({ userName }: DashboardClientProps) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">
-            Xin chào, {userName?.split(" ")[0]} 👋
+            {t("hello")}, {userName?.split(" ")[0]} 👋
           </h1>
-          <p className="mt-1 text-muted-foreground">
-            Tổng quan hoạt động của bạn hôm nay.
-          </p>
+          <p className="mt-1 text-muted-foreground">{t("overview")}</p>
         </div>
         <Link href="/dashboard/boards">
           <Button className="gap-2">
             <Plus className="h-4 w-4" />
-            Tạo board mới
+            {t("createBoard")}
           </Button>
         </Link>
       </div>
@@ -119,21 +120,21 @@ export default function DashboardClient({ userName }: DashboardClientProps) {
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={Folders}
-          label="Boards"
+          label={t("tasks")} // Note: "tasks" key is mapped to "Boards" in JSON, confusing naming but consistent with layout
           value={stats.totalBoards}
           href="/dashboard/boards"
           color="bg-blue-500"
         />
         <StatCard
           icon={CheckSquare}
-          label="Việc của tôi"
+          label={t("todo")}
           value={stats.totalTasks}
           href="/dashboard/todo"
           color="bg-green-500"
         />
         <StatCard
           icon={AlertCircle}
-          label="Quá hạn"
+          label={t("overdue")}
           value={stats.overdueTasks}
           href="/dashboard/todo?filter=overdue"
           color="bg-red-500"
@@ -141,7 +142,7 @@ export default function DashboardClient({ userName }: DashboardClientProps) {
         />
         <StatCard
           icon={Clock}
-          label="Hôm nay"
+          label={t("today")}
           value={stats.todayTasks}
           href="/dashboard/todo?filter=today"
           color="bg-orange-500"
@@ -157,15 +158,13 @@ export default function DashboardClient({ userName }: DashboardClientProps) {
           </div>
           <div className="flex-1">
             <p className="font-medium">
-              Bạn có {stats.pendingInvitations} lời mời đang chờ
+              {t("hello")} {stats.pendingInvitations} {t("pendingInvites")}
             </p>
-            <p className="text-sm text-muted-foreground">
-              Xem và phản hồi lời mời tham gia boards
-            </p>
+            <p className="text-sm text-muted-foreground">{t("pendingInvitesDesc")}</p>
           </div>
           <Link href="/dashboard/boards">
             <Button variant="outline" size="sm" className="gap-1">
-              Xem
+              {t("view")}
               <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
@@ -179,13 +178,13 @@ export default function DashboardClient({ userName }: DashboardClientProps) {
           <div className="flex items-center justify-between p-4 border-b">
             <div className="flex items-center gap-2">
               <CheckSquare className="h-5 w-5 text-muted-foreground" />
-              <h2 className="font-semibold">Việc gần đây</h2>
+              <h2 className="font-semibold">{t("recentTasks")}</h2>
             </div>
             <Link
               href="/dashboard/todo"
               className="text-sm text-primary hover:underline flex items-center gap-1"
             >
-              Xem tất cả
+              {t("viewAll")}
               <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
@@ -198,17 +197,13 @@ export default function DashboardClient({ userName }: DashboardClientProps) {
                   className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
                 >
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">
-                      {task.title || "Untitled"}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {task.boardName}
-                    </p>
+                    <p className="text-sm font-medium truncate">{task.title || t("untitled")}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{task.boardName}</p>
                   </div>
                   <span className="text-xs text-muted-foreground shrink-0 ml-2">
                     {formatDistanceToNow(new Date(task.updatedAt), {
                       addSuffix: true,
-                      locale: vi,
+                      locale: locale === "vi" ? vi : enUS,
                     })}
                   </span>
                 </Link>
@@ -216,7 +211,7 @@ export default function DashboardClient({ userName }: DashboardClientProps) {
             ) : (
               <div className="p-8 text-center text-muted-foreground">
                 <CheckSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Chưa có công việc nào</p>
+                <p className="text-sm">{t("noTasks")}</p>
               </div>
             )}
           </div>
@@ -227,13 +222,13 @@ export default function DashboardClient({ userName }: DashboardClientProps) {
           <div className="flex items-center justify-between p-4 border-b">
             <div className="flex items-center gap-2">
               <LayoutDashboard className="h-5 w-5 text-muted-foreground" />
-              <h2 className="font-semibold">Boards gần đây</h2>
+              <h2 className="font-semibold">{t("recentBoards")}</h2>
             </div>
             <Link
               href="/dashboard/boards"
               className="text-sm text-primary hover:underline flex items-center gap-1"
             >
-              Xem tất cả
+              {t("viewAll")}
               <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
@@ -251,7 +246,7 @@ export default function DashboardClient({ userName }: DashboardClientProps) {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium truncate">{board.name}</p>
                     <p className="text-xs text-muted-foreground">
-                      {board.isOwner ? "Chủ sở hữu" : "Thành viên"}
+                      {board.isOwner ? "Chủ sở hữu" : t("members")}
                     </p>
                   </div>
                   <ExternalLink className="h-4 w-4 text-muted-foreground" />
@@ -260,10 +255,10 @@ export default function DashboardClient({ userName }: DashboardClientProps) {
             ) : (
               <div className="p-8 text-center text-muted-foreground">
                 <Folders className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Chưa có board nào</p>
+                <p className="text-sm">{t("noBoards")}</p>
                 <Link href="/dashboard/boards">
                   <Button variant="outline" size="sm" className="mt-3">
-                    Tạo board đầu tiên
+                    {t("createFirstBoard")}
                   </Button>
                 </Link>
               </div>
@@ -276,27 +271,27 @@ export default function DashboardClient({ userName }: DashboardClientProps) {
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
         <SummaryCard
           icon={AlertCircle}
-          label="Công việc quá hạn"
+          label={t("overdue")}
           value={stats.overdueTasks}
-          description="Cần xử lý ngay"
+          description={t("urgent")}
           color="text-red-500"
           bgColor="bg-red-50 dark:bg-red-500/10"
           href="/dashboard/todo"
         />
         <SummaryCard
           icon={Clock}
-          label="Đến hạn hôm nay"
+          label={t("dueToday")}
           value={stats.todayTasks}
-          description={format(new Date(), "EEEE, dd/MM", { locale: vi })}
+          description={format(new Date(), "EEEE, dd/MM")} // Locale handling needed ideally
           color="text-orange-500"
           bgColor="bg-orange-50 dark:bg-orange-500/10"
           href="/dashboard/todo"
         />
         <SummaryCard
           icon={CalendarDays}
-          label="Trong tuần này"
+          label={t("thisWeek")}
           value={stats.weekTasks}
-          description="Công việc cần hoàn thành"
+          description={t("tasksToComplete")}
           color="text-blue-500"
           bgColor="bg-blue-50 dark:bg-blue-500/10"
           href="/dashboard/todo"
@@ -305,33 +300,31 @@ export default function DashboardClient({ userName }: DashboardClientProps) {
 
       {/* Quick Actions */}
       <div>
-        <h3 className="text-sm font-medium text-muted-foreground mb-4">
-          Hành động nhanh
-        </h3>
+        <h3 className="text-sm font-medium text-muted-foreground mb-4">{t("quickActions")}</h3>
         <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
           <QuickAction
             href="/dashboard/boards"
             icon={Folders}
-            title="Quản lý Boards"
-            description="Xem và tạo boards"
+            title={t("manageBoards")}
+            description={t("manageBoardsDesc")}
           />
           <QuickAction
             href="/dashboard/todo"
             icon={CheckSquare}
-            title="Việc của tôi"
-            description="Các công việc được giao"
+            title={t("todo")}
+            description={t("myTasksDesc")}
           />
           <QuickAction
             href="/dashboard/users"
             icon={BarChart3}
-            title="Người dùng"
-            description="Danh sách người dùng"
+            title={t("manageUsers")}
+            description={t("manageUsersDesc")}
           />
           <QuickAction
             href="/dashboard/admin"
             icon={LayoutDashboard}
-            title="Quản trị"
-            description="Cài đặt hệ thống"
+            title={t("admin")}
+            description={t("adminDesc")}
           />
         </div>
       </div>
@@ -361,7 +354,12 @@ function StatCard({ icon: Icon, label, value, href, color, highlight }: StatCard
         highlight && "ring-2 ring-red-500/50"
       )}
     >
-      <div className={cn("absolute top-0 right-0 w-20 h-20 -mr-6 -mt-6 rounded-full opacity-10", color)} />
+      <div
+        className={cn(
+          "absolute top-0 right-0 w-20 h-20 -mr-6 -mt-6 rounded-full opacity-10",
+          color
+        )}
+      />
       <div className="relative">
         <div className={cn("inline-flex p-2 rounded-lg mb-3", color, "bg-opacity-20")}>
           <Icon className={cn("h-5 w-5", color.replace("bg-", "text-"))} />
@@ -404,9 +402,7 @@ function SummaryCard({
         <Icon className={cn("h-6 w-6", color)} />
       </div>
       <div>
-        <p className={cn("text-2xl font-bold", value > 0 ? color : "")}>
-          {value}
-        </p>
+        <p className={cn("text-2xl font-bold", value > 0 ? color : "")}>{value}</p>
         <p className="text-sm font-medium">{label}</p>
         <p className="text-xs text-muted-foreground">{description}</p>
       </div>

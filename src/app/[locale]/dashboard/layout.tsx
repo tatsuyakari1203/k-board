@@ -1,15 +1,7 @@
 import { getCurrentUser } from "@/lib/auth-utils";
 import { UserButton } from "@/components/auth";
 import { redirect } from "next/navigation";
-import {
-  LayoutGrid,
-  Users,
-  CheckSquare,
-  FileText,
-  Settings,
-  Search,
-  ClipboardList,
-} from "lucide-react";
+import { LayoutGrid, Users, CheckSquare, Settings, Search, ClipboardList } from "lucide-react";
 import Link from "next/link";
 import { USER_ROLES } from "@/types/user";
 import { DashboardShortcuts } from "@/components/dashboard/dashboard-shortcuts";
@@ -56,10 +48,9 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {/* Navigation */}
           <nav className="flex-1 space-y-1 px-4 py-3">
             <NavItem href="/dashboard" icon={LayoutGrid} label={t("home")} />
-            <NavItem href="/dashboard/todo" icon={CheckSquare} label="Việc của tôi" />
+            <NavItem href="/dashboard/todo" icon={CheckSquare} label={t("todo")} />
             <NavItem href="/dashboard/boards" icon={ClipboardList} label={t("tasks")} />
             <NavItem href="/dashboard/users" icon={Users} label={t("members")} />
-            <NavItem href="/dashboard/reports" icon={FileText} label="Báo cáo" />
 
             {/* Admin section - only visible to admins */}
             {isAdmin && (

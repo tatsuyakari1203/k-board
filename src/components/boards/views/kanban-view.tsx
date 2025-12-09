@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import {
   DndContext,
   DragOverlay,
@@ -185,6 +186,7 @@ export function KanbanView({
   onAddPropertyOption,
   onUpdatePropertyOption,
 }: KanbanViewProps) {
+  const t = useTranslations("BoardDetails.kanban");
   const [activeTask, setActiveTask] = useState<TaskData | null>(null);
   const [overId, setOverId] = useState<string | null>(null);
 
@@ -233,7 +235,7 @@ export function KanbanView({
   const columns = useMemo((): Column[] => {
     if (!groupByProperty) {
       // No groupBy, show all in one column
-      return [{ id: "all", title: "All Tasks", value: null }];
+      return [{ id: "all", title: t("allTasks"), value: null }];
     }
 
     const options = groupByProperty.options || [];
@@ -247,12 +249,12 @@ export function KanbanView({
     // Add "No Value" column
     cols.push({
       id: "__no_value__",
-      title: "No Value",
+      title: t("noValue"),
       value: null,
     });
 
     return cols;
-  }, [groupByProperty]);
+  }, [groupByProperty, t]);
 
   // Group tasks by column
   const tasksByColumn = useMemo(() => {
@@ -414,9 +416,9 @@ export function KanbanView({
         properties[groupByPropertyId] = column.value;
       }
 
-      await onCreateTask("New Task", properties);
+      await onCreateTask(t("newTask"), properties);
     },
-    [columns, groupByPropertyId, onCreateTask]
+    [columns, groupByPropertyId, onCreateTask, t]
   );
 
   // ============================================
@@ -428,12 +430,8 @@ export function KanbanView({
     return (
       <div className="flex items-center justify-center h-full p-8">
         <div className="text-center space-y-4">
-          <p className="text-muted-foreground">
-            Kanban view cần một property có kiểu &quot;Trạng thái&quot; (Status) để hiển thị.
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Vui lòng thêm property Trạng thái vào board hoặc chọn trong menu Group By.
-          </p>
+          <p className="text-muted-foreground">{t("noStatusMessage")}</p>
+          <p className="text-sm text-muted-foreground">{t("noStatusAction")}</p>
         </div>
       </div>
     );
@@ -494,7 +492,7 @@ export function KanbanView({
                 onClick={() => handleCreateTaskInColumn(column.id)}
               >
                 <Plus className="h-4 w-4 mr-1.5" />
-                <span className="text-sm">Thêm thẻ</span>
+                <span className="text-sm">{t("addCard")}</span>
               </Button>
             </KanbanColumn>
           );
@@ -507,7 +505,7 @@ export function KanbanView({
             className="w-full h-10 justify-start text-muted-foreground hover:text-foreground"
           >
             <Plus className="h-4 w-4 mr-1.5" />
-            Thêm cột
+            {t("addColumn")}
           </Button>
         </div>
       </div>

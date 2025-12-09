@@ -1,12 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useTranslations } from "next-intl";
 import { type Property, PropertyType } from "@/types/board";
 import {
   Type,
@@ -40,43 +36,45 @@ interface AddPropertyDialogProps {
   onSubmit: (property: Omit<Property, "id" | "order">) => void;
 }
 
-const PROPERTY_TYPES = [
-  { value: PropertyType.TEXT, label: "Văn bản", icon: Type },
-  { value: PropertyType.NUMBER, label: "Số", icon: Hash },
-  { value: PropertyType.DATE, label: "Ngày tháng", icon: Calendar },
-  { value: PropertyType.SELECT, label: "Chọn một", icon: List },
-  { value: PropertyType.MULTI_SELECT, label: "Chọn nhiều", icon: List },
-  { value: PropertyType.STATUS, label: "Trạng thái", icon: CheckCircle },
-  { value: PropertyType.USER, label: "Người phụ trách", icon: Users },
-  { value: PropertyType.PERSON, label: "Người (text)", icon: User },
-  { value: PropertyType.CURRENCY, label: "Tiền tệ", icon: DollarSign },
-  { value: PropertyType.CHECKBOX, label: "Checkbox", icon: CheckSquare },
-  { value: PropertyType.RICH_TEXT, label: "Văn bản dài", icon: FileText },
-  { value: PropertyType.ATTACHMENT, label: "Đính kèm", icon: Paperclip },
-];
+export function AddPropertyDialog({ open, onOpenChange, onSubmit }: AddPropertyDialogProps) {
+  const t = useTranslations("BoardDetails.addProperty");
+  const tCommon = useTranslations("Common");
 
-const STATUS_COLORS = [
-  { value: "gray", label: "Xám", class: "bg-gray-500" },
-  { value: "blue", label: "Xanh dương", class: "bg-blue-500" },
-  { value: "green", label: "Xanh lá", class: "bg-green-500" },
-  { value: "yellow", label: "Vàng", class: "bg-yellow-500" },
-  { value: "orange", label: "Cam", class: "bg-orange-500" },
-  { value: "red", label: "Đỏ", class: "bg-red-500" },
-  { value: "purple", label: "Tím", class: "bg-purple-500" },
-  { value: "pink", label: "Hồng", class: "bg-pink-500" },
-];
-
-export function AddPropertyDialog({
-  open,
-  onOpenChange,
-  onSubmit,
-}: AddPropertyDialogProps) {
   const [name, setName] = useState("");
   const [type, setType] = useState<PropertyType>(PropertyType.TEXT);
   const [options, setOptions] = useState<{ id: string; label: string; color?: string }[]>([]);
   const [newOptionLabel, setNewOptionLabel] = useState("");
 
-  const needsOptions = type === PropertyType.SELECT || type === PropertyType.MULTI_SELECT || type === PropertyType.STATUS;
+  const needsOptions =
+    type === PropertyType.SELECT ||
+    type === PropertyType.MULTI_SELECT ||
+    type === PropertyType.STATUS;
+
+  const PROPERTY_TYPES = [
+    { value: PropertyType.TEXT, label: t("types.text"), icon: Type },
+    { value: PropertyType.NUMBER, label: t("types.number"), icon: Hash },
+    { value: PropertyType.DATE, label: t("types.date"), icon: Calendar },
+    { value: PropertyType.SELECT, label: t("types.select"), icon: List },
+    { value: PropertyType.MULTI_SELECT, label: t("types.multiSelect"), icon: List },
+    { value: PropertyType.STATUS, label: t("types.status"), icon: CheckCircle },
+    { value: PropertyType.USER, label: t("types.user"), icon: Users },
+    { value: PropertyType.PERSON, label: t("types.person"), icon: User },
+    { value: PropertyType.CURRENCY, label: t("types.currency"), icon: DollarSign },
+    { value: PropertyType.CHECKBOX, label: t("types.checkbox"), icon: CheckSquare },
+    { value: PropertyType.RICH_TEXT, label: t("types.richText"), icon: FileText },
+    { value: PropertyType.ATTACHMENT, label: t("types.attachment"), icon: Paperclip },
+  ];
+
+  const STATUS_COLORS = [
+    { value: "gray", label: t("colors.gray"), class: "bg-gray-500" },
+    { value: "blue", label: t("colors.blue"), class: "bg-blue-500" },
+    { value: "green", label: t("colors.green"), class: "bg-green-500" },
+    { value: "yellow", label: t("colors.yellow"), class: "bg-yellow-500" },
+    { value: "orange", label: t("colors.orange"), class: "bg-orange-500" },
+    { value: "red", label: t("colors.red"), class: "bg-red-500" },
+    { value: "purple", label: t("colors.purple"), class: "bg-purple-500" },
+    { value: "pink", label: t("colors.pink"), class: "bg-pink-500" },
+  ];
 
   const handleAddOption = () => {
     if (!newOptionLabel.trim()) return;
@@ -124,28 +122,34 @@ export function AddPropertyDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => { onOpenChange(o); if (!o) handleReset(); }}>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        onOpenChange(o);
+        if (!o) handleReset();
+      }}
+    >
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Thêm cột mới</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Property name */}
           <div className="space-y-2">
-            <Label htmlFor="name">Tên cột</Label>
+            <Label htmlFor="name">{t("labelName")}</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Nhập tên cột..."
+              placeholder={t("placeholderName")}
               autoFocus
             />
           </div>
 
           {/* Property type */}
           <div className="space-y-2">
-            <Label>Loại dữ liệu</Label>
+            <Label>{t("labelType")}</Label>
             <Select value={type} onValueChange={(v) => setType(v as PropertyType)}>
               <SelectTrigger>
                 <SelectValue />
@@ -166,7 +170,7 @@ export function AddPropertyDialog({
           {/* Options for select/status types */}
           {needsOptions && (
             <div className="space-y-2">
-              <Label>Tùy chọn</Label>
+              <Label>{t("labelOptions")}</Label>
               <div className="space-y-2">
                 {options.map((option) => (
                   <div key={option.id} className="flex items-center gap-2">
@@ -179,7 +183,8 @@ export function AddPropertyDialog({
                           <div className="flex items-center gap-1.5">
                             <span
                               className={`w-3 h-3 rounded-full ${
-                                STATUS_COLORS.find((c) => c.value === option.color)?.class || "bg-gray-500"
+                                STATUS_COLORS.find((c) => c.value === option.color)?.class ||
+                                "bg-gray-500"
                               }`}
                             />
                           </div>
@@ -229,7 +234,7 @@ export function AddPropertyDialog({
                         handleAddOption();
                       }
                     }}
-                    placeholder="Thêm tùy chọn..."
+                    placeholder={t("placeholderOption")}
                     className="h-8 flex-1"
                   />
                   <Button
@@ -249,10 +254,10 @@ export function AddPropertyDialog({
           {/* Submit */}
           <div className="flex justify-end gap-2 pt-2">
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>
-              Hủy
+              {tCommon("cancel")}
             </Button>
             <Button type="submit" disabled={!name.trim()}>
-              Thêm cột
+              {t("submit")}
             </Button>
           </div>
         </form>

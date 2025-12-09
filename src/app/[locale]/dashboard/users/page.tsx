@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useSession } from "next-auth/react";
 import { useQuery } from "@tanstack/react-query";
+import Link from "next/link";
 import {
   Users,
   Search,
@@ -52,7 +53,11 @@ const ROLE_COLORS: Record<UserRole, string> = {
   user: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400",
 };
 
+import { useTranslations } from "next-intl";
+
 export default function UsersPage() {
+  const t = useTranslations("Users");
+  const tCommon = useTranslations("Common");
   const { data: session } = useSession();
   const [searchQuery, setSearchQuery] = useState("");
   const [roleFilter, setRoleFilter] = useState<UserRole | "all">("all");
@@ -95,6 +100,10 @@ export default function UsersPage() {
     user: filteredUsers.filter((u) => u.role === "user"),
   };
 
+  const getRoleLabel = (role: UserRole) => {
+    return t(`roles.${role}`);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -102,20 +111,20 @@ export default function UsersPage() {
         <div>
           <h1 className="text-2xl font-semibold flex items-center gap-2">
             <Users className="h-6 w-6" />
-            Nhân sự
+            {t("title")}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Danh sách nhân viên trong hệ thống ({users.length} người)
+            {t("subtitle")} ({users.length})
           </p>
         </div>
         {isAdmin && (
-          <a
+          <Link
             href="/dashboard/admin/users"
             className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
           >
             <UserPlus className="h-4 w-4" />
-            Quản lý tài khoản
-          </a>
+            {t("manageAccount")}
+          </Link>
         )}
       </div>
 
@@ -127,7 +136,7 @@ export default function UsersPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="text"
-              placeholder="Tìm theo tên, email, phòng ban..."
+              placeholder={t("searchPlaceholder")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-4 py-2 border rounded-md bg-background text-sm focus:outline-none focus:ring-2 focus:ring-ring"
@@ -145,9 +154,9 @@ export default function UsersPage() {
                 : "text-muted-foreground hover:text-foreground"
             }`}
           >
-            Tất cả
+            {t("all")}
           </button>
-          {Object.entries(ROLE_LABELS).map(([role, label]) => (
+          {Object.entries(ROLE_LABELS).map(([role]) => (
             <button
               key={role}
               onClick={() => setRoleFilter(role as UserRole)}
@@ -158,7 +167,7 @@ export default function UsersPage() {
               }`}
             >
               {ROLE_ICONS[role as UserRole]}
-              {label}
+              {t(`roles.${role}`)}
             </button>
           ))}
         </div>
@@ -172,7 +181,7 @@ export default function UsersPage() {
       ) : filteredUsers.length === 0 ? (
         <div className="text-center py-12 text-muted-foreground">
           <Users className="h-12 w-12 mx-auto mb-3 opacity-50" />
-          <p>Không tìm thấy nhân viên nào</p>
+          <p>{t("noUsersFound")}</p>
         </div>
       ) : roleFilter === "all" ? (
         // Grouped view
@@ -183,7 +192,7 @@ export default function UsersPage() {
                 <div key={role}>
                   <h2 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
                     {ROLE_ICONS[role as UserRole]}
-                    {ROLE_LABELS[role as UserRole]} ({roleUsers.length})
+                    {t(`roles.${role}`)} ({roleUsers.length})
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {roleUsers.map((user) => (
@@ -192,6 +201,7 @@ export default function UsersPage() {
                         user={user}
                         onClick={() => canViewDetails && setSelectedUser(user)}
                         canViewDetails={canViewDetails}
+                        getRoleLabel={getRoleLabel}
                       />
                     ))}
                   </div>
@@ -208,6 +218,7 @@ export default function UsersPage() {
               user={user}
               onClick={() => canViewDetails && setSelectedUser(user)}
               canViewDetails={canViewDetails}
+              getRoleLabel={getRoleLabel}
             />
           ))}
         </div>
@@ -215,7 +226,13 @@ export default function UsersPage() {
 
       {/* User Detail Modal */}
       {selectedUser && (
-        <UserDetailModal user={selectedUser} onClose={() => setSelectedUser(null)} />
+        <UserDetailModal
+          user={selectedUser}
+          onClose={() => setSelectedUser(null)}
+          getRoleLabel={getRoleLabel}
+          tUsers={t}
+          tCommon={tCommon}
+        />
       )}
     </div>
   );
@@ -225,10 +242,12 @@ function UserCard({
   user,
   onClick,
   canViewDetails,
+  getRoleLabel,
 }: {
   user: UserInfo;
   onClick: () => void;
   canViewDetails: boolean;
+  getRoleLabel: (role: UserRole) => string;
 }) {
   return (
     <div
@@ -254,7 +273,7 @@ function UserCard({
           <span
             className={`inline-block mt-2 px-2 py-0.5 rounded-full text-xs font-medium ${ROLE_COLORS[user.role]}`}
           >
-            {ROLE_LABELS[user.role]}
+            {getRoleLabel(user.role)}
           </span>
         </div>
       </div>
@@ -280,13 +299,25 @@ function UserCard({
   );
 }
 
-function UserDetailModal({ user, onClose }: { user: UserInfo; onClose: () => void }) {
+function UserDetailModal({
+  user,
+  onClose,
+  getRoleLabel,
+  tUsers,
+  tCommon,
+}: {
+  user: UserInfo;
+  onClose: () => void;
+  getRoleLabel: (role: UserRole) => string;
+  tUsers: (key: string) => string;
+  tCommon: (key: string) => string;
+}) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
       <div className="bg-background rounded-lg shadow-lg w-full max-w-md mx-4">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b">
-          <h2 className="text-lg font-semibold">Thông tin nhân viên</h2>
+          <h2 className="text-lg font-semibold">{tUsers("userInfo")}</h2>
           <button onClick={onClose} className="p-1 hover:bg-muted rounded">
             <X className="h-5 w-5" />
           </button>
@@ -304,34 +335,42 @@ function UserDetailModal({ user, onClose }: { user: UserInfo; onClose: () => voi
               <span
                 className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs font-medium ${ROLE_COLORS[user.role]}`}
               >
-                {ROLE_LABELS[user.role]}
+                {getRoleLabel(user.role)}
               </span>
             </div>
           </div>
 
           {/* Info list */}
           <div className="space-y-4">
-            <InfoRow icon={<Mail className="h-4 w-4" />} label="Email" value={user.email} />
+            <InfoRow
+              icon={<Mail className="h-4 w-4" />}
+              label={tUsers("email")}
+              value={user.email}
+            />
             {user.phone && (
-              <InfoRow icon={<Phone className="h-4 w-4" />} label="Điện thoại" value={user.phone} />
+              <InfoRow
+                icon={<Phone className="h-4 w-4" />}
+                label={tUsers("phone")}
+                value={user.phone}
+              />
             )}
             {user.department && (
               <InfoRow
                 icon={<Building2 className="h-4 w-4" />}
-                label="Phòng ban"
+                label={tUsers("department")}
                 value={user.department}
               />
             )}
             {user.position && (
               <InfoRow
                 icon={<Briefcase className="h-4 w-4" />}
-                label="Chức vụ"
+                label={tUsers("position")}
                 value={user.position}
               />
             )}
             <InfoRow
               icon={<Users className="h-4 w-4" />}
-              label="Ngày tham gia"
+              label={tUsers("joinedDate")}
               value={new Date(user.createdAt).toLocaleDateString("vi-VN")}
             />
           </div>
@@ -343,7 +382,7 @@ function UserDetailModal({ user, onClose }: { user: UserInfo; onClose: () => voi
             onClick={onClose}
             className="px-4 py-2 border rounded-md hover:bg-muted transition-colors"
           >
-            Đóng
+            {tCommon("close")}
           </button>
         </div>
       </div>

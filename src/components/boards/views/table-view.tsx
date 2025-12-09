@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { useState, useRef, useMemo, useCallback, useEffect, useId } from "react";
 import {
   Plus,
@@ -221,6 +222,7 @@ function matchesFilter(task: TaskData, filter: FilterConfig, properties: Propert
 }
 
 // Sortable Header Component
+// Sortable Header Component
 function SortableHeader({
   property,
   width,
@@ -238,6 +240,7 @@ function SortableHeader({
   onRename?: (id: string, newName: string) => void;
   onAddAt?: (index: number) => void;
 }) {
+  const t = useTranslations("BoardDetails.table");
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: property.id,
     data: {
@@ -316,20 +319,22 @@ function SortableHeader({
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             {onRename && (
-              <DropdownMenuItem onClick={() => setIsEditing(true)}>Đổi tên</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setIsEditing(true)}>{t("rename")}</DropdownMenuItem>
             )}
             {onAddAt && (
               <>
-                <DropdownMenuItem onClick={() => onAddAt(index)}>Thêm cột trái</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => onAddAt(index)}>
+                  {t("addColumnLeft")}
+                </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => onAddAt(index + 1)}>
-                  Thêm cột phải
+                  {t("addColumnRight")}
                 </DropdownMenuItem>
               </>
             )}
             {(onRemove || onRename || onAddAt) && <DropdownMenuSeparator />}
             {onRemove && (
               <DropdownMenuItem onClick={() => onRemove(property.id)} className="text-destructive">
-                Xóa cột
+                {t("deleteColumn")}
               </DropdownMenuItem>
             )}
           </DropdownMenuContent>
@@ -348,6 +353,7 @@ function SortableHeader({
 }
 // Title Cell Component
 function TitleCell({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  const t = useTranslations("BoardDetails.table");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -368,7 +374,7 @@ function TitleCell({ value, onChange }: { value: string; onChange: (value: strin
       }}
       rows={1}
       className="w-full bg-transparent border-none outline-none focus:ring-0 font-normal text-sm resize-none overflow-hidden"
-      placeholder="Untitled"
+      placeholder={t("untitled")}
     />
   );
 }
@@ -594,8 +600,21 @@ export function TableView({
   groupBy,
   onBulkDeleteTasks,
 }: TableViewProps) {
+  const t = useTranslations("BoardDetails.table");
+  const tAgg = useTranslations("Aggregations");
   const dndId = useId();
   const [columnWidths, setColumnWidths] = useState<Record<string, number>>({});
+
+  // ... (rest of the code is unchanged until lines 1438)
+
+  // I need to skip the huge body of TableView. I can't replace the whole function.
+  // I will just add the hooks at the top.
+  // And then replace the bottom part in a separate chunk. But wait, I can do multiple chunks?
+  // "Use this tool ONLY when you are making a SINGLE CONTIGUOUS block of edits".
+  // So I can't do both.
+
+  // I will just add the hooks first.
+
   const [resizing, setResizing] = useState<{
     id: string;
     startX: number;
@@ -1023,7 +1042,7 @@ export function TableView({
   };
 
   const startAddingTask = () => {
-    onCreateTask("");
+    onCreateTask(t("newTask"));
   };
 
   // Drag End Handler
@@ -1299,14 +1318,14 @@ export function TableView({
                               onUpdateAggregation?.(property.id, AggregationType.PERCENT_EMPTY)
                             }
                           >
-                            Percent empty
+                            {tAgg("percentEmpty")}
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             onClick={() =>
                               onUpdateAggregation?.(property.id, AggregationType.PERCENT_NOT_EMPTY)
                             }
                           >
-                            Percent not empty
+                            {tAgg("percentNotEmpty")}
                           </DropdownMenuItem>
 
                           {(property.type === PropertyType.NUMBER ||
@@ -1318,42 +1337,42 @@ export function TableView({
                                   onUpdateAggregation?.(property.id, AggregationType.SUM)
                                 }
                               >
-                                Sum
+                                {tAgg("sum")}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() =>
                                   onUpdateAggregation?.(property.id, AggregationType.AVERAGE)
                                 }
                               >
-                                Average
+                                {tAgg("average")}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() =>
                                   onUpdateAggregation?.(property.id, AggregationType.MIN)
                                 }
                               >
-                                Min
+                                {tAgg("min")}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() =>
                                   onUpdateAggregation?.(property.id, AggregationType.MAX)
                                 }
                               >
-                                Max
+                                {tAgg("max")}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() =>
                                   onUpdateAggregation?.(property.id, AggregationType.MEDIAN)
                                 }
                               >
-                                Median
+                                {tAgg("median")}
                               </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={() =>
                                   onUpdateAggregation?.(property.id, AggregationType.RANGE)
                                 }
                               >
-                                Range
+                                {tAgg("range")}
                               </DropdownMenuItem>
                             </>
                           )}
@@ -1436,7 +1455,9 @@ export function TableView({
 
                 {visibleProperties.length > 6 && (
                   <button className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground pl-6">
-                    <span>+{visibleProperties.length - 6} more</span>
+                    <span>
+                      +{visibleProperties.length - 6} {t("more")}
+                    </span>
                     <ChevronRight className="h-2.5 w-2.5" />
                   </button>
                 )}
@@ -1449,7 +1470,7 @@ export function TableView({
                 className="flex items-center gap-1.5 py-1.5 text-muted-foreground hover:text-foreground transition-colors w-full text-xs"
               >
                 <Plus className="h-3.5 w-3.5" />
-                <span>New</span>
+                <span>{t("new")}</span>
               </button>
             </div>
           </div>
@@ -1459,14 +1480,14 @@ export function TableView({
         {processedTasks.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 text-center">
             <p className="text-sm text-muted-foreground mb-1.5">
-              {filters.length > 0 || searchQuery ? "No results found" : "No records yet"}
+              {filters.length > 0 || searchQuery ? t("noResults") : t("noRecords")}
             </p>
             {!filters.length && !searchQuery && (
               <button
                 onClick={startAddingTask}
                 className="text-xs text-muted-foreground hover:text-foreground"
               >
-                Add first record
+                {t("addFirstRecord")}
               </button>
             )}
           </div>
@@ -1474,7 +1495,9 @@ export function TableView({
 
         {selectedTaskIds.size > 0 && (
           <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-foreground text-background px-3 py-1.5 rounded-md shadow-lg flex items-center gap-3 z-50">
-            <span className="text-xs">{selectedTaskIds.size} selected</span>
+            <span className="text-xs">
+              {selectedTaskIds.size} {t("selected")}
+            </span>
             <div className="h-3 w-px bg-background/20" />
             <button
               onClick={() => {
@@ -1486,7 +1509,7 @@ export function TableView({
               className="text-xs hover:text-red-400 flex items-center gap-1"
             >
               <Trash2 className="h-3 w-3" />
-              Delete
+              {t("delete")}
             </button>
             <button
               onClick={() => setSelectedTaskIds(new Set())}
