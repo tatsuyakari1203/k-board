@@ -216,6 +216,7 @@
     "restricted_viewer": "Guest (Assigned only)"
   },
   "BoardVisibility": {
+    "title": "Visibility",
     "private": "Private",
     "workspace": "Workspace",
     "privateDesc": "Only owner and invited members",

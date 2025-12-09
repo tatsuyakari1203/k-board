@@ -216,6 +216,7 @@
     "restricted_viewer": "Khách (Chỉ việc được giao)"
   },
   "BoardVisibility": {
+    "title": "Chế độ hiển thị",
     "private": "Riêng tư",
     "workspace": "Workspace",
     "privateDesc": "Chỉ chủ sở hữu và thành viên được mời",
