@@ -24,7 +24,7 @@ export default async function LoginPage() {
       <header className="fixed top-0 left-0 right-0 z-50">
         <div className="mx-auto flex h-14 max-w-screen-xl items-center px-6">
           <Link href="/" className="text-base font-semibold tracking-tight">
-            K-ERP
+            K-Board
           </Link>
         </div>
       </header>

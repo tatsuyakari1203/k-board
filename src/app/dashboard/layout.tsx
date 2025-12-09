@@ -32,7 +32,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
           {/* Logo */}
           <div className="flex h-16 items-center px-5">
             <Link href="/dashboard" className="text-xl font-semibold tracking-tight">
-              K-ERP
+              K-Board
             </Link>
           </div>
 

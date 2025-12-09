@@ -35,5 +35,5 @@ volumes:
   mongodb_data:
 
 networks:
-  k-erp-network:
+  k-board-network:
     driver: bridge

@@ -8,7 +8,7 @@ export default function AuthErrorPage() {
       <header className="fixed top-0 left-0 right-0 z-50">
         <div className="mx-auto flex h-14 max-w-screen-xl items-center px-6">
           <Link href="/" className="text-base font-semibold tracking-tight">
-            K-ERP
+            K-Board
           </Link>
         </div>
       </header>
@@ -18,9 +18,7 @@ export default function AuthErrorPage() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
             <AlertCircle className="h-6 w-6 text-destructive" />
           </div>
-          <h1 className="text-xl font-semibold tracking-tight">
-            Lỗi xác thực
-          </h1>
+          <h1 className="text-xl font-semibold tracking-tight">Lỗi xác thực</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Đã có lỗi xảy ra trong quá trình đăng nhập. Vui lòng thử lại.
           </p>

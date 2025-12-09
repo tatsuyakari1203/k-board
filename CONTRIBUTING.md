@@ -1,6 +1,6 @@
-# Contributing to K-ERP
+# Contributing to K-Board
 
-Cảm ơn bạn đã quan tâm đến việc đóng góp cho K-ERP! 🎉
+Cảm ơn bạn đã quan tâm đến việc đóng góp cho K-Board! 🎉
 
 ## 📋 Mục lục
 
@@ -90,27 +90,27 @@ src/
 
 ```tsx
 // 1. Imports
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 // 2. Types
 interface Props {
-  title: string
-  onSubmit: () => void
+  title: string;
+  onSubmit: () => void;
 }
 
 // 3. Component
 export function MyComponent({ title, onSubmit }: Props) {
   // Hooks
-  const [state, setState] = useState('')
+  const [state, setState] = useState("");
 
   // Handlers
   const handleClick = () => {
     // ...
-  }
+  };
 
   // Render
-  return <div>{/* JSX */}</div>
+  return <div>{/* JSX */}</div>;
 }
 ```
 

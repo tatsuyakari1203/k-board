@@ -73,7 +73,7 @@ export function RegisterForm() {
         <p className="mt-3 text-base text-muted-foreground">
           {isSetupMode
             ? "Tạo tài khoản quản trị viên (Admin) đầu tiên cho hệ thống."
-            : "Bắt đầu sử dụng K-ERP miễn phí."}
+            : "Bắt đầu sử dụng K-Board miễn phí."}
         </p>
       </div>
 

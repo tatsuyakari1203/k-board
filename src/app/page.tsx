@@ -18,7 +18,7 @@ export default async function HomePage() {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-screen-xl items-center justify-between px-6">
-          <span className="text-lg font-semibold">K-ERP</span>
+          <span className="text-lg font-semibold">K-Board</span>
           <nav className="flex items-center gap-3">
             {user ? (
               <Button asChild>
@@ -97,7 +97,7 @@ export default async function HomePage() {
       {/* Footer */}
       <footer className="mt-12">
         <div className="mx-auto max-w-screen-xl px-6 py-8 flex justify-between items-center">
-          <p className="text-sm text-muted-foreground">© 2024 K-ERP</p>
+          <p className="text-sm text-muted-foreground">© 2024 K-Board</p>
         </div>
       </footer>
     </div>

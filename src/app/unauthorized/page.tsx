@@ -8,7 +8,7 @@ export default function UnauthorizedPage() {
       <header className="fixed top-0 left-0 right-0 z-50">
         <div className="mx-auto flex h-14 max-w-screen-xl items-center px-6">
           <Link href="/" className="text-base font-semibold tracking-tight">
-            K-ERP
+            K-Board
           </Link>
         </div>
       </header>
@@ -18,9 +18,7 @@ export default function UnauthorizedPage() {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-muted">
             <Lock className="h-5 w-5 text-muted-foreground" />
           </div>
-          <h1 className="text-xl font-semibold tracking-tight">
-            Không có quyền truy cập
-          </h1>
+          <h1 className="text-xl font-semibold tracking-tight">Không có quyền truy cập</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Bạn không có quyền truy cập trang này. Vui lòng liên hệ quản trị viên.
           </p>

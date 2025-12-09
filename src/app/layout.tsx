@@ -15,10 +15,10 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "K-ERP | Hệ thống quản lý doanh nghiệp",
-    template: "%s | K-ERP",
+    default: "K-Board | Hệ thống quản lý công việc",
+    template: "%s | K-Board",
   },
-  description: "Hệ thống quản lý doanh nghiệp toàn diện K-ERP",
+  description: "Hệ thống quản lý công việc và dự án toàn diện K-Board",
 };
 
 export default function RootLayout({
@@ -28,9 +28,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <Providers>{children}</Providers>
       </body>
     </html>

@@ -1,4 +1,4 @@
-# K-ERP - Hệ thống Quản lý Doanh nghiệp
+# K-Board - Hệ thống Quản lý Công việc & Dự án
 
 <p align="center">
   <strong>Hệ thống quản lý công việc linh hoạt với khả năng tùy biến cao như Notion</strong>
@@ -17,6 +17,7 @@
 ## ✨ Tính năng
 
 ### 📋 Quản lý Công việc (Task Management)
+
 - **Custom Properties**: 12 loại property (text, number, date, select, multi-select, person, status, currency, checkbox, rich-text, attachment, user)
 - **Multiple Views**: Table View và Kanban View
 - **Drag & Drop**: Sắp xếp tasks, columns, và properties
@@ -25,16 +26,19 @@
 - **Rich Text Editor**: Lexical editor với Markdown shortcuts
 
 ### 👥 Quản lý Người dùng
+
 - **Role-based Access Control**: Admin, Manager, Staff, User
 - **User Approval System**: Auto-approve, Manual approve, Disabled
 - **Admin Dashboard**: Thống kê và quản lý người dùng
 
 ### 🔐 Board Permissions
+
 - **6 cấp độ quyền**: Owner, Admin, Editor, Viewer, Restricted Editor, Restricted Viewer
 - **Scope-based permissions**: All tasks vs Assigned tasks only
 - **Member Management**: Mời và quản lý thành viên board
 
 ### 🎨 UI/UX
+
 - **Modern Design**: Tailwind CSS với design system
 - **Dark/Light Mode**: Hỗ trợ theme switching
 - **Responsive**: Tối ưu cho desktop và mobile
@@ -44,16 +48,16 @@
 
 ## 🛠️ Tech Stack
 
-| Layer | Technologies |
-|-------|-------------|
-| **Frontend** | Next.js 16, React 19, TypeScript 5 |
-| **Styling** | Tailwind CSS 4, Radix UI, Lucide Icons |
-| **State** | Zustand, React Hook Form |
-| **Backend** | Next.js API Routes, NextAuth 5 |
-| **Database** | MongoDB, Mongoose 9 |
-| **Editor** | Lexical |
-| **DnD** | @dnd-kit |
-| **Validation** | Zod |
+| Layer          | Technologies                           |
+| -------------- | -------------------------------------- |
+| **Frontend**   | Next.js 16, React 19, TypeScript 5     |
+| **Styling**    | Tailwind CSS 4, Radix UI, Lucide Icons |
+| **State**      | Zustand, React Hook Form               |
+| **Backend**    | Next.js API Routes, NextAuth 5         |
+| **Database**   | MongoDB, Mongoose 9                    |
+| **Editor**     | Lexical                                |
+| **DnD**        | @dnd-kit                               |
+| **Validation** | Zod                                    |
 
 ---
 
@@ -61,29 +65,33 @@
 
 ### Yêu cầu
 
-- Node.js 18+ 
+- Node.js 18+
 - pnpm (recommended) hoặc npm/yarn
 - MongoDB (local hoặc Atlas)
 
 ### Cài đặt
 
 1. **Clone repository**
+
 ```bash
 git clone https://github.com/k4ris-su/K-ERP.git
 cd K-ERP
 ```
 
 2. **Cài đặt dependencies**
+
 ```bash
 pnpm install
 ```
 
 3. **Tạo file environment**
+
 ```bash
 cp .env.example .env.local
 ```
 
 4. **Cấu hình environment variables**
+
 ```env
 # Database
 MONGODB_URI=mongodb://admin:password123@localhost:27017/k-erp?authSource=admin
@@ -97,21 +105,25 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 5. **Khởi động MongoDB** (nếu dùng Docker)
+
 ```bash
 docker-compose up -d mongodb
 ```
 
 6. **Seed admin user** (optional)
+
 ```bash
 pnpm db:seed
 ```
 
 7. **Chạy development server**
+
 ```bash
 pnpm dev
 ```
 
 8. **Mở trình duyệt**
+
 ```
 http://localhost:3000
 ```

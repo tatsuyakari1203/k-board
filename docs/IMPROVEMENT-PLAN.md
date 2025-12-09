@@ -1,4 +1,4 @@
-# 📋 K-ERP Improvement Plan
+# 📋 K-Board Improvement Plan
 
 > **Ngày tạo:** 2024-12-03
 > **Trạng thái:** ✅ Hoàn thành Toàn bộ (Phase 1-5)
@@ -7,7 +7,7 @@
 
 ## 🎯 Mục tiêu
 
-Cải thiện K-ERP dựa trên kết quả review, tập trung vào:
+Cải thiện K-Board dựa trên kết quả review, tập trung vào:
 
 1. Documentation
 2. UX/UI Improvements
