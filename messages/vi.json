@@ -1,0 +1,31 @@
+{
+  "Common": {
+    "loading": "Đang tải...",
+    "error": "Đã có lỗi xảy ra",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "create": "Tạo mới",
+    "search": "Tìm kiếm...",
+    "actions": "Hành động"
+  },
+  "Auth": {
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "logout": "Đăng xuất",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "forgotPassword": "Quên mật khẩu?",
+    "signInWithGoogle": "Đăng nhập với Google",
+    "dontHaveAccount": "Chưa có tài khoản?",
+    "alreadyHaveAccount": "Đã có tài khoản?"
+  },
+  "Dashboard": {
+    "home": "Trang chủ",
+    "projects": "Dự án",
+    "tasks": "Công việc",
+    "members": "Thành viên",
+    "settings": "Cài đặt"
+  }
+}

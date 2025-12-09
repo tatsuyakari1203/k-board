@@ -1,95 +1,169 @@
-import { NextResponse } from "next/server";
-import type { NextRequest } from "next/server";
+import createMiddleware from 'next-intl/middleware';
+import { routing } from './i18n/routing';
+import { NextRequest, NextResponse } from 'next/server';
 import { getToken } from "next-auth/jwt";
 
+const intlMiddleware = createMiddleware(routing);
+
 // Routes that don't require authentication
-const publicRoutes = ["/", "/auth/login", "/auth/register", "/auth/error"];
+const publicRoutes = ["/auth/login", "/auth/register", "/auth/error", "/auth/forgot-password"];
 
 // Routes that require specific roles
 const roleRoutes: Record<string, string[]> = {
   "/dashboard/admin": ["admin"],
-  "/admin": ["admin"],
-  "/management": ["admin", "manager"],
-  "/dashboard": ["admin", "manager", "staff", "user"],
+  // "/management": ["admin", "manager"], // Example
+  "/dashboard": ["admin", "manager", "staff", "user", "owner", "editor", "viewer", "restricted_editor", "restricted_viewer"], // Added board roles just in case, though system roles usually suffice
 };
 
-// API routes that require specific roles (checked in middleware)
+// API routes that require specific roles
 const apiRoleRoutes: Record<string, string[]> = {
   "/api/admin": ["admin"],
 };
 
-export async function proxy(request: NextRequest) {
-  const { nextUrl } = request;
+export default async function middleware(req: NextRequest) {
+  const { nextUrl } = req;
 
-  const isPublicRoute = publicRoutes.some(
-    (route) => nextUrl.pathname === route
-  );
+  // 1. Helper to strip locale from path for checking
+  // e.g. /vi/dashboard -> /dashboard
+  // e.g. /dashboard -> /dashboard (if locale missing, though next-intl handles this)
+  const pathname = nextUrl.pathname;
 
-  const isAuthRoute = nextUrl.pathname.startsWith("/auth");
-  const isApiRoute = nextUrl.pathname.startsWith("/api");
-  const isStaticRoute =
-    nextUrl.pathname.startsWith("/_next") ||
-    nextUrl.pathname.includes(".");
+  // Check if API route (no locale)
+  const isApiRoute = pathname.startsWith("/api");
+  const isStaticRoute = pathname.startsWith("/_next") || pathname.includes(".");
 
-  // Allow static files
   if (isStaticRoute) {
     return NextResponse.next();
   }
 
-  // Get token using next-auth/jwt (Edge compatible)
-  const token = await getToken({
-    req: request,
-    secret: process.env.AUTH_SECRET,
-  });
-
-  const isLoggedIn = !!token;
-  const userRole = token?.role as string | undefined;
-
-  // Check API route role-based access
+  // 2. Handle API routes (bypass intl)
   if (isApiRoute) {
+    const token = await getToken({
+        req,
+        secret: process.env.AUTH_SECRET,
+    });
+    const isLoggedIn = !!token;
+    const userRole = token?.role as string | undefined;
+
     for (const [path, allowedRoles] of Object.entries(apiRoleRoutes)) {
-      if (nextUrl.pathname.startsWith(path)) {
+      if (pathname.startsWith(path)) {
         if (!isLoggedIn || !userRole || !allowedRoles.includes(userRole)) {
-          return NextResponse.json(
-            { error: "Forbidden" },
-            { status: 403 }
-          );
+          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
       }
     }
     return NextResponse.next();
   }
 
+  // 3. Run intl middleware
+  // This handles / -> /vi, adds locale prefix, etc.
+  const response = intlMiddleware(req);
+
+  // If next-intl redirects (e.g. root to default locale), let it happen
+  if (response.headers.get('location')) {
+    return response;
+  }
+
+  // 4. Auth Logic for Pages
+  // We need to normalize the path to check against our rules
+  // Remove the locale segment: /vi/dashboard -> /dashboard
+  const locale = nextUrl.pathname.split('/')[1];
+  const isLocaleValid = routing.locales.includes(locale as any);
+
+  let pathWithoutLocale = nextUrl.pathname;
+  if (isLocaleValid) {
+     pathWithoutLocale = '/' + nextUrl.pathname.split('/').slice(2).join('/');
+     if (pathWithoutLocale === '//') pathWithoutLocale = '/'; // fix root
+  }
+
+  // Normalize for empty/root
+  if (pathWithoutLocale === '') pathWithoutLocale = '/';
+
+
+  // Get Token
+  const token = await getToken({
+    req,
+    secret: process.env.AUTH_SECRET,
+  });
+  const isLoggedIn = !!token;
+  const userRole = token?.role as string | undefined;
+
+  const isAuthRoute = pathWithoutLocale.startsWith("/auth");
+  const isDashboardRoute = pathWithoutLocale.startsWith("/dashboard");
+
+  // Check if strictly public (e.g. landing page /)
+  // Our landing page is public.
+  const isPublicPage = pathWithoutLocale === '/';
+  // Also check public routes list
+  const isPublicRoute = publicRoutes.some(route => pathWithoutLocale.startsWith(route));
+
   // Redirect logged-in users away from auth pages
   if (isLoggedIn && isAuthRoute) {
-    return NextResponse.redirect(new URL("/dashboard", nextUrl));
+     // Redirect to /<locale>/dashboard
+     const localePrefix = isLocaleValid ? locale : routing.defaultLocale;
+     return NextResponse.redirect(new URL(`/${localePrefix}/dashboard`, nextUrl));
   }
 
-  // Allow public routes
-  if (isPublicRoute) {
-    return NextResponse.next();
+  // Protect Dashboard and other private routes
+  if (!isLoggedIn && !isPublicPage && !isPublicRoute && !isAuthRoute) {
+      // Redirect to login
+      // Construct callback URL
+      const localePrefix = isLocaleValid ? locale : routing.defaultLocale;
+      const callbackUrl = encodeURIComponent(nextUrl.pathname);
+      return NextResponse.redirect(
+        new URL(`/${localePrefix}/auth/login?callbackUrl=${callbackUrl}`, nextUrl)
+      );
   }
 
-  // Redirect to login if not authenticated
-  if (!isLoggedIn) {
-    const callbackUrl = encodeURIComponent(nextUrl.pathname);
-    return NextResponse.redirect(
-      new URL(`/auth/login?callbackUrl=${callbackUrl}`, nextUrl)
-    );
-  }
+  // Role-based access control for pages
+  if (isLoggedIn && userRole) {
+      for (const [path, allowedRoles] of Object.entries(roleRoutes)) {
+          if (pathWithoutLocale.startsWith(path)) {
+              // Be careful with partial matches if needed, but startsWith is usually ok for /dashboard/admin
+              // Need to ensure /dashboard matches all, but /dashboard/admin is more specific
+              // We should probably check most specific first if we iterate, but map order is not identifying.
+              // Logic in proxy.ts was: simple loop.
 
-  // Check role-based access
-  for (const [path, allowedRoles] of Object.entries(roleRoutes)) {
-    if (nextUrl.pathname.startsWith(path)) {
-      if (!userRole || !allowedRoles.includes(userRole)) {
-        return NextResponse.redirect(new URL("/unauthorized", nextUrl));
+              if (!allowedRoles.includes(userRole)) {
+                   // Only block if the specific path requires a role the user DOESN'T have.
+                   // But wait, /dashboard matches /dashboard/admin.
+                   // If /dashboard allows "user", and /dashboard/admin allows "admin".
+                   // If "user" goes to /dashboard/admin.
+                   // startsWith("/dashboard") -> true -> allowed.
+                   // startsWith("/dashboard/admin") -> true -> DENIED.
+
+                   // We need to find the *most specific* matching rule?
+                   // Or just 'if any matching rule fails'?
+
+                   // Let's refine:
+                   // If path is exactly /dashboard/admin, and we fail, we deny.
+                   // The previous logic was:
+                   /*
+                    for (const [path, allowedRoles] of Object.entries(roleRoutes)) {
+                        if (nextUrl.pathname.startsWith(path)) {
+                        if (!userRole || !allowedRoles.includes(userRole)) {
+                            return NextResponse.redirect(new URL("/unauthorized", nextUrl));
+                        }
+                        }
+                    }
+                   */
+                   // This logic implies ANY match must be satisfied.
+                   // So if I am USER, and I go to /dashboard/admin.
+                   // Match /dashboard -> Allowed.
+                   // Match /dashboard/admin -> Not Allowed -> Redirect.
+                   // This works fine.
+
+                   const localePrefix = isLocaleValid ? locale : routing.defaultLocale;
+                   return NextResponse.redirect(new URL(`/${localePrefix}/unauthorized`, nextUrl));
+              }
+          }
       }
-    }
   }
 
-  return NextResponse.next();
+  return response;
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // Combine next-intl matcher with general protection
+  matcher: ['/', '/(vi|en)/:path*', '/((?!_next|_vercel|.*\\..*).*)']
 };

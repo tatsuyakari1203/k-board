@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useSearchParams } from "next/navigation";
+import * as z from "zod";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { showToast } from "@/lib/toast";
+import { useTranslations } from "next-intl";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -18,17 +20,29 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-
-import { loginSchema, type LoginInput } from "@/lib/validations/auth";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
+
+const loginSchema = z.object({
+  email: z.string().email("Email không hợp lệ"),
+  password: z.string().min(1, "Vui lòng nhập mật khẩu"),
+});
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
   const { login } = useAuth();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get("callbackUrl");
+  const t = useTranslations("Auth");
+  const tCommon = useTranslations("Common");
 
-  const form = useForm<LoginInput>({
+  const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
@@ -36,91 +50,73 @@ export function LoginForm() {
     },
   });
 
-  async function onSubmit(data: LoginInput) {
+  async function onSubmit(data: z.infer<typeof loginSchema>) {
     setIsLoading(true);
     try {
       await login(data.email, data.password, callbackUrl || undefined);
-      toast.success("Đăng nhập thành công!");
+      showToast.success("Đăng nhập thành công!");
     } catch {
-      toast.error("Email hoặc mật khẩu không đúng");
+      showToast.error("Email hoặc mật khẩu không đúng");
     } finally {
       setIsLoading(false);
     }
   }
 
   return (
-    <div className="w-full max-w-md">
-      <div className="mb-10">
-        <h1 className="text-3xl font-semibold tracking-tight">Đăng nhập</h1>
-        <p className="mt-3 text-base text-muted-foreground">
-          Chào mừng trở lại. Nhập thông tin để tiếp tục.
-        </p>
-      </div>
-
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-base font-normal text-muted-foreground">
-                  Email
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    type="email"
-                    placeholder="email@example.com"
-                    disabled={isLoading}
-                    className="h-12 border-0 bg-secondary px-4 text-base shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring/30"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel className="text-base font-normal text-muted-foreground">
-                  Mật khẩu
-                </FormLabel>
-                <FormControl>
-                  <Input
-                    type="password"
-                    placeholder="••••••••"
-                    disabled={isLoading}
-                    className="h-12 border-0 bg-secondary px-4 text-base shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring/30"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <Button
-            type="submit"
-            className="mt-8 h-12 w-full text-base font-medium"
-            disabled={isLoading}
-          >
-            {isLoading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
-            Tiếp tục
-          </Button>
-        </form>
-      </Form>
-
-      <p className="mt-10 text-center text-base text-muted-foreground">
-        Chưa có tài khoản?{" "}
-        <Link
-          href="/auth/register"
-          className="text-foreground underline-offset-4 hover:underline"
-        >
-          Tạo tài khoản
-        </Link>
-      </p>
-    </div>
+    <Card className="mx-auto max-w-sm w-full">
+      <CardHeader>
+        <CardTitle className="text-2xl">{t("login")}</CardTitle>
+        <CardDescription>
+          {t("dontHaveAccount")} <Link href="/auth/register" className="underline">{t("register")}</Link>
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("email")}</FormLabel>
+                  <FormControl>
+                    <Input placeholder="m@example.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("password")}</FormLabel>
+                  <FormControl>
+                    <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {tCommon("loading")}
+                </>
+              ) : (
+                t("login")
+              )}
+            </Button>
+            <div className="mt-4 text-center text-sm">
+                 <Link href="/auth/forgot-password" className="underline text-muted-foreground">
+                     {t("forgotPassword")}
+                 </Link>
+             </div>
+          </form>
+        </Form>
+      </CardContent>
+    </Card>
   );
 }

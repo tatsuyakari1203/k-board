@@ -13,9 +13,13 @@ import {
 import Link from "next/link";
 import { USER_ROLES } from "@/types/user";
 import { DashboardShortcuts } from "@/components/dashboard/dashboard-shortcuts";
+import { getTranslations } from "next-intl/server";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
+  const t = await getTranslations("Dashboard");
+  const tCommon = await getTranslations("Common");
 
   if (!user) {
     redirect("/auth/login");
@@ -30,10 +34,11 @@ export default async function DashboardLayout({ children }: { children: React.Re
       <aside className="fixed left-0 top-0 z-40 h-screen w-64 border-r bg-sidebar">
         <div className="flex h-full flex-col">
           {/* Logo */}
-          <div className="flex h-16 items-center px-5">
+          <div className="flex h-16 items-center justify-between px-5">
             <Link href="/dashboard" className="text-xl font-semibold tracking-tight">
               K-Board
             </Link>
+            <LanguageSwitcher />
           </div>
 
           {/* Search */}
@@ -42,7 +47,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="search"
-                placeholder="Tìm kiếm... (Cmd+K)"
+                placeholder={tCommon("search")}
                 className="w-full rounded-md border bg-background py-2 pl-9 pr-4 text-sm outline-none placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/20"
               />
             </div>
@@ -50,17 +55,17 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
           {/* Navigation */}
           <nav className="flex-1 space-y-1 px-4 py-3">
-            <NavItem href="/dashboard" icon={LayoutGrid} label="Tổng quan" />
+            <NavItem href="/dashboard" icon={LayoutGrid} label={t("home")} />
             <NavItem href="/dashboard/todo" icon={CheckSquare} label="Việc của tôi" />
-            <NavItem href="/dashboard/boards" icon={ClipboardList} label="Quản lý công việc" />
-            <NavItem href="/dashboard/users" icon={Users} label="Nhân sự" />
+            <NavItem href="/dashboard/boards" icon={ClipboardList} label={t("tasks")} />
+            <NavItem href="/dashboard/users" icon={Users} label={t("members")} />
             <NavItem href="/dashboard/reports" icon={FileText} label="Báo cáo" />
 
             {/* Admin section - only visible to admins */}
             {isAdmin && (
               <>
                 <div className="my-3 border-t" />
-                <NavItem href="/dashboard/admin" icon={Settings} label="Cài đặt" highlight />
+                <NavItem href="/dashboard/admin" icon={Settings} label={t("settings")} highlight />
               </>
             )}
           </nav>

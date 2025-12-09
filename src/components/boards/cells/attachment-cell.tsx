@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Image from "next/image";
 import { Paperclip, Upload, FileText, X } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
@@ -89,7 +90,13 @@ export function AttachmentCell({
               {/* Show first image thumbnail if available */}
               {isImage(value[0].type) ? (
                 <div className="relative h-6 w-8 rounded overflow-hidden border border-border/50 bg-muted/50 flex-shrink-0">
-                  <img src={value[0].url} alt="Thumbnail" className="h-full w-full object-cover" />
+                  <Image
+                    src={value[0].url}
+                    alt="Thumbnail"
+                    fill
+                    className="object-cover"
+                    sizes="32px"
+                  />
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-6 w-8 rounded bg-muted/50 flex-shrink-0">
@@ -131,11 +138,13 @@ export function AttachmentCell({
                       rel="noopener noreferrer"
                       className="block flex-shrink-0"
                     >
-                      <div className="h-10 w-10 rounded overflow-hidden border border-border/50 bg-muted">
-                        <img
+                      <div className="relative h-10 w-10 rounded overflow-hidden border border-border/50 bg-muted">
+                        <Image
                           src={file.url}
                           alt={file.name}
-                          className="h-full w-full object-cover"
+                          fill
+                          className="object-cover"
+                          sizes="40px"
                         />
                       </div>
                     </a>
