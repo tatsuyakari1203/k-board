@@ -371,7 +371,7 @@ export function useBoardViews({ board, onBoardUpdate }: UseBoardViewsOptions): U
         type,
         isDefault: false,
         config: {
-          visibleProperties: undefined, // All visible by default
+          visibleProperties: board.properties.map((p) => p.id),
           groupBy,
         },
       };

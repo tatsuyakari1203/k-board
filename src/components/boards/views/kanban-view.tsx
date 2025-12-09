@@ -326,10 +326,12 @@ export function KanbanView({
 
   // Visible properties for cards (excluding groupBy)
   const cardProperties = useMemo(() => {
-    const visible = view.config.visibleProperties || board.properties.map((p) => p.id);
-    return board.properties
-      .filter((p) => visible.includes(p.id) && p.id !== groupByPropertyId)
-      .slice(0, 4); // Max 4 properties on card
+    const visible =
+      view.config.visibleProperties && view.config.visibleProperties.length > 0
+        ? view.config.visibleProperties
+        : board.properties.map((p) => p.id); // Default to all if empty or undefined
+
+    return board.properties.filter((p) => visible.includes(p.id) && p.id !== groupByPropertyId);
   }, [board.properties, view.config.visibleProperties, groupByPropertyId]);
 
   // Calculate aggregations per column

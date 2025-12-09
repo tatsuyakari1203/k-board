@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { MoreHorizontal, Trash2, Copy, Calendar, Paperclip } from "lucide-react";
@@ -119,58 +119,6 @@ export function KanbanCard({
     [handleTitleBlur, task.title]
   );
 
-  // Get important properties to display
-  const displayInfo = useMemo(() => {
-    const allProps = allProperties || properties;
-    const info: {
-      dates: { prop: Property; value: string }[];
-      people: { prop: Property; value: string | string[] }[];
-      statuses: { prop: Property; value: string }[];
-      numbers: { prop: Property; value: number }[];
-      attachments: { prop: Property; value: unknown[] }[];
-      others: Property[];
-    } = {
-      dates: [],
-      people: [],
-      statuses: [],
-      numbers: [],
-      attachments: [],
-      others: [],
-    };
-
-    allProps.forEach((prop) => {
-      const value = task.properties?.[prop.id];
-      if (value === null || value === undefined || value === "") return;
-
-      switch (prop.type) {
-        case PropertyType.DATE:
-          info.dates.push({ prop, value: value as string });
-          break;
-        case PropertyType.PERSON:
-        case PropertyType.USER:
-          info.people.push({ prop, value: value as string | string[] });
-          break;
-        case PropertyType.STATUS:
-        case PropertyType.SELECT:
-          info.statuses.push({ prop, value: value as string });
-          break;
-        case PropertyType.NUMBER:
-        case PropertyType.CURRENCY:
-          info.numbers.push({ prop, value: value as number });
-          break;
-        case PropertyType.ATTACHMENT:
-          if (Array.isArray(value) && value.length > 0) {
-            info.attachments.push({ prop, value });
-          }
-          break;
-        default:
-          info.others.push(prop);
-      }
-    });
-
-    return info;
-  }, [allProperties, properties, task.properties]);
-
   // Find user by ID
   const findUser = useCallback((userId: string) => users.find((u) => u.id === userId), [users]);
 
@@ -269,84 +217,137 @@ export function KanbanCard({
           </button>
         </div>
 
-        {/* Properties Preview */}
-        <div className="space-y-2">
-          {/* Statuses and Selects */}
-          {displayInfo.statuses.length > 0 && (
-            <div className="flex flex-wrap gap-1.5">
-              {displayInfo.statuses.map(({ prop, value }) => {
-                const opt = getStatusOption(prop.id, value);
-                if (!opt) return null;
-                return (
-                  <div
-                    key={prop.id}
+        {/* Properties Content */}
+        <div className="space-y-2 mt-2">
+          {properties.map((prop) => {
+            const value = task.properties?.[prop.id];
+
+            // Skip empty values
+            if (value === null || value === undefined || value === "") return null;
+            if (Array.isArray(value) && value.length === 0) return null;
+
+            // Footer types (Date, User, Attachment) - skip here, handled below
+            if (
+              prop.type === PropertyType.DATE ||
+              prop.type === PropertyType.PERSON ||
+              prop.type === PropertyType.USER ||
+              prop.type === PropertyType.ATTACHMENT
+            ) {
+              return null;
+            }
+
+            // Body types
+            return (
+              <div key={prop.id} className="text-xs">
+                {/* Status / Select as Badges */}
+                {prop.type === PropertyType.STATUS || prop.type === PropertyType.SELECT ? (
+                  <span
                     className={cn(
-                      "px-2 py-0.5 rounded-md text-[11px] font-medium border border-transparent truncate max-w-full",
-                      opt.color
+                      "px-2 py-0.5 rounded-md font-medium border border-transparent inline-block truncate max-w-full",
+                      getStatusOption(prop.id, value as string)?.color ||
+                        "bg-secondary text-secondary-foreground"
                     )}
                   >
-                    {opt.label}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-
-          {/* Other metadata row */}
-          {(displayInfo.dates.length > 0 ||
-            displayInfo.people.length > 0 ||
-            displayInfo.attachments.length > 0) && (
-            <div className="flex flex-wrap items-center gap-3 text-muted-foreground">
-              {/* Dates */}
-              {displayInfo.dates.map(({ prop, value }) => (
-                <div
-                  key={prop.id}
-                  className="flex items-center gap-1 text-[11px]"
-                  title={prop.name}
-                >
-                  <Calendar className="h-3 w-3" />
-                  <span>{formatDate(value)}</span>
-                </div>
-              ))}
-
-              {/* Attachments Count */}
-              {displayInfo.attachments.length > 0 && (
-                <div className="flex items-center gap-1 text-[11px]" title="Tệp đính kèm">
-                  <Paperclip className="h-3 w-3" />
-                  <span>
-                    {displayInfo.attachments.reduce((acc, curr) => acc + curr.value.length, 0)}
+                    {getStatusOption(prop.id, value as string)?.label || value}
                   </span>
-                </div>
-              )}
+                ) : (
+                  /* Text / Number / Other as Label: Value */
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                      {prop.name}
+                    </span>
+                    <span className="text-foreground/90 font-medium line-clamp-3 whitespace-pre-wrap word-break-break-word">
+                      {value.toString()}
+                    </span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
 
-              {/* Members */}
-              {displayInfo.people.length > 0 && (
-                <div className="flex items-center -space-x-1.5 ml-auto">
-                  {displayInfo.people.flatMap(({ prop, value }) => {
-                    const userIds = Array.isArray(value) ? value : [value];
-                    return userIds.map((uid) => {
-                      const user = findUser(uid);
-                      if (!user) return null;
-                      return (
-                        <div
-                          key={`${prop.id}-${uid}`}
-                          className="h-4 w-4 rounded-full ring-1 ring-background bg-muted flex items-center justify-center overflow-hidden"
-                          title={user.name}
-                        >
-                          {user.image ? (
-                            /* eslint-disable-next-line @next/next/no-img-element */
-                            <img src={user.image} alt="" className="h-full w-full object-cover" />
-                          ) : (
-                            <span className="text-[8px] font-medium text-muted-foreground">
-                              {user.name.charAt(0)}
-                            </span>
-                          )}
-                        </div>
-                      );
-                    });
-                  })}
-                </div>
-              )}
+          {/* Footer Stats Row (Date, User, Attachment) */}
+          {properties.some(
+            (p) =>
+              (
+                [
+                  PropertyType.DATE,
+                  PropertyType.PERSON,
+                  PropertyType.USER,
+                  PropertyType.ATTACHMENT,
+                ] as string[]
+              ).includes(p.type) && task.properties?.[p.id]
+          ) && (
+            <div className="flex flex-wrap items-center gap-3 pt-2 mt-2 border-t border-border/50 text-muted-foreground">
+              {properties.map((prop) => {
+                const value = task.properties?.[prop.id];
+                if (!value) return null;
+
+                if (prop.type === PropertyType.DATE) {
+                  return (
+                    <div
+                      key={prop.id}
+                      className="flex items-center gap-1 text-[11px]"
+                      title={prop.name}
+                    >
+                      <Calendar className="h-3 w-3" />
+                      <span>{formatDate(value as string)}</span>
+                    </div>
+                  );
+                }
+
+                if (
+                  prop.type === PropertyType.ATTACHMENT &&
+                  Array.isArray(value) &&
+                  value.length > 0
+                ) {
+                  return (
+                    <div
+                      key={prop.id}
+                      className="flex items-center gap-1 text-[11px]"
+                      title={prop.name}
+                    >
+                      <Paperclip className="h-3 w-3" />
+                      <span>{value.length}</span>
+                    </div>
+                  );
+                }
+
+                return null;
+              })}
+
+              {/* Users usually go to the right */}
+              <div className="flex items-center -space-x-1.5 ml-auto">
+                {properties.map((prop) => {
+                  const value = task.properties?.[prop.id];
+                  if (
+                    !value ||
+                    (prop.type !== PropertyType.PERSON && prop.type !== PropertyType.USER)
+                  )
+                    return null;
+
+                  const userIds = Array.isArray(value) ? value : [value];
+                  return userIds.map((uid) => {
+                    const user = findUser(uid as string);
+                    if (!user) return null;
+                    return (
+                      <div
+                        key={`${prop.id}-${uid}`}
+                        className="h-4 w-4 rounded-full ring-1 ring-background bg-muted flex items-center justify-center overflow-hidden"
+                        title={user.name}
+                      >
+                        {user.image ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={user.image} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <span className="text-[8px] font-medium text-muted-foreground">
+                            {user.name.charAt(0)}
+                          </span>
+                        )}
+                      </div>
+                    );
+                  });
+                })}
+              </div>
             </div>
           )}
         </div>
