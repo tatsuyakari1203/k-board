@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest",
+    "docker:build": "./scripts/docker-build.sh",
     "seed": "tsx --env-file=.env.local src/scripts/seed.ts",
     "prepare": "husky"
   },
