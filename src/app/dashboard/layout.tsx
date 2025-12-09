@@ -9,7 +9,6 @@ import {
   Settings,
   Search,
   ClipboardList,
-  Shield,
 } from "lucide-react";
 import Link from "next/link";
 import { USER_ROLES } from "@/types/user";

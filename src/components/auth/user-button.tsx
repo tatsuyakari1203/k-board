@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { LogOut, Settings } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { USER_ROLES } from "@/types/user";
 
 export function UserButton() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -16,6 +18,8 @@ export function UserButton() {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+
+  const isAdmin = user.role === USER_ROLES.ADMIN;
 
   return (
     <div className="space-y-1.5">
@@ -32,10 +36,15 @@ export function UserButton() {
 
       {/* Action buttons */}
       <div className="space-y-0.5">
-        <button className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground">
-          <Settings className="h-5 w-5" />
-          <span>Cài đặt</span>
-        </button>
+        {isAdmin && (
+          <Link
+            href="/dashboard/admin"
+            className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+          >
+            <Settings className="h-5 w-5" />
+            <span>Cài đặt</span>
+          </Link>
+        )}
         <button
           onClick={logout}
           className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-base text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-destructive"
