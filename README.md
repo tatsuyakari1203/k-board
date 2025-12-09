@@ -1,7 +1,7 @@
-# K-Board - Hệ thống Quản lý Công việc & Dự án
+# K-Board - Project & Task Management System
 
 <p align="center">
-  <strong>Hệ thống quản lý công việc linh hoạt với khả năng tùy biến cao như Notion</strong>
+  <strong>Flexible task management system with high customizability inspired by Notion</strong>
 </p>
 
 <p align="center">
@@ -10,203 +10,174 @@
   <img src="https://img.shields.io/badge/TypeScript-5-blue" alt="TypeScript" />
   <img src="https://img.shields.io/badge/MongoDB-9-green" alt="MongoDB" />
   <img src="https://img.shields.io/badge/TailwindCSS-4-cyan" alt="Tailwind" />
+  <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License" />
 </p>
 
 ---
 
-## ✨ Tính năng
+## ✨ Features
 
-### 📋 Quản lý Công việc (Task Management)
+### 📋 Task Management
 
-- **Custom Properties**: 12 loại property (text, number, date, select, multi-select, person, status, currency, checkbox, rich-text, attachment, user)
-- **Multiple Views**: Table View và Kanban View
-- **Drag & Drop**: Sắp xếp tasks, columns, và properties
-- **Filter & Sort**: Nhiều operators hỗ trợ lọc và sắp xếp
-- **Aggregation**: Count, Sum, Average, Min, Max, Median
-- **Rich Text Editor**: Lexical editor với Markdown shortcuts
+- **Custom Properties**: 12 fully customizable property types:
+  - Basic: Text, Number, Select, Multi-select, Date, Checkbox
+  - Advanced: Person (Assignment), Status, Currency, Rich Text, Attachment, User
+- **Multiple Views**: Switch seamlessly between:
+  - **Table View**: Spreadsheet-like editing with bulk actions
+  - **Kanban View**: Drag-and-drop workflow visualization
+- **Drag & Drop**: Native drag-and-drop support for tasks, columns, files, and ordering
+- **Advanced Filtering**: Complex boolean logic (AND/OR) filtering
+- **Aggregation**: Real-time column statistics (Sum, Average, Min, Max, Count)
+- **Rich Text Editor**: Powerful Notion-style editor with slash commands and markdown support
 
-### 👥 Quản lý Người dùng
+### 👥 User & Organization
 
-- **Role-based Access Control**: Admin, Manager, Staff, User
-- **User Approval System**: Auto-approve, Manual approve, Disabled
-- **Admin Dashboard**: Thống kê và quản lý người dùng
+- **Role-Based Access (RBAC)**: Fine-grained permissions (Admin, Manager, Staff, User)
+- **Board Permissions**:
+  - **Owner**: Full control
+  - **Admin**: Configure board settings
+  - **Editor**: Create and edit content
+  - **Viewer**: Read-only access
+  - **Restricted**: Limited visibility based on assignment
+- **User Approval Flow**: Security workflow for approving new user registrations
+- **Member Management**: Invite system with email notifications
 
-### 🔐 Board Permissions
+### 🎨 Modern Experience
 
-- **6 cấp độ quyền**: Owner, Admin, Editor, Viewer, Restricted Editor, Restricted Viewer
-- **Scope-based permissions**: All tasks vs Assigned tasks only
-- **Member Management**: Mời và quản lý thành viên board
-
-### 🎨 UI/UX
-
-- **Modern Design**: Tailwind CSS với design system
-- **Dark/Light Mode**: Hỗ trợ theme switching
-- **Responsive**: Tối ưu cho desktop và mobile
-- **Toast Notifications**: Feedback cho user actions
+- **Design System**: Built on top of Tailwind CSS 4 and Radix UI primitives
+- **Theming**: First-class Dark/Light mode support
+- **Responsive**: Fully optimized mobile layout
+- **Interactive**: Real-time feedback with toast notifications and optimistic UI updates
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer          | Technologies                           |
-| -------------- | -------------------------------------- |
-| **Frontend**   | Next.js 16, React 19, TypeScript 5     |
-| **Styling**    | Tailwind CSS 4, Radix UI, Lucide Icons |
-| **State**      | Zustand, React Hook Form               |
-| **Backend**    | Next.js API Routes, NextAuth 5         |
-| **Database**   | MongoDB, Mongoose 9                    |
-| **Editor**     | Lexical                                |
-| **DnD**        | @dnd-kit                               |
-| **Validation** | Zod                                    |
+| Layer          | Technologies                                    |
+| -------------- | ----------------------------------------------- |
+| **Frontend**   | Next.js 16 (App Router), React 19, TypeScript 5 |
+| **Styling**    | Tailwind CSS 4, Radix UI, Lucide Icons          |
+| **State**      | Zustand, React Query (TanStack Query)           |
+| **Backend**    | Next.js API Routes, NextAuth 5 (Beta)           |
+| **Database**   | MongoDB, Mongoose 9                             |
+| **Animation**  | Framer Motion 12, GSAP                          |
+| **Editor**     | Lexical (Meta)                                  |
+| **Testing**    | Vitest, React Testing Library                   |
+| **Validation** | Zod                                             |
 
 ---
 
-## 🚀 Bắt đầu
+## 🚀 Getting Started
 
-### Yêu cầu
+### Prerequisites
 
-- Node.js 18+
-- pnpm (recommended) hoặc npm/yarn
-- MongoDB (local hoặc Atlas)
+- Node.js 18.17 or later
+- pnpm (recommended) or npm/yarn
+- MongoDB instance (Local or Atlas)
 
-### Cài đặt
+### Installation
 
-1. **Clone repository**
+1. **Clone the repository**
 
 ```bash
-git clone https://github.com/k4ris-su/K-ERP.git
-cd K-ERP
+git clone https://github.com/tatsuyakari1203/k-board.git
+cd k-board
 ```
 
-2. **Cài đặt dependencies**
+2. **Install dependencies**
 
 ```bash
 pnpm install
 ```
 
-3. **Tạo file environment**
+3. **Set up environment variables**
 
 ```bash
 cp .env.example .env.local
 ```
 
-4. **Cấu hình environment variables**
+Update `.env.local` with your credentials:
 
 ```env
 # Database
-MONGODB_URI=mongodb://admin:password123@localhost:27017/k-erp?authSource=admin
+MONGODB_URI=mongodb://localhost:27017/k-erp
 
-# NextAuth
-AUTH_SECRET=your-secret-key-here
-AUTH_URL=http://localhost:3000
+# Auth
+AUTH_SECRET="your-super-secret-key-at-least-32-chars"
+AUTH_URL="http://localhost:3000"
 
-# Optional
-NEXT_PUBLIC_APP_URL=http://localhost:3000
+# App
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
 ```
 
-5. **Khởi động MongoDB** (nếu dùng Docker)
-
-```bash
-docker-compose up -d mongodb
-```
-
-6. **Seed admin user** (optional)
+4. **Seed the database** (Creates initial Admin account)
 
 ```bash
 pnpm db:seed
 ```
 
-7. **Chạy development server**
+5. **Start the development server**
 
 ```bash
 pnpm dev
 ```
 
-8. **Mở trình duyệt**
-
-```
-http://localhost:3000
-```
+Visit `http://localhost:3000` to see the app.
 
 ---
 
-## 📁 Cấu trúc Project
+## 🔐 Default Admin Credentials
+
+The seed script creates a default administrator account:
+
+- **Email**: `admin@k-erp.local`
+- **Password**: `Admin@123`
+
+> **Note**: Please change this password immediately after logging in via the User Profile settings.
+
+---
+
+## 📁 Project Structure
 
 ```
 src/
-├── app/                    # Next.js App Router
-│   ├── api/               # API Routes
-│   ├── auth/              # Auth pages
-│   ├── dashboard/         # Dashboard pages
-│   └── layout.tsx         # Root layout
-├── components/            # React components
-│   ├── auth/             # Auth components
-│   ├── boards/           # Board components
-│   ├── editor/           # Lexical editor
-│   ├── providers/        # Context providers
-│   └── ui/               # UI components (shadcn)
-├── hooks/                 # Custom React hooks
-├── lib/                   # Utilities
-│   ├── auth.ts           # NextAuth config
-│   ├── db.ts             # MongoDB connection
-│   └── validations/      # Zod schemas
-├── models/                # Mongoose models
-├── store/                 # Zustand stores
-└── types/                 # TypeScript types
+├── app/                    # Next.js 16 App Directory
+│   ├── [locale]/          # Internationalized routes
+│   └── api/               # Backend API Endpoints
+├── components/            # React 19 Components
+│   ├── boards/            # Kanban & Table components
+│   ├── editor/            # Lexical editor implementation
+│   └── ui/                # Shadcn UI primitives
+├── lib/                   # Core business logic
+│   ├── auth.ts            # Authentication config
+│   └── permissions.ts     # RBAC implementation
+├── models/                # Mongoose 9 Schemas
+├── store/                 # Global state (Zustand)
+└── types/                 # TypeScript interfaces
 ```
 
 ---
 
-## 📝 Scripts
+## 📚 Documentation Plan
 
-```bash
-# Development
-pnpm dev          # Start dev server
+We maintain detailed documentation for core features in the `docs/` directory:
 
-# Build
-pnpm build        # Build for production
-pnpm start        # Start production server
-
-# Linting
-pnpm lint         # Run ESLint
-
-# Database
-pnpm db:seed      # Seed admin user
-```
-
----
-
-## 🔐 Default Admin Account
-
-Sau khi chạy `pnpm db:seed`:
-
-```
-Email: admin@k-erp.local
-Password: Admin@123
-```
-
-⚠️ **Quan trọng**: Đổi mật khẩu ngay sau khi đăng nhập lần đầu!
-
----
-
-## 📚 Documentation
-
-- [Task Management Plan](./docs/PLAN-TASK-MANAGEMENT.md)
-- [User/Role Permission Plan](./docs/USER_ROLE_PERMISSION_PLAN.md)
-- [Kanban View Plan](./docs/KANBAN-VIEW-PLAN.md)
-- [Improvement Plan](./docs/IMPROVEMENT-PLAN.md)
+- [Feature: Task Management System](./docs/PLAN-TASK-MANAGEMENT.md)
+- [Feature: Roles & Permissions](./docs/USER_ROLE_PERMISSION_PLAN.md)
+- [Feature: Kanban Visualization](./docs/KANBAN-VIEW-PLAN.md)
+- [Improvement Roadmap](./docs/IMPROVEMENT-PLAN.md)
 
 ---
 
 ## 🤝 Contributing
 
-Xem [CONTRIBUTING.md](./CONTRIBUTING.md) để biết hướng dẫn contribute.
+Contributions are welcome! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests.
 
 ---
 
 ## 📄 License
 
-MIT License - xem [LICENSE](./LICENSE) để biết thêm chi tiết.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ---
 
@@ -217,5 +188,5 @@ MIT License - xem [LICENSE](./LICENSE) để biết thêm chi tiết.
 ---
 
 <p align="center">
-  Made with ❤️ using Next.js
+  <sub>Built with ❤️ by the Open Source Community</sub>
 </p>
