@@ -80,6 +80,11 @@ export default function AdminDashboardPage() {
             description={t("systemSettingsDesc")}
             href="/dashboard/admin/settings"
           />
+          <QuickAction
+            title={t("employeeStats")}
+            description={t("employeeStatsDesc")}
+            href="/dashboard/admin/stats"
+          />
           {counts.pending > 0 && (
             <QuickAction
               title={t("approveUsers", { count: counts.pending })}

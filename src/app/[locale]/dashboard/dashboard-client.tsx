@@ -1,13 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, ElementType } from "react";
 import Link from "next/link";
 import {
   LayoutDashboard,
   CheckSquare,
-  AlertCircle,
-  Clock,
-  CalendarDays,
   Mail,
   Loader2,
   ArrowRight,
@@ -16,7 +13,7 @@ import {
   BarChart3,
   Folders,
 } from "lucide-react";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow } from "date-fns";
 import { vi, enUS } from "date-fns/locale";
 import { useTranslations, useLocale } from "next-intl";
 
@@ -101,106 +98,94 @@ export default function DashboardClient({ userName }: DashboardClientProps) {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
         <div>
-          <h1 className="text-2xl font-bold">
-            {t("hello")}, {userName?.split(" ")[0]} 👋
+          <h1 className="text-3xl font-bold tracking-tight">
+            {t("hello")}, {userName?.split(" ")[0]}
           </h1>
           <p className="mt-1 text-muted-foreground">{t("overview")}</p>
         </div>
         <Link href="/dashboard/boards">
-          <Button className="gap-2">
-            <Plus className="h-4 w-4" />
+          <Button className="rounded-full px-6 shadow-none">
+            <Plus className="h-4 w-4 mr-2" />
             {t("createBoard")}
           </Button>
         </Link>
       </div>
 
-      {/* Stats Cards */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          icon={Folders}
-          label={t("tasks")} // Note: "tasks" key is mapped to "Boards" in JSON, confusing naming but consistent with layout
-          value={stats.totalBoards}
-          href="/dashboard/boards"
-          color="bg-blue-500"
-        />
-        <StatCard
-          icon={CheckSquare}
-          label={t("todo")}
-          value={stats.totalTasks}
-          href="/dashboard/todo"
-          color="bg-green-500"
-        />
-        <StatCard
-          icon={AlertCircle}
+      {/* Stats Overview - Minimal */}
+      <div className="grid gap-6 grid-cols-2 lg:grid-cols-4">
+        <StatCardMinimal label={t("tasks")} value={stats.totalBoards} href="/dashboard/boards" />
+        <StatCardMinimal label={t("todo")} value={stats.totalTasks} href="/dashboard/todo" />
+        <StatCardMinimal
           label={t("overdue")}
           value={stats.overdueTasks}
           href="/dashboard/todo?filter=overdue"
-          color="bg-red-500"
           highlight={stats.overdueTasks > 0}
         />
-        <StatCard
-          icon={Clock}
+        <StatCardMinimal
           label={t("today")}
           value={stats.todayTasks}
           href="/dashboard/todo?filter=today"
-          color="bg-orange-500"
-          highlight={stats.todayTasks > 0}
+          subLabel={stats.todayTasks > 0 ? t("urgent") : undefined}
         />
       </div>
 
       {/* Pending Invitations Alert */}
       {stats.pendingInvitations > 0 && (
-        <div className="flex items-center gap-3 p-4 rounded-lg bg-primary/10 border border-primary/20">
-          <div className="p-2 rounded-full bg-primary/20">
-            <Mail className="h-5 w-5 text-primary" />
+        <div className="flex items-center gap-4 p-4 rounded-xl bg-orange-50 dark:bg-orange-500/10 text-orange-700 dark:text-orange-400">
+          <div className="p-2 rounded-full bg-orange-100 dark:bg-orange-500/20">
+            <Mail className="h-5 w-5" />
           </div>
           <div className="flex-1">
-            <p className="font-medium">
-              {t("hello")} {stats.pendingInvitations} {t("pendingInvites")}
+            <p className="font-semibold">
+              {stats.pendingInvitations} {t("pendingInvites")}
             </p>
-            <p className="text-sm text-muted-foreground">{t("pendingInvitesDesc")}</p>
           </div>
           <Link href="/dashboard/boards">
-            <Button variant="outline" size="sm" className="gap-1">
-              {t("view")}
-              <ArrowRight className="h-4 w-4" />
+            <Button
+              variant="ghost"
+              size="sm"
+              className="hover:bg-orange-100 dark:hover:bg-orange-500/20 text-orange-700 dark:text-orange-400"
+            >
+              {t("view")} <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </Link>
         </div>
       )}
 
       {/* Main Content Grid */}
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-8 lg:grid-cols-2 mt-4">
         {/* Recent Tasks */}
-        <div className="border rounded-lg">
-          <div className="flex items-center justify-between p-4 border-b">
-            <div className="flex items-center gap-2">
-              <CheckSquare className="h-5 w-5 text-muted-foreground" />
-              <h2 className="font-semibold">{t("recentTasks")}</h2>
-            </div>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold tracking-tight">{t("recentTasks")}</h2>
             <Link
               href="/dashboard/todo"
-              className="text-sm text-primary hover:underline flex items-center gap-1"
+              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
             >
-              {t("viewAll")}
-              <ArrowRight className="h-3 w-3" />
+              {t("viewAll")} <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
-          <div className="divide-y">
+
+          <div className="space-y-2">
             {data?.recentTasks && data.recentTasks.length > 0 ? (
               data.recentTasks.map((task) => (
                 <Link
                   key={task._id}
                   href={`/dashboard/boards/${task.boardId}`}
-                  className="flex items-center justify-between p-4 hover:bg-muted/50 transition-colors"
+                  className="group flex items-center justify-between p-4 rounded-xl bg-muted/30 hover:bg-muted transition-all"
                 >
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium truncate">{task.title || t("untitled")}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">{task.boardName}</p>
+                  <div className="min-w-0 flex-1 pr-4">
+                    <p className="font-medium truncate group-hover:text-primary transition-colors">
+                      {task.title || t("untitled")}
+                    </p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className="inline-block w-2 H-2 rounded-full bg-primary/20" />
+                      <p className="text-xs text-muted-foreground">{task.boardName}</p>
+                    </div>
                   </div>
-                  <span className="text-xs text-muted-foreground shrink-0 ml-2">
+                  <span className="text-xs font-mono text-muted-foreground shrink-0 bg-background px-2 py-1 rounded-md shadow-sm">
                     {formatDistanceToNow(new Date(task.updatedAt), {
                       addSuffix: true,
                       locale: locale === "vi" ? vi : enUS,
@@ -209,123 +194,80 @@ export default function DashboardClient({ userName }: DashboardClientProps) {
                 </Link>
               ))
             ) : (
-              <div className="p-8 text-center text-muted-foreground">
-                <CheckSquare className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">{t("noTasks")}</p>
+              <div className="p-8 text-center rounded-xl bg-muted/10 border border-dashed border-muted">
+                <p className="text-sm text-muted-foreground">{t("noTasks")}</p>
               </div>
             )}
           </div>
         </div>
 
         {/* Recent Boards */}
-        <div className="border rounded-lg">
-          <div className="flex items-center justify-between p-4 border-b">
-            <div className="flex items-center gap-2">
-              <LayoutDashboard className="h-5 w-5 text-muted-foreground" />
-              <h2 className="font-semibold">{t("recentBoards")}</h2>
-            </div>
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold tracking-tight">{t("recentBoards")}</h2>
             <Link
               href="/dashboard/boards"
-              className="text-sm text-primary hover:underline flex items-center gap-1"
+              className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
             >
-              {t("viewAll")}
-              <ArrowRight className="h-3 w-3" />
+              {t("viewAll")} <ArrowRight className="h-3 w-3" />
             </Link>
           </div>
-          <div className="divide-y">
+
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-2">
             {data?.recentBoards && data.recentBoards.length > 0 ? (
               data.recentBoards.map((board) => (
                 <Link
                   key={board._id}
                   href={`/dashboard/boards/${board._id}`}
-                  className="flex items-center gap-3 p-4 hover:bg-muted/50 transition-colors"
+                  className="flex flex-col gap-3 p-5 rounded-xl bg-card border shadow-sm hover:shadow-md hover:border-primary/20 transition-all cursor-pointer group"
                 >
-                  <div className="w-10 h-10 rounded-lg bg-muted flex items-center justify-center text-lg">
-                    {board.icon || "📋"}
+                  <div className="flex items-start justify-between">
+                    <span className="text-2xl">{board.icon || "📋"}</span>
+                    <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{board.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {board.isOwner ? "Chủ sở hữu" : t("members")}
+                  <div>
+                    <p className="font-semibold truncate group-hover:text-primary transition-colors">
+                      {board.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {board.isOwner ? "Owner" : t("members")}
                     </p>
                   </div>
-                  <ExternalLink className="h-4 w-4 text-muted-foreground" />
                 </Link>
               ))
             ) : (
-              <div className="p-8 text-center text-muted-foreground">
-                <Folders className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">{t("noBoards")}</p>
+              <div className="col-span-full p-8 text-center rounded-xl bg-muted/10 border border-dashed border-muted">
+                <p className="text-sm text-muted-foreground mb-4">{t("noBoards")}</p>
                 <Link href="/dashboard/boards">
-                  <Button variant="outline" size="sm" className="mt-3">
+                  <Button variant="outline" size="sm" className="rounded-full">
                     {t("createFirstBoard")}
                   </Button>
                 </Link>
               </div>
             )}
+
+            {/* Add New Board Card - Minimal */}
+            <Link
+              href="/dashboard/boards"
+              className="flex flex-col items-center justify-center gap-2 p-5 rounded-xl border border-dashed hover:bg-muted/30 transition-all text-muted-foreground hover:text-primary cursor-pointer h-full min-h-[120px]"
+            >
+              <Plus className="h-6 w-6" />
+              <span className="text-sm font-medium">{t("createBoard")}</span>
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Task Summary Row */}
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-3">
-        <SummaryCard
-          icon={AlertCircle}
-          label={t("overdue")}
-          value={stats.overdueTasks}
-          description={t("urgent")}
-          color="text-red-500"
-          bgColor="bg-red-50 dark:bg-red-500/10"
-          href="/dashboard/todo"
-        />
-        <SummaryCard
-          icon={Clock}
-          label={t("dueToday")}
-          value={stats.todayTasks}
-          description={format(new Date(), "EEEE, dd/MM")} // Locale handling needed ideally
-          color="text-orange-500"
-          bgColor="bg-orange-50 dark:bg-orange-500/10"
-          href="/dashboard/todo"
-        />
-        <SummaryCard
-          icon={CalendarDays}
-          label={t("thisWeek")}
-          value={stats.weekTasks}
-          description={t("tasksToComplete")}
-          color="text-blue-500"
-          bgColor="bg-blue-50 dark:bg-blue-500/10"
-          href="/dashboard/todo"
-        />
-      </div>
-
-      {/* Quick Actions */}
-      <div>
-        <h3 className="text-sm font-medium text-muted-foreground mb-4">{t("quickActions")}</h3>
-        <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-          <QuickAction
-            href="/dashboard/boards"
-            icon={Folders}
-            title={t("manageBoards")}
-            description={t("manageBoardsDesc")}
-          />
-          <QuickAction
-            href="/dashboard/todo"
-            icon={CheckSquare}
-            title={t("todo")}
-            description={t("myTasksDesc")}
-          />
-          <QuickAction
-            href="/dashboard/users"
-            icon={BarChart3}
-            title={t("manageUsers")}
-            description={t("manageUsersDesc")}
-          />
-          <QuickAction
-            href="/dashboard/admin"
-            icon={LayoutDashboard}
-            title={t("admin")}
-            description={t("adminDesc")}
-          />
+      {/* Quick Actions - Modern List */}
+      <div className="pt-8 border-t border-dashed">
+        <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-6">
+          {t("quickActions")}
+        </h3>
+        <div className="flex flex-wrap gap-4">
+          <QuickActionMinimal href="/dashboard/boards" icon={Folders} title={t("manageBoards")} />
+          <QuickActionMinimal href="/dashboard/todo" icon={CheckSquare} title={t("todo")} />
+          <QuickActionMinimal href="/dashboard/users" icon={BarChart3} title={t("manageUsers")} />
+          <QuickActionMinimal href="/dashboard/admin" icon={LayoutDashboard} title={t("admin")} />
         </div>
       </div>
     </div>
@@ -333,103 +275,66 @@ export default function DashboardClient({ userName }: DashboardClientProps) {
 }
 
 // ============================================
-// SUB COMPONENTS
+// MODERN MINIMAL SUB-COMPONENTS
 // ============================================
 
-interface StatCardProps {
-  icon: React.ElementType;
-  label: string;
-  value: number;
-  href: string;
-  color: string;
-  highlight?: boolean;
-}
-
-function StatCard({ icon: Icon, label, value, href, color, highlight }: StatCardProps) {
-  return (
-    <Link
-      href={href}
-      className={cn(
-        "relative p-4 rounded-lg border bg-card hover:bg-muted/50 transition-all group overflow-hidden",
-        highlight && "ring-2 ring-red-500/50"
-      )}
-    >
-      <div
-        className={cn(
-          "absolute top-0 right-0 w-20 h-20 -mr-6 -mt-6 rounded-full opacity-10",
-          color
-        )}
-      />
-      <div className="relative">
-        <div className={cn("inline-flex p-2 rounded-lg mb-3", color, "bg-opacity-20")}>
-          <Icon className={cn("h-5 w-5", color.replace("bg-", "text-"))} />
-        </div>
-        <p className="text-2xl font-bold">{value}</p>
-        <p className="text-sm text-muted-foreground">{label}</p>
-      </div>
-    </Link>
-  );
-}
-
-interface SummaryCardProps {
-  icon: React.ElementType;
-  label: string;
-  value: number;
-  description: string;
-  color: string;
-  bgColor: string;
-  href: string;
-}
-
-function SummaryCard({
-  icon: Icon,
+function StatCardMinimal({
   label,
   value,
-  description,
-  color,
-  bgColor,
   href,
-}: SummaryCardProps) {
+  highlight,
+  subLabel,
+}: {
+  label: string;
+  value: number;
+  href: string;
+  highlight?: boolean;
+  subLabel?: string;
+}) {
   return (
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-4 p-4 rounded-lg border transition-colors hover:bg-muted/50",
-        bgColor
+        "flex flex-col p-6 rounded-2xl bg-card border shadow-sm hover:shadow-md transition-all",
+        highlight && "ring-2 ring-red-500/20 border-red-200 dark:border-red-900"
       )}
     >
-      <div className={cn("p-3 rounded-full", bgColor)}>
-        <Icon className={cn("h-6 w-6", color)} />
-      </div>
-      <div>
-        <p className={cn("text-2xl font-bold", value > 0 ? color : "")}>{value}</p>
-        <p className="text-sm font-medium">{label}</p>
-        <p className="text-xs text-muted-foreground">{description}</p>
+      <span
+        className={cn(
+          "text-3xl font-extrabold tracking-tight",
+          highlight ? "text-red-500" : "text-foreground"
+        )}
+      >
+        {value}
+      </span>
+      <div className="flex items-center justify-between mt-2">
+        <span className="text-sm font-medium text-muted-foreground">{label}</span>
+        {subLabel && (
+          <span className="text-xs font-semibold text-orange-500 bg-orange-100 dark:bg-orange-500/20 px-2 py-0.5 rounded-full">
+            {subLabel}
+          </span>
+        )}
       </div>
     </Link>
   );
 }
 
-interface QuickActionProps {
+function QuickActionMinimal({
+  href,
+  icon: Icon,
+  title,
+}: {
   href: string;
-  icon: React.ElementType;
+  icon: ElementType;
   title: string;
-  description: string;
-}
-
-function QuickAction({ href, icon: Icon, title, description }: QuickActionProps) {
+}) {
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 p-4 rounded-lg border hover:bg-muted/50 transition-colors group"
+      className="flex items-center gap-2 px-4 py-2 rounded-full border bg-card hover:bg-muted/50 transition-colors text-sm font-medium shadow-sm"
     >
-      <div className="p-2 rounded-lg bg-muted group-hover:bg-background transition-colors">
-        <Icon className="h-5 w-5 text-muted-foreground" />
-      </div>
-      <div className="min-w-0">
-        <p className="text-sm font-medium truncate">{title}</p>
-        <p className="text-xs text-muted-foreground truncate">{description}</p>
-      </div>
+      <Icon className="h-4 w-4 text-muted-foreground" />
+      {title}
     </Link>
   );
 }
