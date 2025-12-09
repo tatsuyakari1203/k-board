@@ -56,18 +56,12 @@ export default async function DashboardLayout({ children }: { children: React.Re
             <NavItem href="/dashboard/boards" icon={ClipboardList} label="Quản lý công việc" />
             <NavItem href="/dashboard/users" icon={Users} label="Nhân sự" />
             <NavItem href="/dashboard/reports" icon={FileText} label="Báo cáo" />
-            <NavItem href="/dashboard/settings" icon={Settings} label="Cài đặt" />
 
             {/* Admin section - only visible to admins */}
             {isAdmin && (
               <>
                 <div className="my-3 border-t" />
-                <NavItem
-                  href="/dashboard/admin"
-                  icon={Shield}
-                  label="Quản trị hệ thống"
-                  highlight
-                />
+                <NavItem href="/dashboard/admin" icon={Settings} label="Cài đặt" highlight />
               </>
             )}
           </nav>

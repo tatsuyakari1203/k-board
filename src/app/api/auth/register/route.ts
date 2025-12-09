@@ -3,7 +3,7 @@ import { connectDB } from "@/lib/db";
 import User from "@/models/user.model";
 import { getRegistrationMode, REGISTRATION_MODE } from "@/models/system-settings.model";
 import { registerSchema } from "@/lib/validations/auth";
-import { USER_ROLES, USER_STATUS } from "@/types/user";
+import { USER_ROLES, USER_STATUS, type UserRole } from "@/types/user";
 import { checkRateLimit } from "@/lib/rate-limit";
 
 export async function POST(request: NextRequest) {
@@ -27,10 +27,14 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
 
-    // Check registration mode
+    // Check for existing users to determine if this is the first user (First Run)
+    const userCount = await User.countDocuments({});
+    const isFirstUser = userCount === 0;
+
+    // Check registration mode (bypass if it's the first user)
     const registrationMode = await getRegistrationMode();
 
-    if (registrationMode === REGISTRATION_MODE.DISABLED) {
+    if (!isFirstUser && registrationMode === REGISTRATION_MODE.DISABLED) {
       return NextResponse.json(
         { error: "Đăng ký tài khoản hiện đang bị tắt. Vui lòng liên hệ quản trị viên." },
         { status: 403 }
@@ -42,25 +46,32 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingUser) {
-      return NextResponse.json(
-        { error: "Email đã được sử dụng" },
-        { status: 409 }
-      );
+      return NextResponse.json({ error: "Email đã được sử dụng" }, { status: 409 });
     }
 
-    // Determine status and isActive based on registration mode
-    const isAutoApprove = registrationMode === REGISTRATION_MODE.AUTO_APPROVE;
-    const status = isAutoApprove ? USER_STATUS.APPROVED : USER_STATUS.PENDING;
-    const isActive = isAutoApprove;
+    // Determine status, role and isActive
+    // If first user: Always ADMIN, APPROVED, ACTIVE
+    // Otherwise: Follow registration mode
+    const isAutoApprove = registrationMode === REGISTRATION_MODE.AUTO_APPROVE; // Default rule
+
+    let status = isAutoApprove ? USER_STATUS.APPROVED : USER_STATUS.PENDING;
+    let isActive = isAutoApprove;
+    let role: UserRole = USER_ROLES.USER;
+
+    if (isFirstUser) {
+      status = USER_STATUS.APPROVED;
+      isActive = true;
+      role = USER_ROLES.ADMIN;
+    }
 
     const user = await User.create({
       email: validated.data.email,
       name: validated.data.name,
       password: validated.data.password,
-      role: USER_ROLES.USER,
+      role: role,
       status,
       isActive,
-      ...(isAutoApprove && { approvedAt: new Date() }),
+      ...((isAutoApprove || isFirstUser) && { approvedAt: new Date() }),
     });
 
     // Return different messages based on mode
@@ -84,9 +95,6 @@ export async function POST(request: NextRequest) {
     );
   } catch (error) {
     console.error("Register error:", error);
-    return NextResponse.json(
-      { error: "Đã có lỗi xảy ra" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Đã có lỗi xảy ra" }, { status: 500 });
   }
 }

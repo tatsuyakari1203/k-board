@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
@@ -24,6 +24,8 @@ import { registerSchema, type RegisterInput } from "@/lib/validations/auth";
 export function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isSetupMode = searchParams.get("setup") === "true";
 
   const form = useForm<RegisterInput>({
     resolver: zodResolver(registerSchema),
@@ -59,14 +61,19 @@ export function RegisterForm() {
     }
   }
 
-  const inputClassName = "h-12 border-0 bg-secondary px-4 text-base shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring/30";
+  const inputClassName =
+    "h-12 border-0 bg-secondary px-4 text-base shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-2 focus-visible:ring-ring/30";
 
   return (
     <div className="w-full max-w-md">
       <div className="mb-10">
-        <h1 className="text-3xl font-semibold tracking-tight">Tạo tài khoản</h1>
+        <h1 className="text-3xl font-semibold tracking-tight">
+          {isSetupMode ? "Khởi tạo hệ thống" : "Tạo tài khoản"}
+        </h1>
         <p className="mt-3 text-base text-muted-foreground">
-          Bắt đầu sử dụng K-ERP miễn phí.
+          {isSetupMode
+            ? "Tạo tài khoản quản trị viên (Admin) đầu tiên cho hệ thống."
+            : "Bắt đầu sử dụng K-ERP miễn phí."}
         </p>
       </div>
 
@@ -97,9 +104,7 @@ export function RegisterForm() {
             name="email"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-base font-normal text-muted-foreground">
-                  Email
-                </FormLabel>
+                <FormLabel className="text-base font-normal text-muted-foreground">Email</FormLabel>
                 <FormControl>
                   <Input
                     type="email"
@@ -168,10 +173,7 @@ export function RegisterForm() {
 
       <p className="mt-10 text-center text-base text-muted-foreground">
         Đã có tài khoản?{" "}
-        <Link
-          href="/auth/login"
-          className="text-foreground underline-offset-4 hover:underline"
-        >
+        <Link href="/auth/login" className="text-foreground underline-offset-4 hover:underline">
           Đăng nhập
         </Link>
       </p>

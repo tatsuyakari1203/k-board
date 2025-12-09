@@ -1,8 +1,23 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { LoginForm } from "@/components/auth";
+import { connectDB } from "@/lib/db";
+import User from "@/models/user.model";
 
-export default function LoginPage() {
+async function checkSystemInitialization() {
+  await connectDB();
+  const count = await User.countDocuments({});
+  return count > 0;
+}
+
+export default async function LoginPage() {
+  const isInitialized = await checkSystemInitialization();
+
+  if (!isInitialized) {
+    redirect("/auth/register?setup=true");
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
