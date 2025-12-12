@@ -178,9 +178,13 @@ export function BoardCard({ board }: BoardCardProps) {
             </span>
           )}
           {board.role && (
-            <span className="flex items-center gap-1.5" title={tRoles(board.role)}>
-              {ROLE_ICONS[board.role]}
-              <span className="text-sm">{tRoles(board.role)}</span>
+            <span className="flex items-center gap-1.5" title={board.role}>
+              {ROLE_ICONS[board.role] || <Eye className="h-4 w-4 text-gray-500" />}
+              <span className="text-sm">
+                {tRoles(board.role) === board.role && board.role.includes(".")
+                  ? board.role
+                  : tRoles(board.role)}
+              </span>
             </span>
           )}
           <span className="ml-auto">

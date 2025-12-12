@@ -25,13 +25,14 @@ import {
   Activity,
 } from "lucide-react";
 import {
-  BOARD_ROLES,
+  // BOARD_ROLES, // Deprecated usage
   BOARD_VISIBILITY,
   type BoardRole,
   type BoardVisibility,
 } from "@/types/board-member";
 import { BoardActivityFeed } from "./BoardActivityFeed";
 import { useTranslations } from "next-intl";
+import { useBoardRoles } from "@/hooks/use-board-roles";
 
 interface BoardMember {
   _id: string;
@@ -111,7 +112,8 @@ export function BoardMembersModal({
   const [loading, setLoading] = useState(true);
   const [showAddForm, setShowAddForm] = useState(false);
   const [addMode, setAddMode] = useState<"direct" | "invite">("direct");
-  const [addRole, setAddRole] = useState<BoardRole>(BOARD_ROLES.VIEWER);
+  const { roles: availableRoles, loading: rolesLoading } = useBoardRoles(boardId);
+  const [addRole, setAddRole] = useState<string>("viewer");
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -134,6 +136,25 @@ export function BoardMembersModal({
   const [selectedUser, setSelectedUser] = useState<SystemUser | null>(null);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  const getRoleLabel = (roleSlug: string) => {
+    const roleDef = availableRoles.find((r) => r.slug === roleSlug);
+    // Prefer translation for system keys if available
+    // We can check if the slug matches standard keys
+    if (
+      ["owner", "admin", "editor", "viewer", "restricted_editor", "restricted_viewer"].includes(
+        roleSlug
+      )
+    ) {
+      return tRoles(roleSlug);
+    }
+    return roleDef?.name || roleSlug;
+  };
+
+  const getRoleIcon = (roleSlug: string) => {
+    // Use a default icon for unknown roles
+    return ROLE_ICONS[roleSlug as BoardRole] || <User className="h-4 w-4 text-gray-500" />;
+  };
 
   const fetchMembers = useCallback(async () => {
     try {
@@ -278,7 +299,10 @@ export function BoardMembersModal({
 
       setSelectedUser(null);
       setSearchQuery("");
-      setAddRole(BOARD_ROLES.VIEWER);
+      setSelectedUser(null);
+      setSearchQuery("");
+      setAddRole("viewer");
+      setShowAddForm(false);
       setShowAddForm(false);
 
       if (addMode === "invite") {
@@ -645,16 +669,13 @@ export function BoardMembersModal({
                     value={addRole}
                     onChange={(e) => setAddRole(e.target.value as BoardRole)}
                     className="flex-1 px-4 py-3 border rounded-lg bg-background text-base focus:outline-none focus:ring-2 focus:ring-ring/30"
+                    disabled={rolesLoading}
                   >
-                    <option value={BOARD_ROLES.VIEWER}>{tRoles("viewer")}</option>
-                    <option value={BOARD_ROLES.EDITOR}>{tRoles("editor")}</option>
-                    <option value={BOARD_ROLES.ADMIN}>{tRoles("admin")}</option>
-                    <option value={BOARD_ROLES.RESTRICTED_EDITOR}>
-                      {tRoles("restricted_editor")}
-                    </option>
-                    <option value={BOARD_ROLES.RESTRICTED_VIEWER}>
-                      {tRoles("restricted_viewer")}
-                    </option>
+                    {availableRoles.map((role) => (
+                      <option key={role.slug} value={role.slug}>
+                        {role.name}
+                      </option>
+                    ))}
                   </select>
                   <button
                     type="button"
@@ -714,7 +735,7 @@ export function BoardMembersModal({
                     <div>
                       <div className="text-sm font-medium">{invitation.user.name}</div>
                       <div className="text-xs text-muted-foreground">
-                        {invitation.user.email} • {tRoles(invitation.role)}
+                        {invitation.user.email} • {getRoleLabel(invitation.role)}
                       </div>
                     </div>
                   </div>
@@ -760,7 +781,7 @@ export function BoardMembersModal({
                       <div>
                         <div className="flex items-center gap-2">
                           <span className="font-medium text-base">{member.user.name}</span>
-                          {ROLE_ICONS[member.role]}
+                          {getRoleIcon(member.role)}
                         </div>
                         <span className="text-sm text-muted-foreground">{member.user.email}</span>
                       </div>
@@ -770,7 +791,7 @@ export function BoardMembersModal({
                       <Loader2 className="h-5 w-5 animate-spin" />
                     ) : member.isOwner ? (
                       <span className="text-sm text-muted-foreground px-3 py-1.5 bg-muted rounded-lg">
-                        {tRoles("owner")}
+                        {getRoleLabel(member.role)}
                       </span>
                     ) : canManageMembersState ? (
                       <div className="flex items-center gap-2">
@@ -782,15 +803,11 @@ export function BoardMembersModal({
                             }
                             className="appearance-none pr-7 pl-3 py-2 text-sm border rounded-lg bg-background cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring/30"
                           >
-                            <option value={BOARD_ROLES.VIEWER}>{tRoles("viewer")}</option>
-                            <option value={BOARD_ROLES.EDITOR}>{tRoles("editor")}</option>
-                            <option value={BOARD_ROLES.ADMIN}>{tRoles("admin")}</option>
-                            <option value={BOARD_ROLES.RESTRICTED_EDITOR}>
-                              {tRoles("restricted_editor")}
-                            </option>
-                            <option value={BOARD_ROLES.RESTRICTED_VIEWER}>
-                              {tRoles("restricted_viewer")}
-                            </option>
+                            {availableRoles.map((role) => (
+                              <option key={role.slug} value={role.slug}>
+                                {role.name}
+                              </option>
+                            ))}
                           </select>
                           <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                         </div>

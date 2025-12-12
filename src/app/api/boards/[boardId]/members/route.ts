@@ -117,6 +117,17 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const { email, role } = validated.data;
 
+    // Validate role exists
+    const { default: Role } = await import("@/models/role.model");
+    const roleExists = await Role.exists({
+      slug: role,
+      $or: [{ boardId: null, isSystem: true }, { boardId }],
+    });
+
+    if (!roleExists) {
+      return NextResponse.json({ error: "Vai trò không hợp lệ" }, { status: 400 });
+    }
+
     // Find user by email
     const user = await User.findOne({ email: email.toLowerCase() }).lean();
     if (!user) {

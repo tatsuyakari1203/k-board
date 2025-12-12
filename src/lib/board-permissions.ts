@@ -20,12 +20,32 @@ export interface BoardAccessResult {
 /**
  * Check if a user has access to a board and return their role/permissions
  */
+// Helper to convert DB permission codes to legacy BoardPermissions object
+function getBoardPermissionsFromCodes(codes: string[]): BoardPermissions {
+  const p = new Set(codes);
+  return {
+    canView: p.has("board.view"),
+    viewScope: p.has("view.scope.assigned") ? "assigned" : "all",
+    canCreateTasks: p.has("task.create"),
+    canEditTasks: p.has("task.edit"),
+    editScope: p.has("edit.scope.assigned") ? "assigned" : "all",
+    canDeleteTasks: p.has("task.delete"),
+    canEditBoard: p.has("board.edit"),
+    canManageMembers: p.has("members.manage"),
+    canDeleteBoard: p.has("board.delete"),
+  };
+}
+
+/**
+ * Check if a user has access to a board and return their role/permissions
+ */
 export async function checkBoardAccess(
   boardId: string,
   userId: string,
   userRole?: string
 ): Promise<BoardAccessResult> {
   await connectDB();
+  const { default: Role } = await import("@/models/role.model"); // Dynamic import to avoid cycles if any
 
   const noAccess: BoardAccessResult = {
     hasAccess: false,
@@ -43,11 +63,30 @@ export async function checkBoardAccess(
     }
   }
 
+  // Helper to fetch permissions for a role slug
+  const getPermissionsForSlug = async (slug: string, bid?: string) => {
+    // Try to find board-specific role first, then system role
+    const query = {
+      slug,
+      $or: [{ boardId: bid }, { boardId: null, isSystem: true }],
+    };
+    // Sort by boardId (desc) so board specific comes first if exists
+    const roleDoc = await Role.findOne(query).sort({ boardId: -1 }).lean();
+
+    if (roleDoc) {
+      return getBoardPermissionsFromCodes(roleDoc.permissions);
+    }
+    // Fallback to legacy constants if DB role missing (safety net)
+    console.warn(`Role ${slug} not found in DB, using legacy constants`);
+    return BOARD_ROLE_PERMISSIONS[slug as BoardRole] || null;
+  };
+
   if (isAdmin) {
+    const permissions = await getPermissionsForSlug(BOARD_ROLES.OWNER);
     return {
       hasAccess: true,
       role: BOARD_ROLES.OWNER, // Admin has owner privileges
-      permissions: BOARD_ROLE_PERMISSIONS[BOARD_ROLES.OWNER],
+      permissions,
       isOwner: false, // Not the creator, but has full access
     };
   }
@@ -59,13 +98,15 @@ export async function checkBoardAccess(
     return noAccess;
   }
 
+  // NOTE: In the original logic, owner gets OWNER role.
   const isOwner = board.ownerId.toString() === userId;
 
   if (isOwner) {
+    const permissions = await getPermissionsForSlug(BOARD_ROLES.OWNER);
     return {
       hasAccess: true,
       role: BOARD_ROLES.OWNER,
-      permissions: BOARD_ROLE_PERMISSIONS[BOARD_ROLES.OWNER],
+      permissions,
       isOwner: true,
     };
   }
@@ -74,10 +115,11 @@ export async function checkBoardAccess(
   const member = await BoardMember.findOne({ boardId, userId }).lean();
 
   if (member) {
+    const permissions = await getPermissionsForSlug(member.role, boardId);
     return {
       hasAccess: true,
       role: member.role,
-      permissions: BOARD_ROLE_PERMISSIONS[member.role],
+      permissions,
       isOwner: false,
     };
   }
@@ -85,10 +127,11 @@ export async function checkBoardAccess(
   // Check board visibility for non-members
   if (board.visibility === "workspace") {
     // All authenticated users can view workspace boards
+    const permissions = await getPermissionsForSlug(BOARD_ROLES.VIEWER);
     return {
       hasAccess: true,
       role: BOARD_ROLES.VIEWER,
-      permissions: BOARD_ROLE_PERMISSIONS[BOARD_ROLES.VIEWER],
+      permissions,
       isOwner: false,
     };
   }
@@ -146,14 +189,10 @@ export async function getUserAccessibleBoardIds(userId: string): Promise<string[
   }
 
   // Get boards owned by user
-  const ownedBoards = await Board.find({ ownerId: userId })
-    .select("_id")
-    .lean();
+  const ownedBoards = await Board.find({ ownerId: userId }).select("_id").lean();
 
   // Get boards user is a member of
-  const memberBoards = await BoardMember.find({ userId })
-    .select("boardId")
-    .lean();
+  const memberBoards = await BoardMember.find({ userId }).select("boardId").lean();
 
   // Get workspace boards (visible to all users)
   const workspaceBoards = await Board.find({
@@ -175,10 +214,7 @@ export async function getUserAccessibleBoardIds(userId: string): Promise<string[
 /**
  * Add owner as a board member when board is created
  */
-export async function addBoardOwnerAsMember(
-  boardId: string,
-  ownerId: string
-): Promise<void> {
+export async function addBoardOwnerAsMember(boardId: string, ownerId: string): Promise<void> {
   await connectDB();
 
   await BoardMember.findOneAndUpdate(

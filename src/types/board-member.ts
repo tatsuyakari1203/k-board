@@ -1,13 +1,14 @@
 // Board Member Types (shared between client and server)
 
 // Board member roles with permission levels
-export type BoardRole = "owner" | "admin" | "editor" | "viewer" | "restricted_editor" | "restricted_viewer";
+// Board member roles with permission levels
+export type BoardRole = string; // Changed from enum to string to support dynamic roles
 
 export const BOARD_ROLES = {
-  OWNER: "owner" as BoardRole,           // Full control
-  ADMIN: "admin" as BoardRole,           // Manage members, settings
-  EDITOR: "editor" as BoardRole,         // Edit all tasks
-  VIEWER: "viewer" as BoardRole,         // View all tasks
+  OWNER: "owner" as BoardRole, // Full control
+  ADMIN: "admin" as BoardRole, // Manage members, settings
+  EDITOR: "editor" as BoardRole, // Edit all tasks
+  VIEWER: "viewer" as BoardRole, // View all tasks
   RESTRICTED_EDITOR: "restricted_editor" as BoardRole, // Edit assigned tasks only
   RESTRICTED_VIEWER: "restricted_viewer" as BoardRole, // View assigned tasks only
 } as const;
@@ -109,7 +110,7 @@ export const BOARD_ROLE_PERMISSIONS: Record<BoardRole, BoardPermissions> = {
 export type BoardVisibility = "private" | "workspace";
 
 export const BOARD_VISIBILITY = {
-  PRIVATE: "private" as BoardVisibility,   // Only owner and members can access
+  PRIVATE: "private" as BoardVisibility, // Only owner and members can access
   WORKSPACE: "workspace" as BoardVisibility, // All workspace users can view
 } as const;
 
@@ -149,10 +150,7 @@ export function getPermissionsForRole(role: BoardRole): BoardPermissions {
 }
 
 // Helper function to check if a role has a specific permission
-export function hasPermission(
-  role: BoardRole,
-  permission: keyof BoardPermissions
-): boolean {
+export function hasPermission(role: BoardRole, permission: keyof BoardPermissions): boolean {
   const value = BOARD_ROLE_PERMISSIONS[role][permission];
   // viewScope and editScope are strings, not booleans
   if (permission === "viewScope" || permission === "editScope") {
