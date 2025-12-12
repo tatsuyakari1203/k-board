@@ -84,11 +84,11 @@ async function cleanup() {
   console.log(`\n${YELLOW}🧹 CLEANING UP TEST DATA...${RESET}`);
   const { client: admin } = createClient();
 
-  let adminEmail = "admin@k-erp.com";
+  let adminEmail = "admin@k-board.com";
   // Try login
   if (!(await login(admin, adminEmail))) {
     console.log(
-      `${YELLOW}   ⚠ 'admin@k-erp.com' not found, trying 'tatsuyakari@gmail.com'...${RESET}`
+      `${YELLOW}   ⚠ 'admin@k-board.com' not found, trying 'tatsuyakari@gmail.com'...${RESET}`
     );
     adminEmail = "tatsuyakari@gmail.com";
     if (!(await login(admin, adminEmail))) {
@@ -147,7 +147,7 @@ async function runTests() {
     console.log(`\n${BLUE}▶ SCENARIO 1: MANAGER BOARD LIFECYCLE${RESET}`);
     const { client: manager } = createClient();
 
-    if (await login(manager, "manager@k-erp.com")) {
+    if (await login(manager, "manager@k-board.com")) {
       // 1. Create Board
       const createRes = await check(
         "Create 'Workflow Test Board'",
@@ -198,7 +198,7 @@ async function runTests() {
     console.log(`\n${BLUE}▶ SCENARIO 2: STAFF TASK WORKFLOW${RESET}`);
     const { client: staff } = createClient();
 
-    if (await login(staff, "staff@k-erp.com")) {
+    if (await login(staff, "staff@k-board.com")) {
       // Find target board
       const boardsRes = await staff.get("/api/boards");
       const boards = (
@@ -280,7 +280,7 @@ async function runTests() {
     console.log(`\n${BLUE}▶ SCENARIO 3: SECURITY REGRESSION (USER/VIEWER)${RESET}`);
     const { client: user } = createClient();
 
-    if (await login(user, "user@k-erp.com")) {
+    if (await login(user, "user@k-board.com")) {
       // Find "Công việc nội bộ"
       const boardsRes = await user.get("/api/boards");
       const boards = (
@@ -321,7 +321,7 @@ async function runTests() {
     console.log(`\n${BLUE}▶ SCENARIO 4: PROPERTY MANAGEMENT (COLUMN CREATION)${RESET}`);
 
     // 1. Manager (Owner) tries to add a property
-    if (await login(manager, "manager@k-erp.com")) {
+    if (await login(manager, "manager@k-board.com")) {
       const boardsRes = await manager.get("/api/boards");
       const boards = (
         Array.isArray(boardsRes.data) ? boardsRes.data : boardsRes.data.boards
@@ -354,7 +354,7 @@ async function runTests() {
     }
 
     // 2. Staff (Editor) tries to add a property to "Công việc nội bộ"
-    if (await login(staff, "staff@k-erp.com")) {
+    if (await login(staff, "staff@k-board.com")) {
       const boardsRes = await staff.get("/api/boards");
       const boards = (
         Array.isArray(boardsRes.data) ? boardsRes.data : boardsRes.data.boards

@@ -7,7 +7,7 @@ const USERS = [
   // Admins
   {
     name: "Nguyễn Văn Admin",
-    email: "admin@k-erp.com",
+    email: "admin@k-board.com",
     password: "123456",
     role: "admin",
     department: "Ban Giám đốc",
@@ -17,7 +17,7 @@ const USERS = [
   // Managers
   {
     name: "Trần Thị Hương",
-    email: "huong.tran@k-erp.com",
+    email: "huong.tran@k-board.com",
     password: "123456",
     role: "manager",
     department: "Phòng Kỹ thuật",
@@ -26,7 +26,7 @@ const USERS = [
   },
   {
     name: "Lê Văn Minh",
-    email: "minh.le@k-erp.com",
+    email: "minh.le@k-board.com",
     password: "123456",
     role: "manager",
     department: "Phòng Kinh doanh",
@@ -36,7 +36,7 @@ const USERS = [
   // Staff
   {
     name: "Phạm Thị Lan",
-    email: "lan.pham@k-erp.com",
+    email: "lan.pham@k-board.com",
     password: "123456",
     role: "staff",
     department: "Phòng Kỹ thuật",
@@ -45,7 +45,7 @@ const USERS = [
   },
   {
     name: "Hoàng Văn Nam",
-    email: "nam.hoang@k-erp.com",
+    email: "nam.hoang@k-board.com",
     password: "123456",
     role: "staff",
     department: "Phòng Kỹ thuật",
@@ -54,7 +54,7 @@ const USERS = [
   },
   {
     name: "Ngô Thị Mai",
-    email: "mai.ngo@k-erp.com",
+    email: "mai.ngo@k-board.com",
     password: "123456",
     role: "staff",
     department: "Phòng Kinh doanh",
@@ -63,7 +63,7 @@ const USERS = [
   },
   {
     name: "Đỗ Văn Tùng",
-    email: "tung.do@k-erp.com",
+    email: "tung.do@k-board.com",
     password: "123456",
     role: "staff",
     department: "Phòng Kế toán",
@@ -72,7 +72,7 @@ const USERS = [
   },
   {
     name: "Vũ Thị Hạnh",
-    email: "hanh.vu@k-erp.com",
+    email: "hanh.vu@k-board.com",
     password: "123456",
     role: "staff",
     department: "Phòng Nhân sự",
@@ -82,7 +82,7 @@ const USERS = [
   // Users
   {
     name: "Bùi Văn Đức",
-    email: "duc.bui@k-erp.com",
+    email: "duc.bui@k-board.com",
     password: "123456",
     role: "user",
     department: "Phòng Kỹ thuật",
@@ -91,7 +91,7 @@ const USERS = [
   },
   {
     name: "Đinh Thị Nga",
-    email: "nga.dinh@k-erp.com",
+    email: "nga.dinh@k-board.com",
     password: "123456",
     role: "user",
     department: "Phòng Kinh doanh",

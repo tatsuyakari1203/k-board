@@ -22,9 +22,15 @@
 - **Custom Properties**: 12 fully customizable property types:
   - Basic: Text, Number, Select, Multi-select, Date, Checkbox
   - Advanced: Person (Assignment), Status, Currency, Rich Text, Attachment, User
-- **Multiple Views**: Switch seamlessly between:
-  - **Table View**: Spreadsheet-like editing with bulk actions
-  - **Kanban View**: Drag-and-drop workflow visualization
+
+## Features
+
+- **Dynamic Kanban Board**: Drag and drop tasks, customizable columns.
+- **Role-Based Access Control (RBAC)**: Flexible permission system (Owner, Admin, Editor, Viewer).
+- **Internationalization**: Support for multiple languages (English/Vietnamese).
+- **Docker Ready**: Easy deployment with Docker Compose.
+- **Table View**: Spreadsheet-like editing with bulk actions
+- **Kanban View**: Drag-and-drop workflow visualization
 - **Drag & Drop**: Native drag-and-drop support for tasks, columns, files, and ordering
 - **Advanced Filtering**: Complex boolean logic (AND/OR) filtering
 - **Aggregation**: Real-time column statistics (Sum, Average, Min, Max, Count)
@@ -100,7 +106,7 @@ Update `.env.local` with your credentials:
 
 ```env
 # Database
-MONGODB_URI=mongodb://localhost:27017/k-erp
+MONGODB_URI=mongodb://localhost:27017/k-board
 
 # Auth
 AUTH_SECRET="your-super-secret-key-at-least-32-chars"
@@ -130,7 +136,7 @@ Visit `http://localhost:3000` to see the app.
 
 The seed script creates a default administrator account:
 
-- **Email**: `admin@k-erp.local`
+- **Email**: `admin@k-board.local`
 - **Password**: `Admin@123`
 
 > **Note**: Please change this password immediately after logging in via the User Profile settings.

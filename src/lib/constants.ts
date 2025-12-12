@@ -2,7 +2,7 @@
 // APPLICATION CONSTANTS
 // ============================================
 
-export const APP_NAME = "K-ERP";
+export const APP_NAME = "K-Board";
 export const APP_DESCRIPTION = "Hệ thống quản lý doanh nghiệp";
 
 // ============================================
@@ -23,7 +23,11 @@ export const FILE_UPLOAD = {
   MAX_SIZE: 5 * 1024 * 1024, // 5MB
   MAX_SIZE_LABEL: "5MB",
   ALLOWED_IMAGE_TYPES: ["image/jpeg", "image/png", "image/gif", "image/webp"],
-  ALLOWED_DOCUMENT_TYPES: ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+  ALLOWED_DOCUMENT_TYPES: [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ],
   ALLOWED_ALL_TYPES: [
     "image/jpeg",
     "image/png",
@@ -89,14 +93,54 @@ export const STATUS_COLORS = {
 } as const;
 
 export const PROPERTY_COLORS = [
-  { id: "gray", bg: "bg-gray-100", text: "text-gray-800", dark: "dark:bg-gray-800 dark:text-gray-200" },
-  { id: "red", bg: "bg-red-100", text: "text-red-800", dark: "dark:bg-red-900/40 dark:text-red-300" },
-  { id: "orange", bg: "bg-orange-100", text: "text-orange-800", dark: "dark:bg-orange-900/40 dark:text-orange-300" },
-  { id: "yellow", bg: "bg-yellow-100", text: "text-yellow-800", dark: "dark:bg-yellow-900/40 dark:text-yellow-300" },
-  { id: "green", bg: "bg-green-100", text: "text-green-800", dark: "dark:bg-green-900/40 dark:text-green-300" },
-  { id: "blue", bg: "bg-blue-100", text: "text-blue-800", dark: "dark:bg-blue-900/40 dark:text-blue-300" },
-  { id: "purple", bg: "bg-purple-100", text: "text-purple-800", dark: "dark:bg-purple-900/40 dark:text-purple-300" },
-  { id: "pink", bg: "bg-pink-100", text: "text-pink-800", dark: "dark:bg-pink-900/40 dark:text-pink-300" },
+  {
+    id: "gray",
+    bg: "bg-gray-100",
+    text: "text-gray-800",
+    dark: "dark:bg-gray-800 dark:text-gray-200",
+  },
+  {
+    id: "red",
+    bg: "bg-red-100",
+    text: "text-red-800",
+    dark: "dark:bg-red-900/40 dark:text-red-300",
+  },
+  {
+    id: "orange",
+    bg: "bg-orange-100",
+    text: "text-orange-800",
+    dark: "dark:bg-orange-900/40 dark:text-orange-300",
+  },
+  {
+    id: "yellow",
+    bg: "bg-yellow-100",
+    text: "text-yellow-800",
+    dark: "dark:bg-yellow-900/40 dark:text-yellow-300",
+  },
+  {
+    id: "green",
+    bg: "bg-green-100",
+    text: "text-green-800",
+    dark: "dark:bg-green-900/40 dark:text-green-300",
+  },
+  {
+    id: "blue",
+    bg: "bg-blue-100",
+    text: "text-blue-800",
+    dark: "dark:bg-blue-900/40 dark:text-blue-300",
+  },
+  {
+    id: "purple",
+    bg: "bg-purple-100",
+    text: "text-purple-800",
+    dark: "dark:bg-purple-900/40 dark:text-purple-300",
+  },
+  {
+    id: "pink",
+    bg: "bg-pink-100",
+    text: "text-pink-800",
+    dark: "dark:bg-pink-900/40 dark:text-pink-300",
+  },
 ] as const;
 
 // ============================================
@@ -161,7 +205,8 @@ export const VALIDATION_MESSAGES = {
   REQUIRED: "Trường này là bắt buộc",
   EMAIL_INVALID: "Email không hợp lệ",
   PASSWORD_MIN: "Mật khẩu phải có ít nhất 6 ký tự",
-  PASSWORD_STRONG: "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt",
+  PASSWORD_STRONG:
+    "Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt",
   PHONE_INVALID: "Số điện thoại không hợp lệ",
   URL_INVALID: "URL không hợp lệ",
   FILE_TOO_LARGE: `File không được vượt quá ${FILE_UPLOAD.MAX_SIZE_LABEL}`,

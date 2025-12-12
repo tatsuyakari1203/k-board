@@ -15,7 +15,7 @@ const SAMPLE_TASKS = [
     soDienThoai: "0901234567",
     ngayNhan: new Date("2024-11-15"),
     ngayHenTra: new Date("2024-11-22"),
-    assignee: "lan.pham@k-erp.com", // Kỹ sư đo đạc
+    assignee: "lan.pham@k-board.com", // Kỹ sư đo đạc
     ghiChu: "Khách hàng yêu cầu đo gấp",
   },
   {
@@ -28,7 +28,7 @@ const SAMPLE_TASKS = [
     soDienThoai: "0912345678",
     ngayNhan: new Date("2024-11-20"),
     ngayHenTra: new Date("2024-11-27"),
-    assignee: "nam.hoang@k-erp.com", // Kỹ sư trắc địa
+    assignee: "nam.hoang@k-board.com", // Kỹ sư trắc địa
     ghiChu: "",
   },
   {
@@ -41,7 +41,7 @@ const SAMPLE_TASKS = [
     soDienThoai: "0283456789",
     ngayNhan: new Date("2024-11-18"),
     ngayHenTra: new Date("2024-12-18"),
-    assignee: "huong.tran@k-erp.com", // Trưởng phòng
+    assignee: "huong.tran@k-board.com", // Trưởng phòng
     ghiChu: "Dự án lớn, cần phối hợp nhiều người",
   },
   {
@@ -54,7 +54,7 @@ const SAMPLE_TASKS = [
     soDienThoai: "0923456789",
     ngayNhan: new Date("2024-11-25"),
     ngayHenTra: new Date("2024-12-02"),
-    assignee: "lan.pham@k-erp.com",
+    assignee: "lan.pham@k-board.com",
     ghiChu: "Cần xác nhận ranh với hàng xóm",
   },
   {
@@ -67,7 +67,7 @@ const SAMPLE_TASKS = [
     soDienThoai: "0934567890",
     ngayNhan: new Date("2024-11-26"),
     ngayHenTra: new Date("2024-12-03"),
-    assignee: "nam.hoang@k-erp.com",
+    assignee: "nam.hoang@k-board.com",
     ghiChu: "Đất nông nghiệp, khó tiếp cận",
   },
   {
@@ -80,7 +80,7 @@ const SAMPLE_TASKS = [
     soDienThoai: "0945678901",
     ngayNhan: new Date("2024-11-10"),
     ngayHenTra: new Date("2024-12-10"),
-    assignee: "huong.tran@k-erp.com",
+    assignee: "huong.tran@k-board.com",
     ghiChu: "20 lô, mỗi lô ~250m2",
   },
   {
@@ -93,7 +93,7 @@ const SAMPLE_TASKS = [
     soDienThoai: "0283789012",
     ngayNhan: new Date("2024-11-05"),
     ngayHenTra: new Date("2024-12-05"),
-    assignee: "minh.le@k-erp.com", // Trưởng phòng KD
+    assignee: "minh.le@k-board.com", // Trưởng phòng KD
     ghiChu: "Chờ quyết định của UBND",
   },
   {
@@ -106,7 +106,7 @@ const SAMPLE_TASKS = [
     soDienThoai: "0956789012",
     ngayNhan: new Date("2024-10-20"),
     ngayHenTra: new Date("2024-11-20"),
-    assignee: "lan.pham@k-erp.com",
+    assignee: "lan.pham@k-board.com",
     ghiChu: "Đã nộp hồ sơ",
   },
 ];
@@ -160,7 +160,7 @@ async function seedBoard() {
     const boardMembersCollection = db.collection("boardmembers");
 
     // Get admin user
-    const admin = await usersCollection.findOne({ email: "admin@k-erp.com" });
+    const admin = await usersCollection.findOne({ email: "admin@k-board.com" });
     if (!admin) {
       console.error("Admin user not found! Run seed-users.js first.");
       process.exit(1);
@@ -221,10 +221,10 @@ async function seedBoard() {
 
     // Add board members
     const staffEmails = [
-      "huong.tran@k-erp.com",
-      "minh.le@k-erp.com",
-      "lan.pham@k-erp.com",
-      "nam.hoang@k-erp.com",
+      "huong.tran@k-board.com",
+      "minh.le@k-board.com",
+      "lan.pham@k-board.com",
+      "nam.hoang@k-board.com",
     ];
 
     // Add admin as owner

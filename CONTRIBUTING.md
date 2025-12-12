@@ -1,6 +1,6 @@
-# Contributing to K-Board
+# Hướng dẫn đóng góp cho K-Board
 
-Cảm ơn bạn đã quan tâm đến việc đóng góp cho K-Board! 🎉
+Cảm ơn bạn đã quan tâm đến việc đóng góp cho **K-Board**! Chúng tôi hoan nghênh mọi sự đóng góp từ cộng đồng.
 
 ## 📋 Mục lục
 
@@ -24,13 +24,13 @@ Cảm ơn bạn đã quan tâm đến việc đóng góp cho K-Board! 🎉
 
 ## 🚀 Bắt đầu
 
-### 1. Fork và Clone
+### 2. Cài đặt môi trường
 
-```bash
-# Fork repo trên GitHub, sau đó:
-git clone https://github.com/YOUR_USERNAME/K-ERP.git
-cd K-ERP
-```
+1.  **Clone repository**:
+    ```bash
+    git clone https://github.com/tatsuyakari1203/k-board.git
+    cd k-board
+    ```
 
 ### 2. Cài đặt Dependencies
 
@@ -242,7 +242,7 @@ Example: `feat(kanban): add column aggregations`
 
 ## ❓ Câu hỏi?
 
-Nếu có câu hỏi, hãy tạo [Issue](https://github.com/k4ris-su/K-ERP/issues) với label `question`.
+Nếu có câu hỏi, hãy tạo [Issue](https://github.com/k4ris-su/K-Board/issues) với label `question`.
 
 ---
 

@@ -19,21 +19,21 @@ import { PropertyType } from "@/types/board";
 const TEST_USERS = [
   {
     name: "Trần Thị Hương",
-    email: "manager@k-erp.com",
+    email: "manager@k-board.com",
     role: "manager",
     department: "Phòng Kỹ thuật",
     position: "Trưởng phòng",
   },
   {
     name: "Phạm Thị Lan",
-    email: "staff@k-erp.com",
+    email: "staff@k-board.com",
     role: "staff",
     department: "Phòng Kỹ thuật",
     position: "Kỹ sư đo đạc",
   },
   {
     name: "Nguyễn Văn User",
-    email: "user@k-erp.com",
+    email: "user@k-board.com",
     role: "user",
     department: "Phòng Kinh doanh",
     position: "Thực tập sinh",
@@ -56,7 +56,7 @@ const SURVEY_TASKS = [
     soDienThoai: "0901234567",
     ngayNhan: formatDate(subDays(today, 10)),
     ngayHenTra: formatDate(subDays(today, 3)), // Overdue if not completed (but status is completed)
-    assigneeEmail: "staff@k-erp.com",
+    assigneeEmail: "staff@k-board.com",
     ghiChu: "Khách hàng yêu cầu đo gấp",
   },
   {
@@ -69,7 +69,7 @@ const SURVEY_TASKS = [
     soDienThoai: "0912345678",
     ngayNhan: formatDate(subDays(today, 5)),
     ngayHenTra: formatDate(addDays(today, 2)), // Due heavily soon
-    assigneeEmail: "manager@k-erp.com",
+    assigneeEmail: "manager@k-board.com",
     ghiChu: "",
   },
   {
@@ -82,7 +82,7 @@ const SURVEY_TASKS = [
     soDienThoai: "0283456789",
     ngayNhan: formatDate(subDays(today, 2)),
     ngayHenTra: formatDate(addDays(today, 30)), // Plenty of time
-    assigneeEmail: "staff@k-erp.com",
+    assigneeEmail: "staff@k-board.com",
     ghiChu: "Dự án lớn, cần phối hợp nhiều người",
   },
 ];
@@ -107,7 +107,7 @@ async function seed() {
     } else {
       console.log("Creating new admin...");
       admin = await User.create({
-        email: "admin@k-erp.com",
+        email: "admin@k-board.com",
         name: "Administrator",
         password: "admin123456", // Will be hashed by pre-save hook
         role: USER_ROLES.ADMIN,
@@ -115,7 +115,7 @@ async function seed() {
         isActive: true,
         approvedAt: new Date(),
       });
-      console.log("✅ Created admin: admin@k-erp.com / admin123456");
+      console.log("✅ Created admin: admin@k-board.com / admin123456");
     }
 
     if (!admin) throw new Error("Failed to resolve admin user");
@@ -356,8 +356,8 @@ async function seed() {
     const privateBoardName = "Dự án Mật (Private)";
     const existingPrivate = await Board.findOne({ name: privateBoardName });
     if (!existingPrivate) {
-      const manager = getUser("manager@k-erp.com");
-      const staff = getUser("staff@k-erp.com");
+      const manager = getUser("manager@k-board.com");
+      const staff = getUser("staff@k-board.com");
 
       if (manager && staff) {
         const props = [{ id: uuidv4(), name: "Status", type: PropertyType.TEXT, order: 0 }];

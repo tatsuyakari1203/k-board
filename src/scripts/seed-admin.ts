@@ -1,7 +1,12 @@
 import "dotenv/config";
 import { connectDB } from "@/lib/db";
 import User from "@/models/user.model";
-import { getSetting, setSetting, SETTING_KEYS, REGISTRATION_MODE } from "@/models/system-settings.model";
+import {
+  getSetting,
+  setSetting,
+  SETTING_KEYS,
+  REGISTRATION_MODE,
+} from "@/models/system-settings.model";
 import { USER_ROLES, USER_STATUS } from "@/types/user";
 
 async function seedAdmin() {
@@ -20,14 +25,14 @@ async function seedAdmin() {
           {
             status: USER_STATUS.APPROVED,
             isActive: true,
-            approvedAt: new Date()
+            approvedAt: new Date(),
           }
         );
         console.log("Updated existing admin to approved status");
       }
     } else {
       const admin = await User.create({
-        email: "admin@k-erp.com",
+        email: "admin@k-board.com",
         name: "Administrator",
         password: "admin123456",
         role: USER_ROLES.ADMIN,
@@ -45,15 +50,11 @@ async function seedAdmin() {
     // Initialize default system settings
     const existingMode = await getSetting(SETTING_KEYS.USER_REGISTRATION_MODE);
     if (!existingMode) {
-      await setSetting(
-        SETTING_KEYS.USER_REGISTRATION_MODE,
-        REGISTRATION_MODE.MANUAL_APPROVE
-      );
+      await setSetting(SETTING_KEYS.USER_REGISTRATION_MODE, REGISTRATION_MODE.MANUAL_APPROVE);
       console.log("Default registration mode set to: manual_approve");
     } else {
       console.log("Registration mode already set:", existingMode);
     }
-
   } catch (error) {
     console.error("Error seeding admin:", error);
   } finally {
