@@ -20,19 +20,19 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-const registerSchema = z.object({
-  name: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
-  email: z.string().email("Email không hợp lệ"),
-  password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
-});
+const registerSchema = z
+  .object({
+    name: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
+    email: z.string().email("Email không hợp lệ"),
+    password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
+    confirmPassword: z.string().min(6, "Mật khẩu xác nhận phải có ít nhất 6 ký tự"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Mật khẩu không khớp",
+    path: ["confirmPassword"],
+  });
 
 export function RegisterForm() {
   const router = useRouter();
@@ -46,6 +46,7 @@ export function RegisterForm() {
       name: "",
       email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
@@ -61,6 +62,17 @@ export function RegisterForm() {
 
       if (!res.ok) {
         const data = await res.json();
+        // Handle Zod validation errors from backend
+        if (data.details && data.details.fieldErrors) {
+          const fieldErrors = data.details.fieldErrors;
+          Object.keys(fieldErrors).forEach((key) => {
+            form.setError(key as keyof z.infer<typeof registerSchema>, {
+              type: "server",
+              message: fieldErrors[key]?.[0],
+            });
+          });
+          throw new Error("Dữ liệu không hợp lệ");
+        }
         throw new Error(data.error || "Đăng ký thất bại");
       }
 
@@ -68,9 +80,9 @@ export function RegisterForm() {
       router.push("/auth/login");
     } catch (error) {
       if (error instanceof Error) {
-         showToast.error(error.message);
+        showToast.error(error.message);
       } else {
-         showToast.error("Đã có lỗi xảy ra");
+        showToast.error("Đã có lỗi xảy ra");
       }
     } finally {
       setIsLoading(false);
@@ -82,7 +94,10 @@ export function RegisterForm() {
       <CardHeader>
         <CardTitle className="text-2xl">{t("register")}</CardTitle>
         <CardDescription>
-          {t("dontHaveAccount")} <Link href="/auth/login" className="underline">{t("login")}</Link>
+          {t("dontHaveAccount")}{" "}
+          <Link href="/auth/login" className="underline">
+            {t("login")}
+          </Link>
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -120,6 +135,19 @@ export function RegisterForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t("password")}</FormLabel>
+                  <FormControl>
+                    <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t("confirmPasswordLabel")}</FormLabel>
                   <FormControl>
                     <Input type="password" {...field} />
                   </FormControl>

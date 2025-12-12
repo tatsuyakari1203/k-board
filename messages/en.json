@@ -17,6 +17,7 @@
     "register": "Register",
     "logout": "Logout",
     "emailLabel": "Email",
+    "password": "Password",
     "passwordLabel": "Password",
     "confirmPasswordLabel": "Confirm Password",
     "forgotPassword": "Forgot password?",
@@ -43,7 +44,18 @@
     "uploadSuccess": "Image uploaded successfully",
     "uploadError": "Failed to upload image",
     "profileUpdated": "Profile updated successfully",
-    "updateError": "Failed to update profile"
+    "updateError": "Failed to update profile",
+    "security": "Security",
+    "currentPassword": "Current Password",
+    "enterCurrentPassword": "Enter current password",
+    "newPassword": "New Password",
+    "enterNewPassword": "Enter new password",
+    "confirmNewPassword": "Confirm New Password",
+    "enterConfirmNewPassword": "Confirm your new password",
+    "changePassword": "Change Password",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "passwordTooShort": "Password must be at least 6 characters",
+    "passwordUpdated": "Password updated successfully"
   },
   "Dashboard": {
     "home": "Home",
