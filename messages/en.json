@@ -648,5 +648,17 @@
       "members_manage": "Manage Members",
       "board_delete": "Delete Board"
     }
+  },
+  "Validation": {
+    "nameMin": "Name must be at least 2 characters",
+    "emailInvalid": "Invalid email address",
+    "passwordMin": "Password must be at least 6 characters",
+    "confirmPasswordMin": "Confirm password must be at least 6 characters",
+    "passwordsMismatch": "Passwords do not match",
+    "passwordRequired": "Password is required",
+    "invalidData": "Invalid data",
+    "registerSuccess": "Registration successful! Redirecting...",
+    "loginSuccess": "Login successful!",
+    "loginError": "Invalid email or password"
   }
 }

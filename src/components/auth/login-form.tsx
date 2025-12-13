@@ -20,19 +20,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 
-const loginSchema = z.object({
-  email: z.string().email("Email không hợp lệ"),
-  password: z.string().min(1, "Vui lòng nhập mật khẩu"),
-});
+const createLoginSchema = (t: (key: string) => string) =>
+  z.object({
+    email: z.string().email(t("emailInvalid")),
+    password: z.string().min(1, t("passwordRequired")),
+  });
 
 export function LoginForm() {
   const [isLoading, setIsLoading] = useState(false);
@@ -41,8 +36,13 @@ export function LoginForm() {
   const callbackUrl = searchParams.get("callbackUrl");
   const t = useTranslations("Auth");
   const tCommon = useTranslations("Common");
+  const tVal = useTranslations("Validation");
 
-  const form = useForm<z.infer<typeof loginSchema>>({
+  // Create schema
+  const loginSchema = createLoginSchema(tVal);
+  type LoginFormValues = z.infer<typeof loginSchema>;
+
+  const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
@@ -50,13 +50,13 @@ export function LoginForm() {
     },
   });
 
-  async function onSubmit(data: z.infer<typeof loginSchema>) {
+  async function onSubmit(data: LoginFormValues) {
     setIsLoading(true);
     try {
       await login(data.email, data.password, callbackUrl || undefined);
-      showToast.success("Đăng nhập thành công!");
+      showToast.success(tVal("loginSuccess"));
     } catch {
-      showToast.error("Email hoặc mật khẩu không đúng");
+      showToast.error(tVal("loginError"));
     } finally {
       setIsLoading(false);
     }
@@ -67,7 +67,10 @@ export function LoginForm() {
       <CardHeader>
         <CardTitle className="text-2xl">{t("login")}</CardTitle>
         <CardDescription>
-          {t("dontHaveAccount")} <Link href="/auth/register" className="underline">{t("register")}</Link>
+          {t("dontHaveAccount")}{" "}
+          <Link href="/auth/register" className="underline">
+            {t("register")}
+          </Link>
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -110,10 +113,10 @@ export function LoginForm() {
               )}
             </Button>
             <div className="mt-4 text-center text-sm">
-                 <Link href="/auth/forgot-password" className="underline text-muted-foreground">
-                     {t("forgotPassword")}
-                 </Link>
-             </div>
+              <Link href="/auth/forgot-password" className="underline text-muted-foreground">
+                {t("forgotPassword")}
+              </Link>
+            </div>
           </form>
         </Form>
       </CardContent>

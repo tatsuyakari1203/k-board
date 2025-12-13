@@ -23,17 +23,18 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-const registerSchema = z
-  .object({
-    name: z.string().min(2, "Tên phải có ít nhất 2 ký tự"),
-    email: z.string().email("Email không hợp lệ"),
-    password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
-    confirmPassword: z.string().min(6, "Mật khẩu xác nhận phải có ít nhất 6 ký tự"),
-  })
-  .refine((data) => data.password === data.confirmPassword, {
-    message: "Mật khẩu không khớp",
-    path: ["confirmPassword"],
-  });
+const createRegisterSchema = (t: (key: string) => string) =>
+  z
+    .object({
+      name: z.string().min(2, t("nameMin")),
+      email: z.string().email(t("emailInvalid")),
+      password: z.string().min(6, t("passwordMin")),
+      confirmPassword: z.string().min(6, t("confirmPasswordMin")),
+    })
+    .refine((data) => data.password === data.confirmPassword, {
+      message: t("passwordsMismatch"),
+      path: ["confirmPassword"],
+    });
 
 export function RegisterForm() {
   const router = useRouter();
@@ -42,8 +43,13 @@ export function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
   const t = useTranslations("Auth");
   const tCommon = useTranslations("Common");
+  const tVal = useTranslations("Validation");
 
-  const form = useForm<z.infer<typeof registerSchema>>({
+  // Create schema with translation function
+  const registerSchema = createRegisterSchema(tVal);
+  type RegisterFormValues = z.infer<typeof registerSchema>;
+
+  const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       name: "",
@@ -53,7 +59,7 @@ export function RegisterForm() {
     },
   });
 
-  async function onSubmit(values: z.infer<typeof registerSchema>) {
+  async function onSubmit(values: RegisterFormValues) {
     setIsLoading(true);
 
     try {
@@ -69,25 +75,27 @@ export function RegisterForm() {
         if (data.details && data.details.fieldErrors) {
           const fieldErrors = data.details.fieldErrors;
           Object.keys(fieldErrors).forEach((key) => {
-            form.setError(key as keyof z.infer<typeof registerSchema>, {
-              type: "server",
-              message: fieldErrors[key]?.[0],
-            });
+            // Need to cast key to match form fields
+            const formKey = key as keyof RegisterFormValues;
+            if (["name", "email", "password", "confirmPassword"].includes(formKey)) {
+              form.setError(formKey, {
+                type: "server",
+                message: fieldErrors[key]?.[0],
+              });
+            }
           });
-          throw new Error("Dữ liệu không hợp lệ");
+          throw new Error(tVal("invalidData"));
         }
-        throw new Error(data.error || "Đăng ký thất bại");
+        throw new Error(data.error || "Đăng ký thất bại"); // Backend error might be untranslated
       }
 
-      showToast.success(
-        isSetupMode ? t("setupSuccess") : "Đăng ký thành công! Đang chuyển hướng..."
-      );
+      showToast.success(isSetupMode ? t("setupSuccess") : tVal("registerSuccess"));
       router.push("/auth/login");
     } catch (error) {
       if (error instanceof Error) {
         showToast.error(error.message);
       } else {
-        showToast.error("Đã có lỗi xảy ra");
+        showToast.error(tCommon("error"));
       }
     } finally {
       setIsLoading(false);
@@ -135,9 +143,9 @@ export function RegisterForm() {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Tên hiển thị</FormLabel>
+                  <FormLabel>{t("name")}</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input placeholder={t("enterName")} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

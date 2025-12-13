@@ -645,5 +645,17 @@
       "members_manage": "Quản lý thành viên",
       "board_delete": "Xóa bảng"
     }
+  },
+  "Validation": {
+    "nameMin": "Tên phải có ít nhất 2 ký tự",
+    "emailInvalid": "Email không hợp lệ",
+    "passwordMin": "Mật khẩu phải có ít nhất 6 ký tự",
+    "confirmPasswordMin": "Mật khẩu xác nhận phải có ít nhất 6 ký tự",
+    "passwordsMismatch": "Mật khẩu không khớp",
+    "passwordRequired": "Vui lòng nhập mật khẩu",
+    "invalidData": "Dữ liệu không hợp lệ",
+    "registerSuccess": "Đăng ký thành công! Đang chuyển hướng...",
+    "loginSuccess": "Đăng nhập thành công!",
+    "loginError": "Email hoặc mật khẩu không đúng"
   }
 }
