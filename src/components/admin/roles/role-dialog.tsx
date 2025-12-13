@@ -203,9 +203,9 @@ export function RoleDialog({ open, onOpenChange, role }: RoleDialogProps) {
                               checked={field.value?.includes(permission.id)}
                               onCheckedChange={(checked) => {
                                 return checked
-                                  ? field.onChange([...field.value, permission.id])
+                                  ? field.onChange([...(field.value || []), permission.id])
                                   : field.onChange(
-                                      field.value?.filter((value) => value !== permission.id)
+                                      (field.value || []).filter((value) => value !== permission.id)
                                     );
                               }}
                             />

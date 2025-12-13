@@ -12,6 +12,12 @@
     "close": "Đóng"
   },
   "Auth": {
+    "setupTitle": "Tạo tài khoản Quản trị viên",
+    "setupDesc": "Tài khoản này sẽ có toàn quyền kiểm soát hệ thống (Super Admin).",
+    "setupBadge": "Thiết lập hệ thống",
+    "setupAlertTitle": "Quyền hạn cao nhất",
+    "setupAlertDesc": "Bạn đang tạo tài khoản Admin đầu tiên cho hệ thống.",
+    "setupSuccess": "Khởi tạo hệ thống thành công! Vui lòng đăng nhập.",
     "login": "Đăng nhập",
     "register": "Đăng ký",
     "logout": "Đăng xuất",

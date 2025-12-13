@@ -12,6 +12,12 @@
     "close": "Close"
   },
   "Auth": {
+    "setupTitle": "Create Admin Account",
+    "setupDesc": "This account will have full control of the system (Super Admin).",
+    "setupBadge": "System Setup",
+    "setupAlertTitle": "Highest Privilege",
+    "setupAlertDesc": "You are creating the first Admin account for the system.",
+    "setupSuccess": "System successfully initialized! Please login.",
     "title": "Authentication",
     "login": "Login",
     "register": "Register",

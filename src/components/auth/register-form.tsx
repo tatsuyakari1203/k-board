@@ -5,8 +5,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Loader2, ShieldCheck } from "lucide-react";
 import { showToast } from "@/lib/toast";
 import { useTranslations } from "next-intl";
 
@@ -21,6 +21,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const registerSchema = z
   .object({
@@ -36,6 +37,8 @@ const registerSchema = z
 
 export function RegisterForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const isSetupMode = searchParams.get("setup") === "true";
   const [isLoading, setIsLoading] = useState(false);
   const t = useTranslations("Auth");
   const tCommon = useTranslations("Common");
@@ -76,7 +79,9 @@ export function RegisterForm() {
         throw new Error(data.error || "Đăng ký thất bại");
       }
 
-      showToast.success("Đăng ký thành công! Đang chuyển hướng...");
+      showToast.success(
+        isSetupMode ? t("setupSuccess") : "Đăng ký thành công! Đang chuyển hướng..."
+      );
       router.push("/auth/login");
     } catch (error) {
       if (error instanceof Error) {
@@ -92,15 +97,37 @@ export function RegisterForm() {
   return (
     <Card className="mx-auto max-w-sm w-full">
       <CardHeader>
-        <CardTitle className="text-2xl">{t("register")}</CardTitle>
-        <CardDescription>
-          {t("dontHaveAccount")}{" "}
-          <Link href="/auth/login" className="underline">
-            {t("login")}
-          </Link>
-        </CardDescription>
+        {isSetupMode ? (
+          <>
+            <div className="flex items-center gap-2 text-primary mb-2">
+              <ShieldCheck className="h-6 w-6" />
+              <span className="font-semibold tracking-tight uppercase text-sm">
+                {t("setupBadge")}
+              </span>
+            </div>
+            <CardTitle className="text-2xl font-bold">{t("setupTitle")}</CardTitle>
+            <CardDescription>{t("setupDesc")}</CardDescription>
+          </>
+        ) : (
+          <>
+            <CardTitle className="text-2xl">{t("register")}</CardTitle>
+            <CardDescription>
+              {t("dontHaveAccount")}{" "}
+              <Link href="/auth/login" className="underline">
+                {t("login")}
+              </Link>
+            </CardDescription>
+          </>
+        )}
       </CardHeader>
       <CardContent>
+        {isSetupMode && (
+          <Alert className="mb-6 bg-blue-50 text-blue-900 border-blue-200">
+            <ShieldCheck className="h-4 w-4" />
+            <AlertTitle>{t("setupAlertTitle")}</AlertTitle>
+            <AlertDescription>{t("setupAlertDesc")}</AlertDescription>
+          </Alert>
+        )}
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField

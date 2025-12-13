@@ -198,7 +198,7 @@ export function RoleList() {
           <AlertDialogHeader>
             <AlertDialogTitle>{t("deleteConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("deleteConfirmDesc", { name: roleToDelete?.name })}
+              {t("deleteConfirmDesc", { name: roleToDelete?.name ?? "" })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

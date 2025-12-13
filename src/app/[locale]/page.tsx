@@ -2,12 +2,34 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Layout, Users, Zap } from "lucide-react";
 import { LanguageSwitcher } from "@/components/language-switcher";
-import { useTranslations } from "next-intl";
+import { getTranslations } from "next-intl/server";
+import { UserService } from "@/services/user.service";
+import { redirect } from "next/navigation";
 import { DashboardPreview } from "@/components/landing/dashboard-preview";
 
-export default function LandingPage() {
-  const tAuth = useTranslations("Auth");
-  const tLanding = useTranslations("Landing");
+export default async function LandingPage() {
+  // Check if system needs setup (0 users)
+  // ... (keep existing check logic)
+  try {
+    const counts = await UserService.getUserCounts();
+    if (counts.total === 0) {
+      redirect("/auth/register?setup=true");
+    }
+  } catch (error: unknown) {
+    if (
+      typeof error === "object" &&
+      error !== null &&
+      "digest" in error &&
+      typeof (error as { digest: unknown }).digest === "string" &&
+      (error as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+    ) {
+      throw error;
+    }
+    console.error("Failed to check system status:", error);
+  }
+
+  const tAuth = await getTranslations("Auth");
+  const tLanding = await getTranslations("Landing");
 
   return (
     <div className="flex min-h-screen flex-col">
