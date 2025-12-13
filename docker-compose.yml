@@ -14,21 +14,20 @@ services:
     networks:
       - k-board-network
 
-  # Uncomment when ready to deploy
-  # app:
-  #   build: .
-  #   container_name: k-board-app
-  #   restart: always
-  #   ports:
-  #     - "3000:3000"
-  #   environment:
-  #     - MONGODB_URI=mongodb://${MONGO_USERNAME:-admin}:${MONGO_PASSWORD:-password123}@mongodb:27017/k-board?authSource=admin
-  #     - AUTH_SECRET=${AUTH_SECRET}
-  #     - AUTH_URL=${AUTH_URL:-http://localhost:3000}
-  #   depends_on:
-  #     - mongodb
-  #   networks:
-  #     - k-board-network
+  app:
+    image: tatsuyakari/k-board:latest
+    container_name: k-board-app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGODB_URI=mongodb://${MONGO_USERNAME:-admin}:${MONGO_PASSWORD:-password123}@mongodb:27017/k-board?authSource=admin
+      - AUTH_SECRET=${AUTH_SECRET}
+      - AUTH_URL=${AUTH_URL:-http://localhost:3000}
+    depends_on:
+      - mongodb
+    networks:
+      - k-board-network
 
 volumes:
   mongodb_data:
