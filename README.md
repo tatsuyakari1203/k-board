@@ -5,6 +5,10 @@
 </p>
 
 <p align="center">
+  <img src="public/screenshots/landing.png" alt="K-Board Landing" width="100%" style="border-radius: 10px" />
+</p>
+
+<p align="center">
   <img src="https://img.shields.io/badge/Next.js-16-black" alt="Next.js" />
   <img src="https://img.shields.io/badge/React-19-blue" alt="React" />
   <img src="https://img.shields.io/badge/TypeScript-5-blue" alt="TypeScript" />
@@ -24,6 +28,10 @@
   - Advanced: Person (Assignment), Status, Currency, Rich Text, Attachment, User
 
 ## Features
+
+<p align="center">
+  <img src="public/screenshots/dashboard.png" alt="K-Board Dashboard" width="100%" style="border-radius: 10px" />
+</p>
 
 - **Dynamic Kanban Board**: Drag and drop tasks, customizable columns.
 - **Role-Based Access Control (RBAC)**: Flexible permission system (Owner, Admin, Editor, Viewer).
