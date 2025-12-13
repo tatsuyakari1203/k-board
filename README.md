@@ -1,270 +1,193 @@
-# K-Board - Project & Task Management System
+<div align="center">
+  <h1>K-Board</h1>
+  <h3>The Open Source, Notion-Inspired Task Management System</h3>
 
-<p align="center">
-  <strong>Flexible task management system with high customizability inspired by Notion</strong>
-</p>
+  <p>
+    Enterprise-grade project management with dynamic Kanban boards, powerful RBAC, <br/>
+    and a beautiful, modern user interface.
+  </p>
 
-<p align="center">
-  <img src="public/screenshots/landing.png" alt="K-Board Landing" width="100%" style="border-radius: 10px" />
-</p>
+  <p>
+    <a href="#-quick-deployment"><strong>🚀 Quick Deploy</strong></a> ·
+    <a href="#-features"><strong>✨ Features</strong></a> ·
+    <a href="#-gallery"><strong>📸 Gallery</strong></a> ·
+    <a href="#-tech-stack"><strong>🛠️ Tech Stack</strong></a>
+  </p>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Next.js-16-black" alt="Next.js" />
-  <img src="https://img.shields.io/badge/React-19-blue" alt="React" />
-  <img src="https://img.shields.io/badge/TypeScript-5-blue" alt="TypeScript" />
-  <img src="https://img.shields.io/badge/MongoDB-9-green" alt="MongoDB" />
-  <img src="https://img.shields.io/badge/TailwindCSS-4-cyan" alt="Tailwind" />
-  <img src="https://img.shields.io/badge/License-MIT-yellow" alt="License" />
-</p>
+  <p>
+    <img src="https://img.shields.io/badge/Next.js-16-black?style=flat-square&logo=next.js" alt="Next.js" />
+    <img src="https://img.shields.io/badge/React-19-blue?style=flat-square&logo=react" alt="React" />
+    <img src="https://img.shields.io/badge/TypeScript-5-3178C6?style=flat-square&logo=typescript&logoColor=white" alt="TypeScript" />
+    <img src="https://img.shields.io/badge/MongoDB-9-47A248?style=flat-square&logo=mongodb&logoColor=white" alt="MongoDB" />
+    <img src="https://img.shields.io/badge/Docker-Ready-2496ED?style=flat-square&logo=docker&logoColor=white" alt="Docker" />
+    <img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" alt="License" />
+  </p>
 
----
+  <br />
 
-## ✨ Features
+  <img src="public/screenshots/landing.png" alt="K-Board Landing" width="100%" style="border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,0.15);" />
+</div>
 
-### 📋 Task Management
+<br />
 
-- **Custom Properties**: 12 fully customizable property types:
-  - Basic: Text, Number, Select, Multi-select, Date, Checkbox
-  - Advanced: Person (Assignment), Status, Currency, Rich Text, Attachment, User
+## 📖 Introduction
 
-## Features
+**K-Board** is a modern, high-performance task management ecosystem designed for teams who need the flexibility of Notion with the structure of strict project management tools. Built on the bleeding edge of the React ecosystem (Next.js 16, React 19, RSC), it delivers a snappy, app-like experience.
 
-<p align="center">
-  <img src="public/screenshots/dashboard.png" alt="K-Board Dashboard" width="100%" style="border-radius: 10px" />
-</p>
+Whether you are a startup needing a roadmap tool or an enterprise requiring strict role-based access control (RBAC), K-Board scales with your needs.
 
-- **Dynamic Kanban Board**: Drag and drop tasks, customizable columns.
-- **Role-Based Access Control (RBAC)**: Flexible permission system (Owner, Admin, Editor, Viewer).
-- **Internationalization**: Support for multiple languages (English/Vietnamese).
-- **Docker Ready**: Easy deployment with Docker Compose.
-- **Table View**: Spreadsheet-like editing with bulk actions
-- **Kanban View**: Drag-and-drop workflow visualization
-- **Drag & Drop**: Native drag-and-drop support for tasks, columns, files, and ordering
-- **Advanced Filtering**: Complex boolean logic (AND/OR) filtering
-- **Aggregation**: Real-time column statistics (Sum, Average, Min, Max, Count)
-- **Rich Text Editor**: Powerful Notion-style editor with slash commands and markdown support
+## 🚀 Quick Deployment
 
-### 👥 User & Organization
+Deploy K-Board in seconds on any Linux server (Ubuntu/Debian/CentOS) with Docker installed.
 
-- **Role-Based Access (RBAC)**: Fine-grained permissions (Admin, Manager, Staff, User)
-- **Board Permissions**:
-  - **Owner**: Full control
-  - **Admin**: Configure board settings
-  - **Editor**: Create and edit content
-  - **Viewer**: Read-only access
-  - **Restricted**: Limited visibility based on assignment
-- **User Approval Flow**: Security workflow for approving new user registrations
-- **Member Management**: Invite system with email notifications
-
-### 🎨 Modern Experience
-
-- **Design System**: Built on top of Tailwind CSS 4 and Radix UI primitives
-- **Theming**: First-class Dark/Light mode support
-- **Responsive**: Fully optimized mobile layout
-- **Interactive**: Real-time feedback with toast notifications and optimistic UI updates
-
----
-
-## 🛠️ Tech Stack
-
-| Layer          | Technologies                                    |
-| -------------- | ----------------------------------------------- |
-| **Frontend**   | Next.js 16 (App Router), React 19, TypeScript 5 |
-| **Styling**    | Tailwind CSS 4, Radix UI, Lucide Icons          |
-| **State**      | Zustand, React Query (TanStack Query)           |
-| **Backend**    | Next.js API Routes, NextAuth 5 (Beta)           |
-| **Database**   | MongoDB, Mongoose 9                             |
-| **Animation**  | Framer Motion 12, GSAP                          |
-| **Editor**     | Lexical (Meta)                                  |
-| **Testing**    | Vitest, React Testing Library                   |
-| **Validation** | Zod                                             |
-
----
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 18.17 or later
-- pnpm (recommended) or npm/yarn
-- MongoDB instance (Local or Atlas)
-
-### Installation
-
-1. **Clone the repository**
-
-```bash
-git clone https://github.com/tatsuyakari1203/k-board.git
-cd k-board
-```
-
-2. **Install dependencies**
-
-```bash
-pnpm install
-```
-
-3. **Set up environment variables**
-
-```bash
-cp .env.example .env.local
-```
-
-Update `.env.local` with your credentials:
-
-```env
-# Database
-MONGODB_URI=mongodb://localhost:27017/k-board
-
-# Auth
-AUTH_SECRET="your-super-secret-key-at-least-32-chars"
-AUTH_URL="http://localhost:3000"
-
-# App
-NEXT_PUBLIC_APP_URL="http://localhost:3000"
-```
-
-4. **Seed the database** (Creates initial Admin account)
-
-```bash
-pnpm db:seed
-```
-
-5. **Start the development server**
-
-```bash
-pnpm dev
-```
-
-Visit `http://localhost:3000` to see the app.
-
----
-
-## 🐳 Deployment (Docker)
-
-### One-Line Install (Recommended)
-
-Quickly deploy K-Board on any Linux server with Docker installed:
+### ⚡ One-Line Automated Install
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/tatsuyakari1203/k-board/main/install.sh | bash
 ```
 
-### Manual Docker Run
+> This script creates a secure `docker-compose.yml`, generates random secrets, pulls the latest optimized image, and sorts everything for you.
 
-```bash
-# Pull image
-docker pull tatsuyakari/k-board:latest
-
-# Run container
-docker run -d -p 3000:3000 \
-  -e MONGODB_URI=mongodb://host.docker.internal:27017/k-board \
-  -e AUTH_SECRET=your_secure_secret \
-  tatsuyakari/k-board:latest
-```
-
----
-
-## 🔐 Default Admin Credentials
-
-The seed script creates a default administrator account:
-
-- **Email**: `admin@k-board.local`
-- **Password**: `Admin@123`
-
-> **Note**: Please change this password immediately after logging in via the User Profile settings.
-
----
-
-## 📁 Project Structure
-
-```
-src/
-├── app/                    # Next.js 16 App Directory
-│   ├── [locale]/          # Internationalized routes
-│   └── api/               # Backend API Endpoints
-├── components/            # React 19 Components
-│   ├── boards/            # Kanban & Table components
-│   ├── editor/            # Lexical editor implementation
-│   └── ui/                # Shadcn UI primitives
-├── lib/                   # Core business logic
-│   ├── auth.ts            # Authentication config
-│   └── permissions.ts     # RBAC implementation
-├── models/                # Mongoose 9 Schemas
-├── store/                 # Global state (Zustand)
-└── types/                 # TypeScript interfaces
-```
-
----
-
-## 📚 Documentation Plan
-
-We maintain detailed documentation for core features in the `docs/` directory:
-
-- [Feature: Task Management System](./docs/PLAN-TASK-MANAGEMENT.md)
-- [Feature: Roles & Permissions](./docs/USER_ROLE_PERMISSION_PLAN.md)
-- [Feature: Kanban Visualization](./docs/KANBAN-VIEW-PLAN.md)
-- [Improvement Roadmap](./docs/IMPROVEMENT-PLAN.md)
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please read our [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests.
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 👨‍💻 Author
-
-**K4ris-su**
-
----
-
-## 📸 Gallery
+### 🐳 Manual Docker Compose
 
 <details>
-<summary><strong>Viewing All Screenshots</strong></summary>
+<summary>Click to view manual setup instructions</summary>
 
-### Authentication
+```bash
+# 1. Pull the image
+docker pull tatsuyakari/k-board:latest
 
-|                               Login                                |                                 Register                                 |
-| :----------------------------------------------------------------: | :----------------------------------------------------------------------: |
-| <img src="public/screenshots/login.png" width="400" alt="Login" /> | <img src="public/screenshots/register.png" width="400" alt="Register" /> |
-
-### Dashboard
-
-<p align="center">
-  <img src="public/screenshots/dashboard.png" width="800" alt="Dashboard" style="border-radius: 5px" />
-</p>
-
-### Board Views
-
-|                                  Table View                                  |                              Kanban Visuals                               |
-| :--------------------------------------------------------------------------: | :-----------------------------------------------------------------------: |
-| <img src="public/screenshots/table-view.png" width="400" alt="Table View" /> | <img src="public/screenshots/kanban.png" width="400" alt="Kanban View" /> |
-
-### User Interface
-
-|                                 User Profile                                  |
-| :---------------------------------------------------------------------------: |
-| <img src="public/screenshots/profile-dialog.png" width="400" alt="Profile" /> |
-
-### Administration
-
-|                                User Management                                 |                                   System Settings                                    |
-| :----------------------------------------------------------------------------: | :----------------------------------------------------------------------------------: |
-| <img src="public/screenshots/admin-users.png" width="400" alt="Admin Users" /> | <img src="public/screenshots/admin-settings.png" width="400" alt="Admin Settings" /> |
+# 2. Run with environment variables
+docker run -d -p 3000:3000 \
+  --name k-board \
+  -e MONGODB_URI=mongodb://host.docker.internal:27017/k-board \
+  -e AUTH_SECRET=change_this_to_a_secure_random_string \
+  -e AUTH_URL=http://localhost:3000 \
+  tatsuyakari/k-board:latest
+```
 
 </details>
 
 ---
 
-<p align="center">
+## 📸 Gallery
+
+<div align="center">
+  <h3>Interactive Dashboard (Light/Dark Mode)</h3>
+  <img src="public/screenshots/dashboard.png" width="100%" alt="Dashboard" style="border-radius: 8px; margin-bottom: 20px" />
+</div>
+
+### 📊 Versatile Views
+
+Compare our powerful visualization modes. Switch instantly between high-level roadmaps and detailed data entry.
+
+|                                   **Table View** (Excel-like Editing)                                    |                                     **Kanban View** (Drag & Drop)                                     |
+| :------------------------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------------------: |
+| <img src="public/screenshots/table-view.png" width="100%" alt="Table View" style="border-radius: 6px" /> | <img src="public/screenshots/kanban.png" width="100%" alt="Kanban View" style="border-radius: 6px" /> |
+
+<details>
+<summary><strong>🔎 View More Screenshots (Admin, Profile, Login)</strong></summary>
+
+|                                     Admin Users                                     |                                     Admin Settings                                     |
+| :---------------------------------------------------------------------------------: | :------------------------------------------------------------------------------------: |
+| <img src="public/screenshots/admin-users.png" width="100%" alt="User Management" /> | <img src="public/screenshots/admin-settings.png" width="100%" alt="System Settings" /> |
+
+|                             Login Page                              |                                  User Profile                                  |
+| :-----------------------------------------------------------------: | :----------------------------------------------------------------------------: |
+| <img src="public/screenshots/login.png" width="100%" alt="Login" /> | <img src="public/screenshots/profile-dialog.png" width="100%" alt="Profile" /> |
+
+</details>
+
+---
+
+## ✨ Features
+
+### 🛠️ Core Productivity
+
+- **Dynamic Kanban**: Fully draggable tasks and columns with optimistic UI updates.
+- **Advanced Properties**: 12+ types including Status, Priority (Select), Date, User, Rich Text, and creating custom properties on the fly.
+- **Views System**: Save multiple views (Kanban, Table) with unique filters and sorts per board.
+- **Real-time Filters**: Boolean logic filtering (AND/OR) for complex queries.
+
+### 🏢 Enterprise & Security
+
+- **RBAC System**: Granular permissions (Owner, Admin, Editor, Viewer, Restricted).
+- **Organization Management**: User approval flows, deactivation, and invite management.
+- **Audit Ready**: Strict database validation ensuring no "ghost" sessions or unauthorized access.
+
+### 🎨 Design & Experience
+
+- **Modern UI**: Built with Shadcn UI & Radix Primitives for accessibility.
+- **Theming**: First-class Dark Mode support.
+- **Internationalization (i18n)**: English and Vietnamese support out of the box.
+
+---
+
+## 🛠️ Tech Stack
+
+Built with the latest Modern Web technologies for performance and longevity.
+
+| Layer        | Tools                                             |
+| ------------ | ------------------------------------------------- |
+| **Frontend** | Next.js 16 (App Router), React 19, TypeScript 5.7 |
+| **Styling**  | Tailwind CSS 4.0 (Alpha), Shadcn UI, Lucid React  |
+| **State**    | Zustand, TanStack Query v5                        |
+| **Backend**  | NextAuth v5 (Beta), Server Actions                |
+| **Database** | MongoDB 7.0, Mongoose 9.0                         |
+| **Testing**  | Vitest, Playwright (E2E)                          |
+
+---
+
+## 💻 Local Development
+
+1. **Clone & Install**
+
+   ```bash
+   git clone https://github.com/tatsuyakari1203/k-board.git
+   cd k-board
+   pnpm install
+   ```
+
+2. **Environment Setup**
+
+   ```bash
+   cp .env.example .env.local
+   # Check .env.local for MONGODB_URI
+   ```
+
+3. **Database Seed (Important)**
+
+   ```bash
+   pnpm seed
+   ```
+
+   > Populates the DB with "Product Roadmap" and default users.
+
+4. **Run Dev Server**
+   ```bash
+   pnpm dev
+   ```
+
+### 🔐 Default Accounts (Local/Seed)
+
+- **Admin**: `admin@k-board.com` / `admin123456`
+- **Manager**: `manager@k-board.com` / `123456`
+- **Staff**: `staff@k-board.com` / `123456`
+
+---
+
+## 🤝 Contributing
+
+We welcome contributions! Please check the `docs/` folder for architectural plans:
+
+- [Kanban Architecture](./docs/KANBAN-VIEW-PLAN.md)
+- [Permission System](./docs/USER_ROLE_PERMISSION_PLAN.md)
+
+## 📄 License
+
+Licensed under the [MIT License](./LICENSE).
+
+<br />
+<div align="center">
   <sub>Built with ❤️ by the Open Source Community</sub>
-</p>
+</div>
