@@ -54,18 +54,30 @@ test.describe("Marketing Screenshots Gallery", () => {
     await page.screenshot({ path: "public/screenshots/boards-list.png" });
     console.log("📸 Captured Boards List");
 
-    /*
     // 6. Kanban Board
     const boardName = "Hồ sơ đo đạc 2024";
-    await page.click(`text=${boardName}`); // Open board
+    // Navigate via URL to avoid UI flakiness
+    await page.goto("/dashboard/boards");
+    await page.getByText(boardName).click();
     await expect(page.locator("h1")).toContainText(boardName);
+
+    // Switch to Kanban View (if not active)
+    // Try to find the tab "Bảng Kanban" (Seed name)
+    const kanbanTab = page.getByText("Bảng Kanban");
+    if (await kanbanTab.isVisible()) {
+      await kanbanTab.click();
+      await page.waitForTimeout(1000); // Animation
+    }
+
+    // Wait for Kanban Columns
+    // "Chờ xử lý" should be a column header now
+    await expect(page.getByText("Chờ xử lý")).toBeVisible();
     await page.waitForTimeout(1000);
 
     // Ensure "New Task" button is visible
     await expect(page.getByRole("button", { name: /New|Mới/i })).toBeVisible();
     await page.screenshot({ path: "public/screenshots/kanban.png" });
     console.log("📸 Captured Kanban");
-    */
 
     // 7. Admin Users
     await page.goto("/dashboard/admin/users");

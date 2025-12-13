@@ -239,9 +239,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ### Dashboard & Board
 
-|                                 Dashboard                                  |                                Board List                                 |
-| :------------------------------------------------------------------------: | :-----------------------------------------------------------------------: |
-| <img src="public/screenshots/dashboard.png" width="400" alt="Dashboard" /> | <img src="public/screenshots/boards-list.png" width="400" alt="Boards" /> |
+|                                 Dashboard                                  |                               Kanban Visuals                               |
+| :------------------------------------------------------------------------: | :------------------------------------------------------------------------: |
+| <img src="public/screenshots/dashboard.png" width="400" alt="Dashboard" /> | <img src="public/screenshots/kanban.png" width="400" alt="Kanban Board" /> |
 
 ### User Interface
 

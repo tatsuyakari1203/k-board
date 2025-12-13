@@ -11,7 +11,6 @@ import { SETTING_KEYS, REGISTRATION_MODE } from "@/types/system-settings";
 import { USER_ROLES, USER_STATUS } from "@/types/user";
 import { PropertyType } from "@/types/board";
 import {
-  BOARD_ROLES,
   BOARD_ROLE_PERMISSIONS,
   BOARD_ROLE_LABELS,
   type BoardPermissions,
@@ -87,6 +86,45 @@ const SURVEY_TASKS = [
     ngayHenTra: formatDate(addDays(today, 30)), // Plenty of time
     assigneeEmail: "staff@k-board.com",
     ghiChu: "Dự án lớn, cần phối hợp nhiều người",
+  },
+  {
+    title: "Khảo sát thực địa dự án Đường Vành Đai 3",
+    status: "Đang xử lý",
+    loaiHoSo: "Trích đo địa chính",
+    diaChi: "Huyện Củ Chi, TP.HCM",
+    dienTich: 15000,
+    nguoiYeuCau: "Ban quản lý dự án",
+    soDienThoai: "0999888777",
+    ngayNhan: formatDate(subDays(today, 1)),
+    ngayHenTra: formatDate(addDays(today, 15)),
+    assigneeEmail: "manager@k-board.com",
+    ghiChu: "Cần đo chính xác mốc lộ giới",
+  },
+  {
+    title: "Phân lô tách thửa ông Lê Văn C",
+    status: "Chờ xử lý",
+    loaiHoSo: "Đo đạc địa chính",
+    diaChi: "Xã Bình Mỹ, Củ Chi",
+    dienTich: 500,
+    nguoiYeuCau: "Lê Văn C",
+    soDienThoai: "0987654321",
+    ngayNhan: formatDate(today),
+    ngayHenTra: formatDate(addDays(today, 7)),
+    assigneeEmail: "staff@k-board.com",
+    ghiChu: "",
+  },
+  {
+    title: "Đo vẽ hoàn công nhà xưởng Công ty May 10",
+    status: "Đã hoàn thành",
+    loaiHoSo: "Đo vẽ bản đồ",
+    diaChi: "KCN Tân Bình",
+    dienTich: 1200,
+    nguoiYeuCau: "Công ty May 10",
+    soDienThoai: "0289999999",
+    ngayNhan: formatDate(subDays(today, 20)),
+    ngayHenTra: formatDate(subDays(today, 15)),
+    assigneeEmail: "manager@k-board.com",
+    ghiChu: "Đã giao hồ sơ",
   },
 ];
 
@@ -256,6 +294,17 @@ async function seed() {
           type: "table",
           config: { visibleProperties: properties.map((p) => p.id) },
           isDefault: true,
+        },
+        {
+          id: uuidv4(),
+          name: "Bảng Kanban",
+          type: "kanban",
+          config: {
+            visibleProperties: properties.map((p) => p.id),
+            // Group by Status property
+            groupBy: properties.find((p) => p.type === PropertyType.STATUS)?.id,
+          },
+          isDefault: false,
         },
       ],
     });
