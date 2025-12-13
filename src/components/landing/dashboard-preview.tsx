@@ -162,6 +162,8 @@ export function DashboardPreview() {
                 duration: 8,
                 ease: "easeInOut",
                 times: [0, 0.2, 0.25, 0.5, 0.55, 1],
+                repeat: Infinity,
+                repeatDelay: 0,
               }}
             >
               <MousePointer2 className="h-5 w-5 fill-foreground" />
@@ -200,41 +202,46 @@ export function DashboardPreview() {
                       animate={{
                         opacity: 1,
                         y: 0,
-                        x: [0, 0, 0, 300, 300, 0],
-                        rotate: [0, 0, -3, 3, 0, 0],
-                        scale: [1, 1, 1.05, 1.05, 1, 1],
-                        zIndex: [0, 0, 50, 50, 0, 0],
+                        x: [0, 0, 0, 300, 300, 300, 0, 0],
+                        rotate: [0, 0, -3, 3, 0, 0, 0, 0],
+                        scale: [1, 1, 1.05, 1.05, 1, 1, 1, 1],
+                        zIndex: [0, 0, 50, 50, 50, 50, 0, 0],
                       }}
                       transition={{
                         delay: 0.5,
-                        opacity: { duration: 0.4 },
+                        opacity: {
+                          duration: 8,
+                          times: [0, 0.2, 0.25, 0.5, 0.55, 0.8, 0.9, 1],
+                          repeat: Infinity,
+                          repeatDelay: 0,
+                        },
                         y: { duration: 0.4 },
                         x: {
                           duration: 8,
                           repeat: Infinity,
                           ease: "easeInOut",
-                          times: [0, 0.2, 0.25, 0.5, 0.55, 1],
-                          repeatDelay: 1,
+                          times: [0, 0.2, 0.25, 0.5, 0.55, 0.8, 0.9, 1],
+                          repeatDelay: 0,
                         },
                         rotate: {
                           duration: 8,
                           repeat: Infinity,
                           ease: "easeInOut",
-                          times: [0, 0.2, 0.25, 0.5, 0.55, 1],
-                          repeatDelay: 1,
+                          times: [0, 0.2, 0.25, 0.5, 0.55, 0.8, 0.9, 1],
+                          repeatDelay: 0,
                         },
                         scale: {
                           duration: 8,
                           repeat: Infinity,
                           ease: "easeInOut",
-                          times: [0, 0.2, 0.25, 0.5, 0.55, 1],
-                          repeatDelay: 1,
+                          times: [0, 0.2, 0.25, 0.5, 0.55, 0.8, 0.9, 1],
+                          repeatDelay: 0,
                         },
                         zIndex: {
                           duration: 8,
                           repeat: Infinity,
-                          times: [0, 0.2, 0.25, 0.5, 0.55, 1],
-                          repeatDelay: 1,
+                          times: [0, 0.2, 0.25, 0.5, 0.55, 0.8, 0.9, 1],
+                          repeatDelay: 0,
                         },
                       }}
                     >
@@ -329,8 +336,21 @@ export function DashboardPreview() {
 
                     <motion.div
                       initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.7 }}
+                      animate={{
+                        opacity: 1,
+                        y: [0, 0, 0, 140, 140, 140, 0, 0],
+                      }}
+                      transition={{
+                        delay: 0.5,
+                        opacity: { duration: 0.4 },
+                        y: {
+                          duration: 8,
+                          repeat: Infinity,
+                          ease: "easeInOut",
+                          times: [0, 0.2, 0.25, 0.5, 0.55, 0.8, 0.9, 1],
+                          repeatDelay: 0,
+                        },
+                      }}
                       whileHover={{ scale: 1.02 }}
                     >
                       <Card className="p-3 shadow-sm hover:shadow-md transition-shadow cursor-default border-l-4 border-l-blue-500">

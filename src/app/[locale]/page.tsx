@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Layout, Users, Zap } from "lucide-react";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { getTranslations } from "next-intl/server";
-import { DashboardPreview } from "@/components/landing/dashboard-preview";
+import {
+  HeroSection,
+  BentoGridFeatures,
+  TechStackSection,
+  CTASection,
+} from "@/components/landing/landing-sections";
 
 export default async function LandingPage() {
   // Landing page should always be accessible
@@ -13,85 +17,56 @@ export default async function LandingPage() {
   const tLanding = await getTranslations("Landing");
 
   return (
-    <div className="flex min-h-screen flex-col">
+    <div className="flex min-h-screen flex-col bg-background selection:bg-primary/10 selection:text-primary">
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md">
-        <div className="mx-auto flex h-16 max-w-screen-xl items-center justify-between px-6">
-          <span className="text-lg font-semibold">K-Board</span>
-          <nav className="flex items-center gap-3">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-background/60 backdrop-blur-xl border-b border-border/40 supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-lg shadow-lg shadow-primary/20">
+              K
+            </div>
+            <span className="text-lg font-bold tracking-tight">K-Board</span>
+          </div>
+          <nav className="flex items-center gap-4">
             <LanguageSwitcher />
-            <Button asChild>
-              <Link href="/auth/login">{tAuth("login")}</Link>
-            </Button>
-            <Button asChild variant="secondary">
-              <Link href="/auth/register">{tAuth("register")}</Link>
-            </Button>
+            <div className="hidden md:flex items-center gap-4">
+              <Button
+                variant="ghost"
+                asChild
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <Link href="/auth/login">{tAuth("login")}</Link>
+              </Button>
+              <Button asChild className="rounded-full shadow-md shadow-primary/20">
+                <Link href="/auth/register">{tAuth("register")}</Link>
+              </Button>
+            </div>
           </nav>
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="flex-1 flex items-center justify-center pt-24 pb-12 px-6">
-        <div className="mx-auto max-w-screen-xl grid lg:grid-cols-2 gap-12 items-center">
-          <div className="space-y-6">
-            <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl">
-              {tLanding("heroTitle")} <br />
-              <span className="text-primary">{tLanding("heroTitleHighlight")}</span>
-            </h1>
-            <p className="text-lg text-muted-foreground">{tLanding("heroDescription")}</p>
-            <div className="flex items-center gap-4">
-              <Button size="lg" asChild>
-                <Link href="/auth/register">
-                  {tLanding("getStarted")} <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link href="/auth/login">{tLanding("login")}</Link>
-              </Button>
-            </div>
-          </div>
-          <DashboardPreview />
-        </div>
-      </section>
+      <main className="flex-1">
+        <HeroSection />
 
-      {/* Features Section */}
-      <section className="bg-muted/30 py-24 px-6">
-        <div className="mx-auto max-w-screen-xl">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold tracking-tight">{tLanding("featuresTitle")}</h2>
-            <p className="mt-4 text-muted-foreground">{tLanding("featuresSubtitle")}</p>
-          </div>
+        <TechStackSection />
 
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="bg-background p-6 rounded-lg border shadow-sm">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <Layout className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="font-semibold text-xl mb-2">{tLanding("feature1Title")}</h3>
-              <p className="text-muted-foreground">{tLanding("feature1Desc")}</p>
-            </div>
-            <div className="bg-background p-6 rounded-lg border shadow-sm">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <Users className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="font-semibold text-xl mb-2">{tLanding("feature2Title")}</h3>
-              <p className="text-muted-foreground">{tLanding("feature2Desc")}</p>
-            </div>
-            <div className="bg-background p-6 rounded-lg border shadow-sm">
-              <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4">
-                <Zap className="h-5 w-5 text-primary" />
-              </div>
-              <h3 className="font-semibold text-xl mb-2">{tLanding("feature3Title")}</h3>
-              <p className="text-muted-foreground">{tLanding("feature3Desc")}</p>
-            </div>
-          </div>
-        </div>
-      </section>
+        <BentoGridFeatures />
+
+        <CTASection />
+      </main>
 
       {/* Footer */}
-      <footer className="mt-12">
-        <div className="mx-auto max-w-screen-xl px-6 py-8 flex justify-between items-center">
-          <p className="text-sm text-muted-foreground">© 2024 K-Board</p>
+      <footer className="border-t bg-muted/20">
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-2">
+              <div className="h-6 w-6 rounded bg-primary flex items-center justify-center text-primary-foreground font-bold text-xs">
+                K
+              </div>
+              <span className="font-bold">K-Board</span>
+            </div>
+            <p className="text-sm text-muted-foreground">{tLanding("footerCopyright")}</p>
+          </div>
         </div>
       </footer>
     </div>
