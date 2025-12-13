@@ -5,12 +5,8 @@ import User from "@/models/user.model";
 import Board from "@/models/board.model";
 import Task from "@/models/task.model";
 import BoardMember from "@/models/board-member.model";
-import {
-  getSetting,
-  setSetting,
-  SETTING_KEYS,
-  REGISTRATION_MODE,
-} from "@/models/system-settings.model";
+import { SettingsService } from "@/services/settings.service";
+import { SETTING_KEYS, REGISTRATION_MODE } from "@/types/system-settings";
 import { USER_ROLES, USER_STATUS } from "@/types/user";
 import { PropertyType } from "@/types/board";
 
@@ -142,9 +138,12 @@ async function seed() {
     const getUser = (email: string) => allUsers.find((u) => u.email === email);
 
     // 3. SYSTEM SETTINGS
-    const existingMode = await getSetting(SETTING_KEYS.USER_REGISTRATION_MODE);
-    if (!existingMode) {
-      await setSetting(SETTING_KEYS.USER_REGISTRATION_MODE, REGISTRATION_MODE.MANUAL_APPROVE);
+    const regMode = await SettingsService.getSetting(SETTING_KEYS.USER_REGISTRATION_MODE);
+    if (!regMode) {
+      await SettingsService.setSetting(
+        SETTING_KEYS.USER_REGISTRATION_MODE,
+        REGISTRATION_MODE.MANUAL_APPROVE
+      );
       console.log("✅ Set default registration mode: MANUAL_APPROVE");
     }
 

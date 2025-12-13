@@ -1,7 +1,6 @@
 import dotenv from "dotenv";
 import { connectDB } from "../lib/db.js"; // Note: .js extension for direct execution if needed, or tsx handles it
 import Role from "../models/role.model.js";
-import { BOARD_ROLE_PERMISSIONS } from "../types/board-member.js";
 
 dotenv.config({ path: ".env.local" });
 

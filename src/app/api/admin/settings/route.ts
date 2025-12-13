@@ -1,16 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { connectDB } from "@/lib/db";
-import {
-  getSetting,
-  setSetting,
-  SETTING_KEYS,
-  REGISTRATION_MODE,
-  type RegistrationMode
-} from "@/models/system-settings.model";
+import { SETTING_KEYS, REGISTRATION_MODE, type RegistrationMode } from "@/types/system-settings";
 import { USER_ROLES } from "@/types/user";
 import { updateSettingsSchema } from "@/lib/validations/admin";
 import { logSettingsUpdated } from "@/lib/audit";
+import { SettingsService } from "@/services/settings.service";
 
 // Helper to check admin access
 async function checkAdminAccess() {
@@ -29,15 +23,10 @@ export async function GET() {
   try {
     const authResult = await checkAdminAccess();
     if ("error" in authResult) {
-      return NextResponse.json(
-        { error: authResult.error },
-        { status: authResult.status }
-      );
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
 
-    await connectDB();
-
-    const registrationMode = await getSetting<RegistrationMode>(
+    const registrationMode = await SettingsService.getSetting<RegistrationMode>(
       SETTING_KEYS.USER_REGISTRATION_MODE
     );
 
@@ -55,10 +44,7 @@ export async function GET() {
     });
   } catch (error) {
     console.error("GET /api/admin/settings error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -67,10 +53,7 @@ export async function PATCH(request: NextRequest) {
   try {
     const authResult = await checkAdminAccess();
     if ("error" in authResult) {
-      return NextResponse.json(
-        { error: authResult.error },
-        { status: authResult.status }
-      );
+      return NextResponse.json({ error: authResult.error }, { status: authResult.status });
     }
 
     const body = await request.json();
@@ -83,19 +66,17 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    await connectDB();
-
     const updates: Record<string, unknown> = {};
     const previousValues: Record<string, unknown> = {};
 
     if (validated.data.user_registration_mode) {
       // Get previous value for audit
-      const previousMode = await getSetting<RegistrationMode>(
+      const previousMode = await SettingsService.getSetting<RegistrationMode>(
         SETTING_KEYS.USER_REGISTRATION_MODE
       );
       previousValues.user_registration_mode = previousMode || REGISTRATION_MODE.MANUAL_APPROVE;
 
-      await setSetting(
+      await SettingsService.setSetting(
         SETTING_KEYS.USER_REGISTRATION_MODE,
         validated.data.user_registration_mode,
         authResult.session.user.id
@@ -105,11 +86,7 @@ export async function PATCH(request: NextRequest) {
 
     // Log audit
     if (Object.keys(updates).length > 0) {
-      await logSettingsUpdated(
-        authResult.session.user.id,
-        previousValues,
-        updates
-      );
+      await logSettingsUpdated(authResult.session.user.id, previousValues, updates);
     }
 
     return NextResponse.json({
@@ -118,9 +95,6 @@ export async function PATCH(request: NextRequest) {
     });
   } catch (error) {
     console.error("PATCH /api/admin/settings error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

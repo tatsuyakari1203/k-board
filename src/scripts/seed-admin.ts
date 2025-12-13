@@ -1,13 +1,9 @@
 import "dotenv/config";
 import { connectDB } from "@/lib/db";
 import User from "@/models/user.model";
-import {
-  getSetting,
-  setSetting,
-  SETTING_KEYS,
-  REGISTRATION_MODE,
-} from "@/models/system-settings.model";
+import { SettingsService } from "@/services/settings.service";
 import { USER_ROLES, USER_STATUS } from "@/types/user";
+import { SETTING_KEYS, REGISTRATION_MODE } from "@/types/system-settings";
 
 async function seedAdmin() {
   try {
@@ -47,13 +43,16 @@ async function seedAdmin() {
       console.log("⚠️  Please change this password immediately!");
     }
 
-    // Initialize default system settings
-    const existingMode = await getSetting(SETTING_KEYS.USER_REGISTRATION_MODE);
-    if (!existingMode) {
-      await setSetting(SETTING_KEYS.USER_REGISTRATION_MODE, REGISTRATION_MODE.MANUAL_APPROVE);
-      console.log("Default registration mode set to: manual_approve");
+    // Initialize default    // Check registration mode
+    const regMode = await SettingsService.getSetting(SETTING_KEYS.USER_REGISTRATION_MODE);
+    if (!regMode) {
+      await SettingsService.setSetting(
+        SETTING_KEYS.USER_REGISTRATION_MODE,
+        REGISTRATION_MODE.MANUAL_APPROVE
+      );
+      console.log("Initialized registration mode to MANUAL_APPROVE");
     } else {
-      console.log("Registration mode already set:", existingMode);
+      console.log("Registration mode already set:", regMode);
     }
   } catch (error) {
     console.error("Error seeding admin:", error);
