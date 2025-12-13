@@ -226,6 +226,39 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
+## 📸 Gallery
+
+<details>
+<summary><strong>Viewing All Screenshots</strong></summary>
+
+### Authentication
+
+|                               Login                                |                                 Register                                 |
+| :----------------------------------------------------------------: | :----------------------------------------------------------------------: |
+| <img src="public/screenshots/login.png" width="400" alt="Login" /> | <img src="public/screenshots/register.png" width="400" alt="Register" /> |
+
+### Dashboard & Board
+
+|                                 Dashboard                                  |                                Board List                                 |
+| :------------------------------------------------------------------------: | :-----------------------------------------------------------------------: |
+| <img src="public/screenshots/dashboard.png" width="400" alt="Dashboard" /> | <img src="public/screenshots/boards-list.png" width="400" alt="Boards" /> |
+
+### User Interface
+
+|                                 User Profile                                  |
+| :---------------------------------------------------------------------------: |
+| <img src="public/screenshots/profile-dialog.png" width="400" alt="Profile" /> |
+
+### Administration
+
+|                                User Management                                 |                                   System Settings                                    |
+| :----------------------------------------------------------------------------: | :----------------------------------------------------------------------------------: |
+| <img src="public/screenshots/admin-users.png" width="400" alt="Admin Users" /> | <img src="public/screenshots/admin-settings.png" width="400" alt="Admin Settings" /> |
+
+</details>
+
+---
+
 <p align="center">
   <sub>Built with ❤️ by the Open Source Community</sub>
 </p>

@@ -1,70 +1,85 @@
 import { test, expect } from "@playwright/test";
 
-// robust-selector-playground/tests/e2e/screenshots.spec.ts but for K-ERP
-// Targeting localhost:3000 (Docker or Dev)
-
-test.describe("Marketing Screenshots", () => {
+test.describe("Marketing Screenshots Gallery", () => {
   test.use({
-    viewport: { width: 1440, height: 900 }, // Standard Desktop
-    locale: "en", // English for international README (or user preference?) Let's use 'vi' as it is primary? User's README is in English features but "K-Board" implies...
-    // Let's stick to 'vi' if that's the default or 'en' if README is English.
-    // README is mixed. Let's use 'vi' (Vietnamese) as it looks like the primary target audience based on seed data ("Hồ sơ đo đạc").
-    // Actually, README has English descriptions.
-    // Let's take screenshots in Vietnamese since the UI is localized that way in seed?
-    // Wait, the seed data is Vietnamese ("Hồ sơ đo đạc"). So Vietnamese UI matches better.
+    viewport: { width: 1440, height: 900 },
   });
 
-  test("Capture Landing Page", async ({ page }) => {
+  test("Capture All Pages", async ({ page }) => {
+    // 1. Landing Page
     await page.goto("/");
-    // Wait for hero to load
     await expect(page.locator("h1")).toBeVisible();
-    await page.waitForTimeout(1000); // Wait for animations
+    await page.waitForTimeout(1000);
     await page.screenshot({ path: "public/screenshots/landing.png", fullPage: true });
-  });
+    console.log("📸 Captured Landing");
 
-  test("Capture Dashboard and Kanban", async ({ page }) => {
-    // 1. Login
+    // 2. Authentication Pages
     await page.goto("/auth/login");
+    await expect(page.getByRole("button", { name: "Login" })).toBeVisible();
+    await page.screenshot({ path: "public/screenshots/login.png" });
+    console.log("📸 Captured Login");
 
-    // Use manager credentials from seed (reliable)
-    // "admin@k-board.com" might not exist if another admin (e.g. user's own account) exists in DB.
-    await page.getByLabel("Email").fill("manager@k-board.com");
-    await page.getByLabel("Password").fill("123456");
+    await page.goto("/auth/register");
+    await expect(page.getByRole("button", { name: /Register|Đăng/i })).toBeVisible();
+    await page.screenshot({ path: "public/screenshots/register.png" });
+    console.log("📸 Captured Register");
+
+    // 3. Login as Admin
+    await page.goto("/auth/login");
+    await page.getByLabel("Email").fill("admin-test@k-board.com");
+    await page.getByLabel("Password").fill("admin123456");
     await page.getByRole("button", { name: "Login" }).click();
 
-    // Wait for Dashboard (increase timeout for Docker slowness)
-    await page.waitForURL("**/dashboard", { timeout: 15000 });
-
-    // Handle potential first-time setup or welcome toasts
-    // "Chào mừng" might be in a toast.
-    // Check for Sidebar instead.
+    // Wait for Dashboard
+    await page.waitForURL("**/dashboard");
     await expect(page.locator("aside")).toBeVisible();
-    await page.waitForTimeout(1000); // Wait for hydration
+    await page.waitForTimeout(1000);
     await page.screenshot({ path: "public/screenshots/dashboard.png" });
+    console.log("📸 Captured Dashboard");
+
+    // 4. User Profile Dialog
+    // UserButton is in the footer (border-t p-4)
+    // Click the Settings icon button in that area
+    await page.locator(".border-t.p-4 button:has(.lucide-settings)").click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await page.waitForTimeout(500); // Animation
+    await page.screenshot({ path: "public/screenshots/profile-dialog.png" });
+    console.log("📸 Captured Profile Dialog");
+    await page.keyboard.press("Escape"); // Close dialog
+
+    // 5. Boards List
+    await page.goto("/dashboard/boards");
+    await expect(page.locator("h1")).toContainText("Boards");
+    await page.waitForTimeout(1000);
+    await page.screenshot({ path: "public/screenshots/boards-list.png" });
+    console.log("📸 Captured Boards List");
 
     /*
-    // 2. Go to Board (Seed board: "Hồ sơ đo đạc 2024")
-    // Navigate via URL to be safe
-    // Assuming seed created this board.
+    // 6. Kanban Board
     const boardName = "Hồ sơ đo đạc 2024";
-    await page.goto("/dashboard/boards");
-
-    // Wait for list to load
-    await expect(page.locator(`text=${boardName}`)).toBeVisible({ timeout: 10000 });
-
-    // Click the board
-    await page.click(`text=${boardName}`);
-
-    // Wait for Kanban info
+    await page.click(`text=${boardName}`); // Open board
     await expect(page.locator("h1")).toContainText(boardName);
+    await page.waitForTimeout(1000);
 
-    // Wait for generic board content (Table or Kanban)
-    // Board header actions should be visible
+    // Ensure "New Task" button is visible
     await expect(page.getByRole("button", { name: /New|Mới/i })).toBeVisible();
-    await page.waitForTimeout(2000); // Allow data to load
-
-    // Take screenshot of Kanban
     await page.screenshot({ path: "public/screenshots/kanban.png" });
+    console.log("📸 Captured Kanban");
     */
+
+    // 7. Admin Users
+    await page.goto("/dashboard/admin/users");
+    // Wait for table
+    await expect(page.getByRole("table")).toBeVisible();
+    await page.waitForTimeout(1000);
+    await page.screenshot({ path: "public/screenshots/admin-users.png" });
+    console.log("📸 Captured Admin Users");
+
+    // 8. Admin Settings
+    await page.goto("/dashboard/admin/settings");
+    await expect(page.locator("h1")).toContainText("Settings");
+    await page.waitForTimeout(1000);
+    await page.screenshot({ path: "public/screenshots/admin-settings.png" });
+    console.log("📸 Captured Admin Settings");
   });
 });
