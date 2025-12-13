@@ -20,25 +20,25 @@ import {
 
 const TEST_USERS = [
   {
-    name: "Trần Thị Hương",
+    name: "Sarah Manager",
     email: "manager@k-board.com",
     role: "manager",
-    department: "Phòng Kỹ thuật",
-    position: "Trưởng phòng",
+    department: "Engineering",
+    position: "VP of Engineering",
   },
   {
-    name: "Phạm Thị Lan",
+    name: "John Staff",
     email: "staff@k-board.com",
     role: "staff",
-    department: "Phòng Kỹ thuật",
-    position: "Kỹ sư đo đạc",
+    department: "Product",
+    position: "Product Designer",
   },
   {
-    name: "Nguyễn Văn User",
+    name: "Alex User",
     email: "user@k-board.com",
     role: "user",
-    department: "Phòng Kinh doanh",
-    position: "Thực tập sinh",
+    department: "Marketing",
+    position: "Intern",
   },
 ];
 
@@ -47,84 +47,87 @@ import { addDays, subDays, format } from "date-fns";
 const today = new Date();
 const formatDate = (date: Date) => format(date, "yyyy-MM-dd");
 
-const SURVEY_TASKS = [
+// Generic Project Management Tasks
+const PROJECT_TASKS = [
   {
-    title: "Đo đạc lô đất 123 Nguyễn Trãi",
-    status: "Đã hoàn thành",
-    loaiHoSo: "Đo đạc địa chính",
-    diaChi: "123 Nguyễn Trãi, Q.1, TP.HCM",
-    dienTich: 250.5,
-    nguoiYeuCau: "Nguyễn Văn A",
-    soDienThoai: "0901234567",
-    ngayNhan: formatDate(subDays(today, 10)),
-    ngayHenTra: formatDate(subDays(today, 3)), // Overdue if not completed (but status is completed)
+    title: "Design System V2.0",
+    status: "In Progress",
+    priority: "High",
+    department: "Design",
+    dueDate: formatDate(addDays(today, 5)),
+    startDate: formatDate(subDays(today, 2)),
     assigneeEmail: "staff@k-board.com",
-    ghiChu: "Khách hàng yêu cầu đo gấp",
+    notes: "Focus on dark mode consistency",
   },
   {
-    title: "Trích đo thửa đất 456 Lê Lợi",
-    status: "Đang xử lý",
-    loaiHoSo: "Trích đo địa chính",
-    diaChi: "456 Lê Lợi, Q.3, TP.HCM",
-    dienTich: 180.2,
-    nguoiYeuCau: "Trần Thị B",
-    soDienThoai: "0912345678",
-    ngayNhan: formatDate(subDays(today, 5)),
-    ngayHenTra: formatDate(addDays(today, 2)), // Due heavily soon
+    title: "Q1 Marketing Campaign",
+    status: "Planning",
+    priority: "Medium",
+    department: "Marketing",
+    dueDate: formatDate(addDays(today, 20)),
+    startDate: formatDate(today),
+    assigneeEmail: "user@k-board.com",
+    notes: "Coordinate with social media team",
+  },
+  {
+    title: "API Performance Optimization",
+    status: "Done",
+    priority: "Critical",
+    department: "Engineering",
+    dueDate: formatDate(subDays(today, 1)),
+    startDate: formatDate(subDays(today, 10)),
     assigneeEmail: "manager@k-board.com",
-    ghiChu: "",
+    notes: "Reduced latency by 40%",
   },
   {
-    title: "Đo vẽ bản đồ khu công nghiệp ABC",
-    status: "Chờ xử lý",
-    loaiHoSo: "Đo vẽ bản đồ",
-    diaChi: "KCN ABC, Bình Dương",
-    dienTich: 50000,
-    nguoiYeuCau: "Công ty XYZ",
-    soDienThoai: "0283456789",
-    ngayNhan: formatDate(subDays(today, 2)),
-    ngayHenTra: formatDate(addDays(today, 30)), // Plenty of time
+    title: "User Research Interviews",
+    status: "In Progress",
+    priority: "High",
+    department: "Product",
+    dueDate: formatDate(addDays(today, 3)),
+    startDate: formatDate(subDays(today, 1)),
     assigneeEmail: "staff@k-board.com",
-    ghiChu: "Dự án lớn, cần phối hợp nhiều người",
+    notes: "Interview 5 enterprise clients",
   },
   {
-    title: "Khảo sát thực địa dự án Đường Vành Đai 3",
-    status: "Đang xử lý",
-    loaiHoSo: "Trích đo địa chính",
-    diaChi: "Huyện Củ Chi, TP.HCM",
-    dienTich: 15000,
-    nguoiYeuCau: "Ban quản lý dự án",
-    soDienThoai: "0999888777",
-    ngayNhan: formatDate(subDays(today, 1)),
-    ngayHenTra: formatDate(addDays(today, 15)),
+    title: "Mobile App Beta Testing",
+    status: "In Progress",
+    priority: "Critical",
+    department: "QA",
+    dueDate: formatDate(addDays(today, 10)),
+    startDate: formatDate(subDays(today, 5)),
     assigneeEmail: "manager@k-board.com",
-    ghiChu: "Cần đo chính xác mốc lộ giới",
+    notes: "Focus on iOS scroll issues",
   },
   {
-    title: "Phân lô tách thửa ông Lê Văn C",
-    status: "Chờ xử lý",
-    loaiHoSo: "Đo đạc địa chính",
-    diaChi: "Xã Bình Mỹ, Củ Chi",
-    dienTich: 500,
-    nguoiYeuCau: "Lê Văn C",
-    soDienThoai: "0987654321",
-    ngayNhan: formatDate(today),
-    ngayHenTra: formatDate(addDays(today, 7)),
+    title: "Update Documentation",
+    status: "Todo",
+    priority: "Low",
+    department: "Engineering",
+    dueDate: formatDate(addDays(today, 30)),
+    startDate: formatDate(addDays(today, 5)),
     assigneeEmail: "staff@k-board.com",
-    ghiChu: "",
+    notes: "API docs need refresh",
   },
   {
-    title: "Đo vẽ hoàn công nhà xưởng Công ty May 10",
-    status: "Đã hoàn thành",
-    loaiHoSo: "Đo vẽ bản đồ",
-    diaChi: "KCN Tân Bình",
-    dienTich: 1200,
-    nguoiYeuCau: "Công ty May 10",
-    soDienThoai: "0289999999",
-    ngayNhan: formatDate(subDays(today, 20)),
-    ngayHenTra: formatDate(subDays(today, 15)),
+    title: "Quarterly Financial Report",
+    status: "Done",
+    priority: "High",
+    department: "Finance",
+    dueDate: formatDate(subDays(today, 5)),
+    startDate: formatDate(subDays(today, 15)),
     assigneeEmail: "manager@k-board.com",
-    ghiChu: "Đã giao hồ sơ",
+    notes: "Submitted to board",
+  },
+  {
+    title: "Security Audit",
+    status: "In Progress",
+    priority: "Critical",
+    department: "Security",
+    dueDate: formatDate(addDays(today, 2)),
+    startDate: formatDate(subDays(today, 3)),
+    assigneeEmail: "manager@k-board.com",
+    notes: "Pending penetration test results",
   },
 ];
 
@@ -213,6 +216,11 @@ async function seed() {
         console.log(`✅ Created user: ${userData.email}`);
       } else {
         console.log(`   User exists: ${userData.email}`);
+        // Optionally update name/dept if needed
+        existing.name = userData.name;
+        existing.department = userData.department;
+        existing.position = userData.position;
+        await existing.save();
       }
     }
 
@@ -231,93 +239,92 @@ async function seed() {
     }
 
     // 4. BOARDS
-    // Survey Board
-    const surveyBoardName = "Hồ sơ đo đạc 2024";
-    let surveyBoard = await Board.findOne({ name: surveyBoardName });
+    // Main Product Board
+    const mainBoardName = "Product Roadmap 2024";
+    // Check if old VN board exists and delete it to avoid clutter
+    await Board.deleteOne({ name: "Hồ sơ đo đạc 2024" });
 
-    if (surveyBoard) {
-      console.log(`   Board exists: ${surveyBoardName} -> Recreating to update data...`);
-      await Task.deleteMany({ boardId: surveyBoard._id });
-      await BoardMember.deleteMany({ boardId: surveyBoard._id });
-      await Board.deleteOne({ _id: surveyBoard._id });
+    let mainBoard = await Board.findOne({ name: mainBoardName });
+
+    if (mainBoard) {
+      console.log(`   Board exists: ${mainBoardName} -> Recreating to update data...`);
+      await Task.deleteMany({ boardId: mainBoard._id });
+      await BoardMember.deleteMany({ boardId: mainBoard._id });
+      await Board.deleteOne({ _id: mainBoard._id });
     }
 
-    console.log(`Creating board: ${surveyBoardName}...`);
+    console.log(`Creating board: ${mainBoardName}...`);
 
-    // Define properties manually or import from a template source if available
-    // For now, replicating the "Survey" template structure
     const properties = [
       {
         id: uuidv4(),
-        name: "Trạng thái",
+        name: "Status",
         type: PropertyType.STATUS,
         order: 0,
         width: 150,
         options: [
-          { id: uuidv4(), label: "Chờ xử lý", color: "bg-gray-100 text-gray-800" },
-          { id: uuidv4(), label: "Đang xử lý", color: "bg-blue-100 text-blue-800" },
-          { id: uuidv4(), label: "Đã hoàn thành", color: "bg-green-100 text-green-800" },
+          { id: uuidv4(), label: "Todo", color: "bg-gray-100 text-gray-800" },
+          { id: uuidv4(), label: "Planning", color: "bg-purple-100 text-purple-800" },
+          { id: uuidv4(), label: "In Progress", color: "bg-blue-100 text-blue-800" },
+          { id: uuidv4(), label: "Done", color: "bg-green-100 text-green-800" },
         ],
       },
       {
         id: uuidv4(),
-        name: "Loại hồ sơ",
+        name: "Priority",
         type: PropertyType.SELECT,
         order: 1,
-        width: 180,
+        width: 140,
         options: [
-          { id: uuidv4(), label: "Đo đạc địa chính", color: "bg-blue-50 text-blue-700" },
-          { id: uuidv4(), label: "Trích đo địa chính", color: "bg-indigo-50 text-indigo-700" },
-          { id: uuidv4(), label: "Đo vẽ bản đồ", color: "bg-purple-50 text-purple-700" },
+          { id: uuidv4(), label: "Low", color: "bg-green-50 text-green-700" },
+          { id: uuidv4(), label: "Medium", color: "bg-yellow-50 text-yellow-700" },
+          { id: uuidv4(), label: "High", color: "bg-orange-50 text-orange-700" },
+          { id: uuidv4(), label: "Critical", color: "bg-red-50 text-red-700" },
         ],
       },
-      { id: uuidv4(), name: "Địa chỉ", type: PropertyType.TEXT, order: 2, width: 250 },
-      { id: uuidv4(), name: "Diện tích (m²)", type: PropertyType.NUMBER, order: 3, width: 120 },
-      { id: uuidv4(), name: "Người yêu cầu", type: PropertyType.TEXT, order: 4, width: 150 },
-      { id: uuidv4(), name: "Số điện thoại", type: PropertyType.TEXT, order: 5, width: 120 },
-      { id: uuidv4(), name: "Ngày nhận", type: PropertyType.DATE, order: 6, width: 130 },
-      { id: uuidv4(), name: "Ngày hẹn trả", type: PropertyType.DATE, order: 7, width: 130 },
-      { id: uuidv4(), name: "Người phụ trách", type: PropertyType.USER, order: 8, width: 150 },
-      { id: uuidv4(), name: "Ghi chú", type: PropertyType.TEXT, order: 9, width: 200 }, // Using Text for simplicity in seed
+      { id: uuidv4(), name: "Department", type: PropertyType.TEXT, order: 2, width: 150 },
+      { id: uuidv4(), name: "Due Date", type: PropertyType.DATE, order: 3, width: 130 },
+      { id: uuidv4(), name: "Start Date", type: PropertyType.DATE, order: 4, width: 130 },
+      { id: uuidv4(), name: "Assignee", type: PropertyType.USER, order: 5, width: 150 },
+      { id: uuidv4(), name: "Notes", type: PropertyType.TEXT, order: 6, width: 250 },
     ];
 
-    surveyBoard = await Board.create({
-      name: surveyBoardName,
-      description: "Quản lý hồ sơ đo đạc (Seed Data)",
+    mainBoard = await Board.create({
+      name: mainBoardName,
+      description: "Strategic project roadmap for 2024",
       ownerId: admin._id,
       visibility: "workspace",
       properties,
       views: [
         {
           id: uuidv4(),
-          name: "Tất cả hồ sơ",
+          name: "All Tasks",
           type: "table",
           config: { visibleProperties: properties.map((p) => p.id) },
           isDefault: true,
         },
         {
           id: uuidv4(),
-          name: "Bảng Kanban",
+          name: "Kanban Board",
           type: "kanban",
           config: {
             visibleProperties: properties.map((p) => p.id),
-            // Group by Status property
-            groupBy: properties.find((p) => p.type === PropertyType.STATUS)?.id,
+            groupBy: properties.find((p) => p.name === "Status")?.id,
           },
           isDefault: false,
         },
       ],
     });
-    console.log(`✅ Created board: ${surveyBoardName}`);
+    console.log(`✅ Created board: ${mainBoardName}`);
 
     // Add Members
     for (const u of TEST_USERS) {
       const userObj = getUser(u.email);
       if (userObj) {
         await BoardMember.create({
-          boardId: surveyBoard._id,
+          boardId: mainBoard._id,
           userId: userObj._id,
-          role: "editor", // Simplified
+          role: "editor",
           addedBy: admin._id,
         });
       }
@@ -325,46 +332,43 @@ async function seed() {
 
     // Create Tasks
     const propMap = {
-      status: properties.find((p) => p.name === "Trạng thái"),
-      loaiHoSo: properties.find((p) => p.name === "Loại hồ sơ"),
-      diaChi: properties.find((p) => p.name === "Địa chỉ"),
-      dienTich: properties.find((p) => p.name === "Diện tích (m²)"),
-      nguoiYeuCau: properties.find((p) => p.name === "Người yêu cầu"),
-      sdt: properties.find((p) => p.name === "Số điện thoại"),
-      ngayNhan: properties.find((p) => p.name === "Ngày nhận"),
-      ngayHenTra: properties.find((p) => p.name === "Ngày hẹn trả"),
-      phuTrach: properties.find((p) => p.name === "Người phụ trách"),
-      ghiChu: properties.find((p) => p.name === "Ghi chú"),
+      status: properties.find((p) => p.name === "Status"),
+      priority: properties.find((p) => p.name === "Priority"),
+      department: properties.find((p) => p.name === "Department"),
+      dueDate: properties.find((p) => p.name === "Due Date"),
+      startDate: properties.find((p) => p.name === "Start Date"),
+      assignee: properties.find((p) => p.name === "Assignee"),
+      notes: properties.find((p) => p.name === "Notes"),
     };
 
-    for (const [index, taskData] of SURVEY_TASKS.entries()) {
+    for (const [index, taskData] of PROJECT_TASKS.entries()) {
       const statusOpt = propMap.status?.options?.find((o) => o.label === taskData.status)?.id;
-      const loaiOpt = propMap.loaiHoSo?.options?.find((o) => o.label === taskData.loaiHoSo)?.id;
+      const priorityOpt = propMap.priority?.options?.find((o) => o.label === taskData.priority)?.id;
       const assignee = getUser(taskData.assigneeEmail)?._id?.toString();
 
       await Task.create({
-        boardId: surveyBoard._id,
+        boardId: mainBoard._id,
         title: taskData.title,
         order: index,
         createdBy: admin._id,
         properties: {
           [propMap.status!.id]: statusOpt,
-          [propMap.loaiHoSo!.id]: loaiOpt,
-          [propMap.diaChi!.id]: taskData.diaChi,
-          [propMap.dienTich!.id]: taskData.dienTich,
-          [propMap.nguoiYeuCau!.id]: taskData.nguoiYeuCau,
-          [propMap.sdt!.id]: taskData.soDienThoai,
-          [propMap.ngayNhan!.id]: taskData.ngayNhan, // ISO string needed? Date cell expects ISO usually
-          [propMap.ngayHenTra!.id]: taskData.ngayHenTra,
-          [propMap.phuTrach!.id]: assignee ? [assignee] : [], // User cell usually expects array of IDs
-          [propMap.ghiChu!.id]: taskData.ghiChu,
+          [propMap.priority!.id]: priorityOpt,
+          [propMap.department!.id]: taskData.department,
+          [propMap.dueDate!.id]: taskData.dueDate,
+          [propMap.startDate!.id]: taskData.startDate,
+          [propMap.assignee!.id]: assignee ? [assignee] : [],
+          [propMap.notes!.id]: taskData.notes,
         },
       });
     }
-    console.log(`✅ Created ${SURVEY_TASKS.length} tasks for Survey Board`);
+    console.log(`✅ Created ${PROJECT_TASKS.length} tasks for Product Board`);
 
     // 5. SIMPLE BOARD (Internal Work)
-    const simpleBoardName = "Công việc nội bộ";
+    const simpleBoardName = "Team Internal";
+    // Clean old name
+    await Board.deleteOne({ name: "Công việc nội bộ" });
+
     let existingSimple = await Board.findOne({ name: simpleBoardName });
 
     if (existingSimple) {
@@ -379,7 +383,7 @@ async function seed() {
       const props = [
         {
           id: uuidv4(),
-          name: "Trạng thái",
+          name: "Status",
           type: PropertyType.STATUS,
           order: 0,
           width: 150,
@@ -394,7 +398,7 @@ async function seed() {
       const simpleBoard = await Board.create({
         name: simpleBoardName,
         ownerId: admin._id,
-        visibility: "workspace", // Visible to all workspace members
+        visibility: "workspace",
         properties: props,
         views: [
           {
@@ -407,11 +411,8 @@ async function seed() {
         ],
       });
 
-      // Members: Everyone is an editor here (Simplistic workspace board)
       for (const u of TEST_USERS) {
-        // Skip 'user' to test workspace visibility (Viewer) fallback
         if (u.role === "user") continue;
-
         const userObj = getUser(u.email);
         if (userObj) {
           await BoardMember.create({
@@ -431,7 +432,7 @@ async function seed() {
 
       await Task.create({
         boardId: simpleBoard._id,
-        title: "Họp giao ban tuần",
+        title: "Weekly Sync Meeting",
         order: 0,
         createdBy: admin._id,
         properties: {
@@ -442,11 +443,11 @@ async function seed() {
       console.log(`✅ Created board: ${simpleBoardName}`);
     }
 
-    // 6. PRIVATE BOARD (Restricted)
-    // - Manager: Owner
-    // - Staff: Viewer
-    // - User: No Access
-    const privateBoardName = "Dự án Mật (Private)";
+    // 6. PRIVATE BOARD
+    // Clean old
+    await Board.deleteOne({ name: "Dự án Mật (Private)" });
+
+    const privateBoardName = "Exec Strategy (Private)";
     const existingPrivate = await Board.findOne({ name: privateBoardName });
     if (!existingPrivate) {
       const manager = getUser("manager@k-board.com");
@@ -457,7 +458,7 @@ async function seed() {
 
         const privateBoard = await Board.create({
           name: privateBoardName,
-          ownerId: manager._id, // Manager owns this
+          ownerId: manager._id,
           visibility: "private",
           properties: props,
           views: [
@@ -471,22 +472,18 @@ async function seed() {
           ],
         });
 
-        // Manager = Owner
         await BoardMember.create({
           boardId: privateBoard._id,
           userId: manager._id,
           role: "owner",
           addedBy: admin._id,
         });
-        // Staff = Viewer
         await BoardMember.create({
           boardId: privateBoard._id,
           userId: staff._id,
           role: "viewer",
           addedBy: manager._id,
         });
-
-        // Admin gets added as owner too usually, or remains super-admin. Let's add admin as editor for visibility.
         await BoardMember.create({
           boardId: privateBoard._id,
           userId: admin._id,
@@ -494,9 +491,7 @@ async function seed() {
           addedBy: admin._id,
         });
 
-        console.log(
-          `✅ Created board: ${privateBoardName} (Manager=Owner, Staff=Viewer, User=NoAccess)`
-        );
+        console.log(`✅ Created board: ${privateBoardName}`);
       }
     }
 

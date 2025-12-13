@@ -55,7 +55,7 @@ test.describe("Marketing Screenshots Gallery", () => {
     console.log("📸 Captured Boards List");
 
     // 6. Board Details
-    const boardName = "Hồ sơ đo đạc 2024";
+    const boardName = "Product Roadmap 2024";
     // Navigate via URL to avoid UI flakiness
     await page.goto("/dashboard/boards");
     await page.getByText(boardName).click();
@@ -70,20 +70,20 @@ test.describe("Marketing Screenshots Gallery", () => {
 
     // 6b. Kanban View switch
     // Switch to Kanban View (if not active)
-    // Try to find the tab "Bảng Kanban" (Seed name)
-    const kanbanTab = page.getByText("Bảng Kanban");
+    // Try to find the tab "Kanban Board" (Seed name)
+    const kanbanTab = page.getByText("Kanban Board");
     if (await kanbanTab.isVisible()) {
       await kanbanTab.click();
       await page.waitForTimeout(1000); // Animation
     }
 
     // Wait for Kanban Columns
-    // "Chờ xử lý" should be a column header now
-    await expect(page.getByText("Chờ xử lý")).toBeVisible();
+    // "In Progress" should be a column header now
+    await expect(page.getByText("In Progress")).toBeVisible();
     await page.waitForTimeout(1000);
 
     // Ensure "New Task" button is visible
-    await expect(page.getByRole("button", { name: /New|Mới/i })).toBeVisible();
+    await expect(page.getByRole("button", { name: /New/i })).toBeVisible();
     await page.screenshot({ path: "public/screenshots/kanban.png" });
     console.log("📸 Captured Kanban");
 
