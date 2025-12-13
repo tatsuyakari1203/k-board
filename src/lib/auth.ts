@@ -129,6 +129,41 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         // Important: cache name/image in token so they persist
         token.name = user.name;
         token.picture = user.image;
+      } else if (token?.id) {
+        // Optimization: For subsequent requests, validate user against DB
+        // This ensures deleted/blocked users are invalidated immediately
+        // and role changes are reflected without re-login.
+        try {
+          await connectDB();
+          const dbUser = await User.findById(token.id).select(
+            "role status isActive name image phone department position"
+          );
+
+          if (!dbUser) {
+            console.warn(`User ${token.id} not found in DB. Invalidating token.`);
+            return null; // Invalidates session
+          }
+
+          // Check status
+          const isAdmin = dbUser.role === USER_ROLES.ADMIN;
+          if (!isAdmin && (dbUser.status !== USER_STATUS.APPROVED || !dbUser.isActive)) {
+            return null;
+          }
+
+          // Sync verifyable fields
+          token.role = dbUser.role;
+          token.name = dbUser.name;
+          token.picture = dbUser.image;
+          token.phone = dbUser.phone;
+          token.department = dbUser.department;
+          token.position = dbUser.position;
+        } catch (error) {
+          console.error("Error validating user in JWT callback:", error);
+          // Don't kill session on DB connection error to be resilient?
+          // Or fail safe? secure = fail closed.
+          // For now, if DB fails, we might want to keep existing token or fail.
+          // Choosing to return current token to avoid outage during transient DB issues.
+        }
       }
 
       // Handle session update
