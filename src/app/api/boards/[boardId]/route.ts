@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import dbConnect from "@/lib/db";
-import Board from "@/models/board.model";
-import Task from "@/models/task.model";
-import BoardMember from "@/models/board-member.model";
+import { BoardService } from "@/services/board.service";
+import { TaskService } from "@/services/task.service";
 import { checkBoardAccess } from "@/lib/board-permissions";
 import { updateBoardSchema } from "@/types/board";
 
@@ -16,38 +14,25 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { boardId } = await params;
 
-    await dbConnect();
-
     // Check board access
     const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess) {
-      return NextResponse.json(
-        { error: "Bạn không có quyền truy cập board này" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Bạn không có quyền truy cập board này" }, { status: 403 });
     }
 
-    const board = await Board.findById(boardId).lean();
+    const board = await BoardService.getBoardById(boardId);
 
     if (!board) {
-      return NextResponse.json(
-        { error: "Board not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Board not found" }, { status: 404 });
     }
 
     // Get tasks
-    const tasks = await Task.find({ boardId })
-      .sort({ order: 1 })
-      .lean();
+    const tasks = await TaskService.getTasksByBoardId(boardId);
 
     return NextResponse.json({
       ...board,
@@ -65,10 +50,7 @@ export async function GET(request: NextRequest, { params }: RouteParams) {
     });
   } catch (error) {
     console.error("GET /api/boards/[boardId] error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -77,16 +59,11 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { boardId } = await params;
     const body = await request.json();
-
-    await dbConnect();
 
     // Check board access - need canEditBoard permission
     const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
@@ -105,17 +82,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
       );
     }
 
-    const board = await Board.findByIdAndUpdate(
-      boardId,
-      { $set: validation.data },
-      { new: true }
-    ).lean();
+    const board = await BoardService.updateBoard(boardId, validation.data);
 
     if (!board) {
-      return NextResponse.json(
-        { error: "Board not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Board not found" }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -124,10 +94,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     });
   } catch (error) {
     console.error("PATCH /api/boards/[boardId] error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -136,44 +103,40 @@ export async function DELETE(request: NextRequest, { params }: RouteParams) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { boardId } = await params;
 
-    await dbConnect();
-
     // Check board access - need canDeleteBoard permission (owner only)
     const access = await checkBoardAccess(boardId, session.user.id, session.user.role);
     if (!access.hasAccess || !access.permissions?.canDeleteBoard) {
-      return NextResponse.json(
-        { error: "Chỉ chủ sở hữu mới có thể xóa board" },
-        { status: 403 }
-      );
+      return NextResponse.json({ error: "Chỉ chủ sở hữu mới có thể xóa board" }, { status: 403 });
     }
 
-    const board = await Board.findByIdAndDelete(boardId);
+    const board = await BoardService.deleteBoard(boardId);
 
     if (!board) {
-      return NextResponse.json(
-        { error: "Board not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Board not found" }, { status: 404 });
     }
 
     // Delete all tasks and members in this board
-    await Task.deleteMany({ boardId });
+    await TaskService.deleteTasksByBoardId(boardId);
+
+    // Note: BoardService.deleteBoard logic could also be enhanced to delete members,
+    // but originally it was in the route.
+    // For now keeping explicit calls or moving to service.
+    // Let's verify existing code: original code deleted members here.
+    // I should probably move member deletion to BoardService.deleteBoard to be safe?
+    // In BoardService.deleteBoard I only did Board.findByIdAndDelete.
+    // I'll add member deletion to this route for now to match exactly original logic,
+    // or update BoardService.
+    const BoardMember = (await import("@/models/board-member.model")).default;
     await BoardMember.deleteMany({ boardId });
 
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("DELETE /api/boards/[boardId] error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
