@@ -12,6 +12,7 @@
     "docker:push": "./scripts/docker-build-push.sh --push",
     "docker:build:push": "./scripts/docker-build-push.sh --push",
     "docker:prune": "./scripts/docker-build-push.sh --prune",
+    "docker:clean": "./scripts/docker-clean.sh",
     "seed": "tsx --env-file=.env.local src/scripts/seed.ts",
     "prepare": "husky"
   },
