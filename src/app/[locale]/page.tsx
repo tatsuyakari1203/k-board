@@ -3,30 +3,11 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Layout, Users, Zap } from "lucide-react";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { getTranslations } from "next-intl/server";
-import { UserService } from "@/services/user.service";
-import { redirect } from "next/navigation";
 import { DashboardPreview } from "@/components/landing/dashboard-preview";
 
 export default async function LandingPage() {
-  // Check if system needs setup (0 users)
-  // ... (keep existing check logic)
-  try {
-    const counts = await UserService.getUserCounts();
-    if (counts.total === 0) {
-      redirect("/auth/register?setup=true");
-    }
-  } catch (error: unknown) {
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "digest" in error &&
-      typeof (error as { digest: unknown }).digest === "string" &&
-      (error as { digest: string }).digest.startsWith("NEXT_REDIRECT")
-    ) {
-      throw error;
-    }
-    console.error("Failed to check system status:", error);
-  }
+  // Landing page should always be accessible
+  // Authentication check is handled in /auth/* routes
 
   const tAuth = await getTranslations("Auth");
   const tLanding = await getTranslations("Landing");
