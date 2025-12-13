@@ -132,6 +132,31 @@ Visit `http://localhost:3000` to see the app.
 
 ---
 
+## 🐳 Deployment (Docker)
+
+### One-Line Install (Recommended)
+
+Quickly deploy K-Board on any Linux server with Docker installed:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/tatsuyakari1203/k-board/main/install.sh | bash
+```
+
+### Manual Docker Run
+
+```bash
+# Pull image
+docker pull tatsuyakari/k-board:latest
+
+# Run container
+docker run -d -p 3000:3000 \
+  -e MONGODB_URI=mongodb://host.docker.internal:27017/k-board \
+  -e AUTH_SECRET=your_secure_secret \
+  tatsuyakari/k-board:latest
+```
+
+---
+
 ## 🔐 Default Admin Credentials
 
 The seed script creates a default administrator account:
