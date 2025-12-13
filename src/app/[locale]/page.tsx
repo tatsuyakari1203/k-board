@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, Layout, Users, Zap } from "lucide-react";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { useTranslations } from "next-intl";
+import { DashboardPreview } from "@/components/landing/dashboard-preview";
 
 export default function LandingPage() {
   const tAuth = useTranslations("Auth");
@@ -46,10 +47,7 @@ export default function LandingPage() {
               </Button>
             </div>
           </div>
-          <div className="relative aspect-video rounded-xl bg-muted border border-border/50 shadow-2xl overflow-hidden flex items-center justify-center">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-background/10 z-0" />
-            <div className="z-10 text-muted-foreground font-medium">Dashboard Preview</div>
-          </div>
+          <DashboardPreview />
         </div>
       </section>
 

@@ -296,7 +296,6 @@
     "loading": "Đang tải...",
     "error": "Có lỗi xảy ra"
   },
-
   "Users": {
     "title": "Nhân sự",
     "subtitle": "Danh sách nhân viên trong hệ thống",
@@ -597,6 +596,48 @@
           "pink": "Hồng"
         }
       }
+    }
+  },
+  "AdminRoles": {
+    "title": "Vai trò hệ thống",
+    "description": "Quản lý vai trò và quyền hạn toàn cục cho các bảng.",
+    "createRole": "Tạo vai trò",
+    "editRole": "Chỉnh sửa vai trò",
+    "deleteRole": "Xóa vai trò",
+    "roleName": "Tên vai trò",
+    "slug": "Mã định danh (Slug)",
+    "permissions": "Quyền hạn",
+    "type": "Loại",
+    "system": "Hệ thống",
+    "custom": "Tùy chỉnh",
+    "noRoles": "Không tìm thấy vai trò nào.",
+    "deleteConfirmTitle": "Bạn có chắc chắn không?",
+    "deleteConfirmDesc": "Hành động này không thể hoàn tác. Vai trò \"{name}\" sẽ bị xóa vĩnh viễn.",
+    "deleteSuccess": "Xóa vai trò thành công",
+    "createSuccess": "Tạo vai trò thành công",
+    "updateSuccess": "Cập nhật vai trò thành công",
+    "form": {
+      "nameLabel": "Tên vai trò",
+      "namePlaceholder": "VD: Quản lý dự án",
+      "slugLabel": "Mã định danh (Slug)",
+      "slugPlaceholder": "VD: project_manager",
+      "slugDesc": "Định danh duy nhất (chữ thường, không dấu, không khoảng trắng)",
+      "descLabel": "Mô tả",
+      "descPlaceholder": "Mô tả những gì vai trò này có thể làm...",
+      "permissionsLabel": "Quyền hạn",
+      "save": "Lưu vai trò",
+      "saving": "Đang lưu..."
+    },
+    "permissionsList": {
+      "board_view": "Xem bảng",
+      "view_scope_assigned": "Chỉ xem công việc được giao",
+      "task_create": "Tạo công việc",
+      "task_edit": "Chỉnh sửa công việc",
+      "edit_scope_assigned": "Chỉ sửa công việc được giao",
+      "task_delete": "Xóa công việc",
+      "board_edit": "Chỉnh sửa cài đặt bảng",
+      "members_manage": "Quản lý thành viên",
+      "board_delete": "Xóa bảng"
     }
   }
 }

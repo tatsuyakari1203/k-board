@@ -44,6 +44,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <nav className="p-4 space-y-1">
             <NavItem href="/dashboard/admin" icon={Shield} label={t("overview")} />
             <NavItem href="/dashboard/admin/users" icon={Users} label={t("manageUsers")} />
+            <NavItem href="/dashboard/admin/roles" icon={Shield} label="Roles & Permissions" />
             <NavItem href="/dashboard/admin/settings" icon={Settings} label={t("systemSettings")} />
             <NavItem
               href="/dashboard/admin/audit-logs"
