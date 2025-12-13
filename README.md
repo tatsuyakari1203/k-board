@@ -237,11 +237,17 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 | :----------------------------------------------------------------: | :----------------------------------------------------------------------: |
 | <img src="public/screenshots/login.png" width="400" alt="Login" /> | <img src="public/screenshots/register.png" width="400" alt="Register" /> |
 
-### Dashboard & Board
+### Dashboard
 
-|                                 Dashboard                                  |                               Kanban Visuals                               |
-| :------------------------------------------------------------------------: | :------------------------------------------------------------------------: |
-| <img src="public/screenshots/dashboard.png" width="400" alt="Dashboard" /> | <img src="public/screenshots/kanban.png" width="400" alt="Kanban Board" /> |
+<p align="center">
+  <img src="public/screenshots/dashboard.png" width="800" alt="Dashboard" style="border-radius: 5px" />
+</p>
+
+### Board Views
+
+|                                  Table View                                  |                              Kanban Visuals                               |
+| :--------------------------------------------------------------------------: | :-----------------------------------------------------------------------: |
+| <img src="public/screenshots/table-view.png" width="400" alt="Table View" /> | <img src="public/screenshots/kanban.png" width="400" alt="Kanban View" /> |
 
 ### User Interface
 

@@ -54,13 +54,21 @@ test.describe("Marketing Screenshots Gallery", () => {
     await page.screenshot({ path: "public/screenshots/boards-list.png" });
     console.log("📸 Captured Boards List");
 
-    // 6. Kanban Board
+    // 6. Board Details
     const boardName = "Hồ sơ đo đạc 2024";
     // Navigate via URL to avoid UI flakiness
     await page.goto("/dashboard/boards");
     await page.getByText(boardName).click();
     await expect(page.locator("h1")).toContainText(boardName);
 
+    // 6a. Table View (Default)
+    // Wait for table rows to appear
+    await expect(page.getByRole("table")).toBeVisible();
+    await page.waitForTimeout(1000);
+    await page.screenshot({ path: "public/screenshots/table-view.png" });
+    console.log("📸 Captured Table View");
+
+    // 6b. Kanban View switch
     // Switch to Kanban View (if not active)
     // Try to find the tab "Bảng Kanban" (Seed name)
     const kanbanTab = page.getByText("Bảng Kanban");
