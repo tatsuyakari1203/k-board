@@ -5,10 +5,17 @@ import User from "@/models/user.model";
 import Board from "@/models/board.model";
 import Task from "@/models/task.model";
 import BoardMember from "@/models/board-member.model";
+import Role from "@/models/role.model";
 import { SettingsService } from "@/services/settings.service";
 import { SETTING_KEYS, REGISTRATION_MODE } from "@/types/system-settings";
 import { USER_ROLES, USER_STATUS } from "@/types/user";
 import { PropertyType } from "@/types/board";
+import {
+  BOARD_ROLES,
+  BOARD_ROLE_PERMISSIONS,
+  BOARD_ROLE_LABELS,
+  type BoardPermissions,
+} from "@/types/board-member";
 
 // --- DATA DEFINITIONS ---
 
@@ -83,10 +90,48 @@ const SURVEY_TASKS = [
   },
 ];
 
+function getPermissionsCodes(permissions: BoardPermissions): string[] {
+  const codes: string[] = [];
+  if (permissions.canView) codes.push("board.view");
+  if (permissions.viewScope === "assigned") codes.push("view.scope.assigned");
+  if (permissions.canCreateTasks) codes.push("task.create");
+  if (permissions.canEditTasks) codes.push("task.edit");
+  if (permissions.editScope === "assigned") codes.push("edit.scope.assigned");
+  if (permissions.canDeleteTasks) codes.push("task.delete");
+  if (permissions.canEditBoard) codes.push("board.edit");
+  if (permissions.canManageMembers) codes.push("members.manage");
+  if (permissions.canDeleteBoard) codes.push("board.delete");
+  return codes;
+}
+
 async function seed() {
   try {
     console.log("🌱 Starting seed...");
     await connectDB();
+
+    // 0. SYSTEM ROLES
+    console.log("Creating/Updating System Roles...");
+    const roleSlugs = Object.keys(BOARD_ROLE_PERMISSIONS);
+
+    for (const slug of roleSlugs) {
+      const permissions = BOARD_ROLE_PERMISSIONS[slug];
+      const codes = getPermissionsCodes(permissions);
+      const name = BOARD_ROLE_LABELS[slug as keyof typeof BOARD_ROLE_LABELS] || slug;
+
+      await Role.findOneAndUpdate(
+        { slug, boardId: null, isSystem: true }, // Find system role
+        {
+          name,
+          slug,
+          description: `System role: ${name}`,
+          isSystem: true,
+          boardId: null,
+          permissions: codes,
+        },
+        { upsert: true, new: true }
+      );
+    }
+    console.log(`✅ Synced ${roleSlugs.length} system roles`);
 
     // 1. ADMIN USER
     let admin = await User.findOne({ role: USER_ROLES.ADMIN });
