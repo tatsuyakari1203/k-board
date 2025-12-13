@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest",
-    "docker:build": "./scripts/docker-build.sh",
+    "docker:build": "./scripts/docker-build-push.sh",
+    "docker:push": "./scripts/docker-build-push.sh --push",
+    "docker:build:push": "./scripts/docker-build-push.sh --push",
+    "docker:prune": "./scripts/docker-build-push.sh --prune",
     "seed": "tsx --env-file=.env.local src/scripts/seed.ts",
     "prepare": "husky"
   },
