@@ -2,10 +2,37 @@ import { Suspense } from "react";
 import { Link, redirect } from "@/i18n/routing";
 import { RegisterForm } from "@/components/auth";
 import { connectDB } from "@/lib/db";
+import User from "@/models/user.model";
+import { getLocale } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
-export default function RegisterPage() {
+async function checkSystemInitialization() {
+  await connectDB();
+  const count = await User.countDocuments({});
+  return count > 0;
+}
+
+export default async function RegisterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}) {
+  const isInitialized = await checkSystemInitialization();
+  const locale = await getLocale();
+  const { setup } = await searchParams;
+  const isSetupMode = setup === "true";
+
+  // If system is not initialized (no admin) and not in setup mode -> Redirect to setup
+  if (!isInitialized && !isSetupMode) {
+    redirect({ href: "/auth/register?setup=true", locale });
+  }
+
+  // If system is initialized (admin exists) and trying to access setup mode -> Redirect to normal register
+  if (isInitialized && isSetupMode) {
+    redirect({ href: "/auth/register", locale });
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
