@@ -58,6 +58,10 @@ RUN addgroup --system --gid 1001 nodejs && \
 
 # Copy public assets
 COPY --from=builder /app/public ./public
+
+# Create uploads directory and set permissions
+RUN mkdir -p public/uploads && chown -R nextjs:nodejs public
+
 # Create .next directory and set permissions
 RUN mkdir .next && chown nextjs:nodejs .next
 

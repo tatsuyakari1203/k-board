@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# K-Board Quick Access Installer
+# K-Board All-in-One Installer
 # Usage: curl -sSL https://raw.githubusercontent.com/tatsuyakari1203/k-board/main/install.sh | bash
 
 set -e
@@ -12,10 +12,12 @@ APP_NAME="k-board"
 # Colors
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m'
 
 log() { echo -e "${BLUE}[INFO]${NC} $1"; }
+warn() { echo -e "${YELLOW}[WARN]${NC} $1"; }
 success() { echo -e "${GREEN}[SUCCESS]${NC} $1"; }
 error() { echo -e "${RED}[ERROR]${NC} $1"; exit 1; }
 
@@ -51,7 +53,13 @@ success "Docker is present."
 # 2. Setup Directory
 INSTALL_DIR="${APP_NAME}-deploy"
 if [ -d "$INSTALL_DIR" ]; then
-    log "Directory $INSTALL_DIR exists. Updating..."
+    warn "Directory $INSTALL_DIR exists."
+    read -p "Do you want to update/overwrite it? [y/N] " -n 1 -r
+    echo
+    if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+        log "Aborting installation."
+        exit 0
+    fi
 else
     log "Creating directory $INSTALL_DIR..."
     mkdir -p "$INSTALL_DIR"
@@ -68,30 +76,61 @@ else
     error "Neither curl nor wget is installed."
 fi
 
-# 4. Generate Environment
-if [ ! -f .env ]; then
-    log "Generating default .env file..."
+# 4. Configuration Wizard
+echo ""
+echo "========================================="
+echo "       CONFIGURATION WIZARD"
+echo "========================================="
+echo ""
 
-    # Generate secure secret
-    if command -v openssl &> /dev/null; then
-        AUTH_SECRET=$(openssl rand -hex 32)
-    else
-        AUTH_SECRET=$(head -c 32 /dev/urandom | xxd -p)
-    fi
+# Default values
+DEFAULT_PORT=3000
+DEFAULT_DOMAIN="http://localhost:$DEFAULT_PORT"
+DEFAULT_MONGO_USER="admin"
+DEFAULT_MONGO_PASS="password123"
 
-    cat <<EOF > .env
-# Auto-generated configuration
-MONGO_USERNAME=admin
-MONGO_PASSWORD=password123
-AUTH_SECRET=${AUTH_SECRET}
-AUTH_URL=http://localhost:3000
-EOF
-    success "Generated .env with secure secret."
+# Interactive prompts
+read -p "Enter Application Port [${DEFAULT_PORT}]: " APP_PORT
+APP_PORT=${APP_PORT:-$DEFAULT_PORT}
+
+read -p "Enter Domain/URL (e.g. https://kboard.com) [${DEFAULT_DOMAIN}]: " AUTH_URL
+AUTH_URL=${AUTH_URL:-$DEFAULT_DOMAIN}
+
+read -p "Enter MongoDB Username [${DEFAULT_MONGO_USER}]: " MONGO_USERNAME
+MONGO_USERNAME=${MONGO_USERNAME:-$DEFAULT_MONGO_USER}
+
+read -p "Enter MongoDB Password [${DEFAULT_MONGO_PASS}]: " MONGO_PASSWORD
+MONGO_PASSWORD=${MONGO_PASSWORD:-$DEFAULT_MONGO_PASS}
+
+# 5. Generate Environment
+log "Generating .env file..."
+
+# Generate secure secret
+if command -v openssl &> /dev/null; then
+    AUTH_SECRET=$(openssl rand -hex 32)
 else
-    log "Using existing .env configuration."
+    AUTH_SECRET=$(head -c 32 /dev/urandom | xxd -p)
 fi
 
-# 5. Launch Stack
+cat <<EOF > .env
+# Auto-generated configuration
+APP_PORT=${APP_PORT}
+MONGO_USERNAME=${MONGO_USERNAME}
+MONGO_PASSWORD=${MONGO_PASSWORD}
+AUTH_SECRET=${AUTH_SECRET}
+AUTH_URL=${AUTH_URL}
+EOF
+
+success "Configuration saved to .env"
+
+# 6. Create Uploads Directory
+log "Setting up uploads directory..."
+mkdir -p public/uploads
+# Set permissions to ensure container can write (UID 1001 is usually nextjs user in container)
+chmod 777 public/uploads
+success "Created public/uploads directory"
+
+# 7. Launch Stack
 log "Pulling latest images..."
 $DOCKER_COMPOSE_CMD pull
 
@@ -103,10 +142,11 @@ echo "========================================="
 success "K-Board is successfully deployed!"
 echo "========================================="
 echo ""
-echo "📱 Application: http://localhost:3000"
-echo "📂 Directory:   /$(pwd)"
+echo "📱 Application: ${AUTH_URL}"
+echo "📂 Directory:   $(pwd)"
 echo "🔐 Admin User:  (Create one via /auth/register on first visit)"
 echo ""
 echo "To stop the app:"
-echo "  cd $INSTALL_DIR && $DOCKER_COMPOSE_CMD down"
+echo "  cd $(pwd) && $DOCKER_COMPOSE_CMD down"
 echo ""
+
