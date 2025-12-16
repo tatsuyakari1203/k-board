@@ -68,6 +68,7 @@ cd "$INSTALL_DIR"
 
 # 3. Download Configuration
 log "Downloading configuration..."
+# Always download the latest docker-compose.yml to ensure updates are applied
 if command -v curl &> /dev/null; then
     curl -sSL -o docker-compose.yml "$REPO_URL/$COMPOSE_FILE" || error "Failed to download docker-compose.yml"
 elif command -v wget &> /dev/null; then
@@ -77,42 +78,46 @@ else
 fi
 
 # 4. Configuration Wizard
-echo ""
-echo "========================================="
-echo "       CONFIGURATION WIZARD"
-echo "========================================="
-echo ""
-
-# Default values
-DEFAULT_PORT=3000
-DEFAULT_DOMAIN="http://localhost:$DEFAULT_PORT"
-DEFAULT_MONGO_USER="admin"
-DEFAULT_MONGO_PASS="password123"
-
-# Interactive prompts
-read -p "Enter Application Port [${DEFAULT_PORT}]: " APP_PORT
-APP_PORT=${APP_PORT:-$DEFAULT_PORT}
-
-read -p "Enter Domain/URL (e.g. https://kboard.com) [${DEFAULT_DOMAIN}]: " AUTH_URL
-AUTH_URL=${AUTH_URL:-$DEFAULT_DOMAIN}
-
-read -p "Enter MongoDB Username [${DEFAULT_MONGO_USER}]: " MONGO_USERNAME
-MONGO_USERNAME=${MONGO_USERNAME:-$DEFAULT_MONGO_USER}
-
-read -p "Enter MongoDB Password [${DEFAULT_MONGO_PASS}]: " MONGO_PASSWORD
-MONGO_PASSWORD=${MONGO_PASSWORD:-$DEFAULT_MONGO_PASS}
-
-# 5. Generate Environment
-log "Generating .env file..."
-
-# Generate secure secret
-if command -v openssl &> /dev/null; then
-    AUTH_SECRET=$(openssl rand -hex 32)
+if [ -f .env ]; then
+    log "Found existing .env configuration. Skipping wizard..."
+    # Load existing values for display if needed, or just proceed
 else
-    AUTH_SECRET=$(head -c 32 /dev/urandom | xxd -p)
-fi
+    echo ""
+    echo "========================================="
+    echo "       CONFIGURATION WIZARD"
+    echo "========================================="
+    echo ""
 
-cat <<EOF > .env
+    # Default values
+    DEFAULT_PORT=3000
+    DEFAULT_DOMAIN="http://localhost:$DEFAULT_PORT"
+    DEFAULT_MONGO_USER="admin"
+    DEFAULT_MONGO_PASS="password123"
+
+    # Interactive prompts
+    read -p "Enter Application Port [${DEFAULT_PORT}]: " APP_PORT
+    APP_PORT=${APP_PORT:-$DEFAULT_PORT}
+
+    read -p "Enter Domain/URL (e.g. https://kboard.com) [${DEFAULT_DOMAIN}]: " AUTH_URL
+    AUTH_URL=${AUTH_URL:-$DEFAULT_DOMAIN}
+
+    read -p "Enter MongoDB Username [${DEFAULT_MONGO_USER}]: " MONGO_USERNAME
+    MONGO_USERNAME=${MONGO_USERNAME:-$DEFAULT_MONGO_USER}
+
+    read -p "Enter MongoDB Password [${DEFAULT_MONGO_PASS}]: " MONGO_PASSWORD
+    MONGO_PASSWORD=${MONGO_PASSWORD:-$DEFAULT_MONGO_PASS}
+
+    # 5. Generate Environment
+    log "Generating .env file..."
+
+    # Generate secure secret
+    if command -v openssl &> /dev/null; then
+        AUTH_SECRET=$(openssl rand -hex 32)
+    else
+        AUTH_SECRET=$(head -c 32 /dev/urandom | xxd -p)
+    fi
+
+    cat <<EOF > .env
 # Auto-generated configuration
 APP_PORT=${APP_PORT}
 MONGO_USERNAME=${MONGO_USERNAME}
@@ -121,7 +126,8 @@ AUTH_SECRET=${AUTH_SECRET}
 AUTH_URL=${AUTH_URL}
 EOF
 
-success "Configuration saved to .env"
+    success "Configuration saved to .env"
+fi
 
 # 6. Create Uploads Directory
 log "Setting up uploads directory..."
