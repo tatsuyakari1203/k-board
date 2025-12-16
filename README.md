@@ -43,7 +43,7 @@ Deploy K-Board in seconds on any Linux server (Ubuntu/Debian/CentOS) with Docker
 ### ⚡ One-Line Automated Install
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/tatsuyakari1203/k-board/main/install.sh | bash
+bash <(curl -sSL https://raw.githubusercontent.com/tatsuyakari1203/k-board/main/install.sh)
 ```
 
 > This script creates a secure `docker-compose.yml`, generates random secrets, pulls the latest optimized image, and sorts everything for you.
