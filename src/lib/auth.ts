@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { connectDB } from "@/lib/db";
 import User from "@/models/user.model";
@@ -33,13 +33,10 @@ declare module "next-auth" {
 }
 
 // Custom error class for specific auth errors
-class AuthError extends Error {
-  constructor(
-    message: string,
-    public code: string
-  ) {
+class AuthError extends CredentialsSignin {
+  constructor(message: string) {
     super(message);
-    this.name = "AuthError";
+    this.code = "credentials_signin";
   }
 }
 
@@ -75,22 +72,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           // Check user status (skip for admin)
           if (!isAdmin && user.status === USER_STATUS.PENDING) {
             throw new AuthError(
-              "Tài khoản của bạn đang chờ phê duyệt. Vui lòng liên hệ quản trị viên.",
-              "PENDING_APPROVAL"
+              "Tài khoản của bạn đang chờ phê duyệt. Vui lòng liên hệ quản trị viên."
             );
           }
 
           if (!isAdmin && user.status === USER_STATUS.REJECTED) {
-            throw new AuthError(
-              "Tài khoản của bạn đã bị từ chối. Vui lòng liên hệ quản trị viên.",
-              "REJECTED"
-            );
+            throw new AuthError("Tài khoản của bạn đã bị từ chối. Vui lòng liên hệ quản trị viên.");
           }
 
           if (!isAdmin && !user.isActive) {
             throw new AuthError(
-              "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.",
-              "INACTIVE"
+              "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên."
             );
           }
 

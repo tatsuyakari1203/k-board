@@ -23,7 +23,10 @@ export function useAuth() {
       });
 
       if (result?.error) {
-        throw new Error("Email hoặc mật khẩu không đúng");
+        if (result.error === "CredentialsSignin") {
+          throw new Error("Email hoặc mật khẩu không đúng");
+        }
+        throw new Error(result.error);
       }
 
       router.push(callbackUrl || "/dashboard");

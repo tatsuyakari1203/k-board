@@ -55,8 +55,24 @@ export function LoginForm() {
     try {
       await login(data.email, data.password, callbackUrl || undefined);
       showToast.success(tVal("loginSuccess"));
-    } catch {
-      showToast.error(tVal("loginError"));
+    } catch (error) {
+      if (error instanceof Error) {
+        // Handle specific error messages
+        if (error.message.includes("PENDING_APPROVAL") || error.message.includes("chờ phê duyệt")) {
+          showToast.error("Tài khoản đang chờ phê duyệt. Vui lòng liên hệ quản trị viên.");
+        } else if (error.message.includes("REJECTED") || error.message.includes("từ chối")) {
+          showToast.error("Tài khoản đã bị từ chối. Vui lòng liên hệ quản trị viên.");
+        } else if (error.message.includes("INACTIVE") || error.message.includes("vô hiệu hóa")) {
+          showToast.error("Tài khoản đã bị vô hiệu hóa. Vui lòng liên hệ quản trị viên.");
+        } else if (error.message === "Email hoặc mật khẩu không đúng") {
+          showToast.error(tVal("loginError"));
+        } else {
+          // Fallback for other errors
+          showToast.error(error.message || tVal("loginError"));
+        }
+      } else {
+        showToast.error(tVal("loginError"));
+      }
     } finally {
       setIsLoading(false);
     }
