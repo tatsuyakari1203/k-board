@@ -101,6 +101,12 @@ else
     read -p "Enter Domain/URL (e.g. https://kboard.com) [${DEFAULT_DOMAIN}]: " AUTH_URL
     AUTH_URL=${AUTH_URL:-$DEFAULT_DOMAIN}
 
+    # Auto-detect if we need to trust proxy (for https/production domains)
+    AUTH_TRUST_HOST="false"
+    if [[ "$AUTH_URL" == https* ]] || [[ "$AUTH_URL" != *"localhost"* ]]; then
+        AUTH_TRUST_HOST="true"
+    fi
+
     read -p "Enter MongoDB Username [${DEFAULT_MONGO_USER}]: " MONGO_USERNAME
     MONGO_USERNAME=${MONGO_USERNAME:-$DEFAULT_MONGO_USER}
 
@@ -124,6 +130,8 @@ MONGO_USERNAME=${MONGO_USERNAME}
 MONGO_PASSWORD=${MONGO_PASSWORD}
 AUTH_SECRET=${AUTH_SECRET}
 AUTH_URL=${AUTH_URL}
+NEXT_PUBLIC_APP_URL=${AUTH_URL}
+AUTH_TRUST_HOST=${AUTH_TRUST_HOST}
 EOF
 
     success "Configuration saved to .env"
