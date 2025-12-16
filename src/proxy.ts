@@ -1,9 +1,11 @@
 import createMiddleware from "next-intl/middleware";
 import { routing } from "./i18n/routing";
 import { NextRequest, NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import NextAuth from "next-auth";
+import { authConfig } from "@/lib/auth.config";
 
 const intlMiddleware = createMiddleware(routing);
+const { auth } = NextAuth(authConfig);
 
 // Routes that don't require authentication
 const publicRoutes = ["/auth/login", "/auth/register", "/auth/error", "/auth/forgot-password"];
@@ -48,12 +50,9 @@ export async function proxy(req: NextRequest) {
 
   // 2. Handle API routes (bypass intl)
   if (isApiRoute) {
-    const token = await getToken({
-      req,
-      secret: process.env.AUTH_SECRET,
-    });
-    const isLoggedIn = !!token;
-    const userRole = token?.role as string | undefined;
+    const session = await auth();
+    const isLoggedIn = !!session?.user;
+    const userRole = session?.user?.role as string | undefined;
 
     for (const [path, allowedRoles] of Object.entries(apiRoleRoutes)) {
       if (pathname.startsWith(path)) {
@@ -90,12 +89,9 @@ export async function proxy(req: NextRequest) {
   if (pathWithoutLocale === "") pathWithoutLocale = "/";
 
   // Get Token
-  const token = await getToken({
-    req,
-    secret: process.env.AUTH_SECRET,
-  });
-  const isLoggedIn = !!token;
-  const userRole = token?.role as string | undefined;
+  const session = await auth();
+  const isLoggedIn = !!session?.user;
+  const userRole = session?.user?.role as string | undefined;
 
   const isAuthRoute = pathWithoutLocale.startsWith("/auth");
 

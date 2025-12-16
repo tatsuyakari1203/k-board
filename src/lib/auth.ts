@@ -4,6 +4,7 @@ import { connectDB } from "@/lib/db";
 import User from "@/models/user.model";
 import { loginSchema } from "@/lib/validations/auth";
 import { USER_ROLES, USER_STATUS, type UserRole } from "@/types/user";
+import { authConfig } from "./auth.config";
 
 declare module "next-auth" {
   interface Session {
@@ -43,6 +44,7 @@ class AuthError extends Error {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
+  ...authConfig,
   trustHost: true,
   providers: [
     Credentials({
@@ -120,16 +122,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
+    ...authConfig.callbacks,
     async jwt({ token, user, trigger, session }) {
+      // Run basic JWT callback first
+      const basicToken = await authConfig.callbacks?.jwt?.({ token, user, trigger, session });
+      if (basicToken) token = basicToken;
+
       if (user) {
-        token.id = user.id;
-        token.role = user.role;
-        token.phone = user.phone;
-        token.department = user.department;
-        token.position = user.position;
-        // Important: cache name/image in token so they persist
-        token.name = user.name;
-        token.picture = user.image;
+        // Already handled in basic callback
       } else if (token?.id) {
         // Optimization: For subsequent requests, validate user against DB
         // This ensures deleted/blocked users are invalidated immediately
@@ -167,37 +167,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         }
       }
 
-      // Handle session update
-      if (trigger === "update" && session) {
-        if (session.name) token.name = session.name;
-        if (session.image) token.picture = session.image;
-        if (session.phone !== undefined) token.phone = session.phone;
-        if (session.department !== undefined) token.department = session.department;
-        if (session.position !== undefined) token.position = session.position;
-      }
-
       return token;
     },
-    async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as UserRole;
-        session.user.phone = token.phone as string | undefined;
-        session.user.department = token.department as string | undefined;
-        session.user.position = token.position as string | undefined;
-        // Ensure name/image come from token (which might be updated)
-        if (token.name) session.user.name = token.name;
-        if (token.picture) session.user.image = token.picture;
-      }
-      return session;
-    },
-  },
-  pages: {
-    signIn: "/auth/login",
-    error: "/auth/error",
-  },
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 });
