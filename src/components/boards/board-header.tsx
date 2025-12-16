@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { ChevronLeft, Table2, Kanban, Users, Building2, Plus } from "lucide-react";
 import { type View, ViewType } from "@/types/board";
 import { type BoardRole, type BoardPermissions, type BoardVisibility } from "@/types/board-member";

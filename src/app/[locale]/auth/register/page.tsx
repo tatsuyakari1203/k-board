@@ -1,5 +1,7 @@
-import Link from "next/link";
-import { RegisterForm } from "@/components/auth/register-form";
+import { Suspense } from "react";
+import { Link, redirect } from "@/i18n/routing";
+import { RegisterForm } from "@/components/auth";
+import { connectDB } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 

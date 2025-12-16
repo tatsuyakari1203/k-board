@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link, usePathname } from "@/i18n/routing";
 import {
   LayoutGrid,
   Users,
@@ -11,7 +11,6 @@ import {
   Menu,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { usePathname } from "next/navigation";
 import { UserButton } from "@/components/auth";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 import { useTranslations, useLocale } from "next-intl";
@@ -34,7 +34,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import { BOARD_ROLES, type BoardRole, type BoardVisibility } from "@/types/board-member";
 
 interface BoardListItem {

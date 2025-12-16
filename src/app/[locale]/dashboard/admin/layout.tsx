@@ -1,21 +1,24 @@
 import { getCurrentUser } from "@/lib/auth-utils";
-import { redirect } from "next/navigation";
+import { redirect } from "@/i18n/routing";
 import { USER_ROLES } from "@/types/user";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { Users, Settings, Shield, ChevronLeft, ClipboardList } from "lucide-react";
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
   const t = await getTranslations("Admin");
   const tDashboard = await getTranslations("Dashboard");
+  const locale = await getLocale();
 
   if (!user) {
-    redirect("/auth/login");
+    redirect({ href: "/auth/login", locale });
+    return null;
   }
 
   if (user.role !== USER_ROLES.ADMIN) {
-    redirect("/dashboard");
+    redirect({ href: "/dashboard", locale });
+    return null;
   }
 
   return (

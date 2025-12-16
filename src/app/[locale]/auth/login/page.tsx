@@ -1,9 +1,9 @@
 import { Suspense } from "react";
-import Link from "next/link";
-import { redirect } from "next/navigation";
+import { Link, redirect } from "@/i18n/routing";
 import { LoginForm } from "@/components/auth";
 import { connectDB } from "@/lib/db";
 import User from "@/models/user.model";
+import { getLocale } from "next-intl/server";
 
 async function checkSystemInitialization() {
   await connectDB();
@@ -13,9 +13,10 @@ async function checkSystemInitialization() {
 
 export default async function LoginPage() {
   const isInitialized = await checkSystemInitialization();
+  const locale = await getLocale();
 
   if (!isInitialized) {
-    redirect("/auth/register?setup=true");
+    redirect({ href: "/auth/register?setup=true", locale });
   }
 
   return (

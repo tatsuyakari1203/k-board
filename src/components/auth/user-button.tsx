@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { LogOut, Settings, Shield } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { USER_ROLES } from "@/types/user";

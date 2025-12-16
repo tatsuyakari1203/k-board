@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession, signIn, signOut } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import { useCallback } from "react";
 import type { UserRole } from "@/types/user";
 import { ROLE_HIERARCHY } from "@/types/user";

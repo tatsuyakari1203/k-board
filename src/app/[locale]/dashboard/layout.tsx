@@ -1,14 +1,17 @@
 import { getCurrentUser } from "@/lib/auth-utils";
 import { Sidebar, MobileSidebar } from "@/components/dashboard/sidebar";
-import { redirect } from "next/navigation";
+import { redirect } from "@/i18n/routing";
 import { USER_ROLES } from "@/types/user";
 import { DashboardShortcuts } from "@/components/dashboard/dashboard-shortcuts";
+import { getLocale } from "next-intl/server";
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const user = await getCurrentUser();
+  const locale = await getLocale();
 
   if (!user) {
-    redirect("/auth/login");
+    redirect({ href: "/auth/login", locale });
+    return null;
   }
 
   const isAdmin = user.role === USER_ROLES.ADMIN;

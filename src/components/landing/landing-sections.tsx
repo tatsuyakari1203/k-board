@@ -16,7 +16,7 @@ import {
   Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { DashboardPreview } from "./dashboard-preview";
 import { Badge } from "@/components/ui/badge";
 import { useTranslations } from "next-intl";

@@ -2,7 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Users, UserCheck, UserX, Clock } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 
 interface UserCounts {
   total: number;

@@ -17,7 +17,7 @@ import {
 import { Loader2, Upload, User as UserIcon } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 
 interface UserProfileDialogProps {
   open: boolean;
