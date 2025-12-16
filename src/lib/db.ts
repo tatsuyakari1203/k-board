@@ -35,7 +35,7 @@ export async function connectDB() {
 
   if (!cached.promise) {
     const opts = {
-      bufferCommands: false,
+      bufferCommands: true, // Enable buffering to prevent "Cannot call ... before initial connection"
     };
 
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
