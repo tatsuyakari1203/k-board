@@ -137,6 +137,14 @@ export function BoardMembersModal({
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  // Ensure addRole is valid when availableRoles loads
+  useEffect(() => {
+    if (availableRoles.length > 0 && !availableRoles.some((r) => r.slug === addRole)) {
+      const defaultRole = availableRoles.find((r) => r.slug === "viewer") || availableRoles[0];
+      setAddRole(defaultRole.slug);
+    }
+  }, [availableRoles, addRole]);
+
   const getRoleLabel = (roleSlug: string) => {
     const roleDef = availableRoles.find((r) => r.slug === roleSlug);
     // Prefer translation for system keys if available
