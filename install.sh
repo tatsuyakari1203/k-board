@@ -103,12 +103,7 @@ else
 
     # Ensure URL has protocol
     if [[ ! "$AUTH_URL" =~ ^https?:// ]]; then
-        # If localhost, default to http, otherwise https
-        if [[ "$AUTH_URL" == *"localhost"* ]]; then
-             AUTH_URL="http://${AUTH_URL}"
-        else
-             AUTH_URL="https://${AUTH_URL}"
-        fi
+        AUTH_URL="https://${AUTH_URL}"
         warn "Protocol missing. Auto-corrected to: ${AUTH_URL}"
     fi
 
