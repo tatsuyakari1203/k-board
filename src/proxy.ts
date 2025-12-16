@@ -30,7 +30,7 @@ const apiRoleRoutes: Record<string, string[]> = {
   "/api/admin": ["admin"],
 };
 
-export default async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { nextUrl } = req;
 
   // 1. Helper to strip locale from path for checking
