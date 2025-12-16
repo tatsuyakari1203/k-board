@@ -101,6 +101,17 @@ else
     read -p "Enter Domain/URL (e.g. https://kboard.com) [${DEFAULT_DOMAIN}]: " AUTH_URL
     AUTH_URL=${AUTH_URL:-$DEFAULT_DOMAIN}
 
+    # Ensure URL has protocol
+    if [[ ! "$AUTH_URL" =~ ^https?:// ]]; then
+        # If localhost, default to http, otherwise https
+        if [[ "$AUTH_URL" == *"localhost"* ]]; then
+             AUTH_URL="http://${AUTH_URL}"
+        else
+             AUTH_URL="https://${AUTH_URL}"
+        fi
+        warn "Protocol missing. Auto-corrected to: ${AUTH_URL}"
+    fi
+
     # Auto-detect if we need to trust proxy (for https/production domains)
     AUTH_TRUST_HOST="false"
     if [[ "$AUTH_URL" == https* ]] || [[ "$AUTH_URL" != *"localhost"* ]]; then
